@@ -8,9 +8,6 @@ enum Screenshots {
         let errorDescription: String?
     }
 
-    /// Posted after `saveWindow` saves, with the file as the object.
-    static let saved = Notification.Name("ScreenshotSaved")
-
     static var directory: URL {
         URL(filePath: FileManager.default.currentDirectoryPath).appending(path: ".build/screenshots")
     }
@@ -24,23 +21,6 @@ enum Screenshots {
                 calendar: .current
             )
         )
-    }
-
-    /// Saves the key window's contents as a PNG and returns the file.
-    static func saveWindow() throws -> URL {
-        guard let view = (NSApp.keyWindow ?? NSApp.windows.first)?.contentView,
-            let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds)
-        else {
-            throw Failure(errorDescription: "There's no window to capture.")
-        }
-        view.cacheDisplay(in: view.bounds, to: bitmap)
-        let file = try write(
-            bitmap.representation(using: .png, properties: [:]),
-            to: directory,
-            name: "\(timestamp).png"
-        )
-        NotificationCenter.default.post(name: saved, object: file)
-        return file
     }
 
     /// Renders `view` off screen at `size` and saves it as a PNG in `directory` under `name`.

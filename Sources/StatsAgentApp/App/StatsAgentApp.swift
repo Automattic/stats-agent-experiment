@@ -13,18 +13,6 @@ struct StatsAgentApp: App {
             QuestionView(questions: appDelegate.questions)
         }
         .defaultSize(width: 760, height: 900)
-        .commands {
-            CommandGroup(after: .saveItem) {
-                Button("Save Screenshot") {
-                    do {
-                        print("Saved \(try Screenshots.saveWindow().path(percentEncoded: false))")
-                    } catch {
-                        print("No screenshot: \(error.localizedDescription)")
-                    }
-                }
-                .keyboardShortcut("s", modifiers: [.command, .shift])
-            }
-        }
     }
 }
 

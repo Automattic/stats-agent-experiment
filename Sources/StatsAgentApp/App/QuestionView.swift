@@ -7,7 +7,6 @@ struct QuestionView: View {
     let questions: Questions
     @State private var question = ""
     @State private var showsFeedback = false
-    @State private var showsSavedScreenshot = false
     @FocusState private var questionFocused: Bool
     @Environment(\.context) private var context
 
@@ -55,25 +54,6 @@ struct QuestionView: View {
         }
         .padding()
         .frame(minWidth: 640, minHeight: 560)
-        // Drawn here as well as by the window, so a screenshot of the window's contents has it.
-        .background(Color(nsColor: .windowBackgroundColor))
-        .overlay(alignment: .bottom) {
-            if showsSavedScreenshot {
-                Text("Saved screenshot")
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(.regularMaterial, in: Capsule())
-                    .padding(.bottom, 56)
-                    .transition(.opacity)
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: Screenshots.saved)) { _ in
-            withAnimation { showsSavedScreenshot = true }
-            Task {
-                try? await Task.sleep(for: .seconds(2))
-                withAnimation { showsSavedScreenshot = false }
-            }
-        }
         .onAppear {
             guard let question = AskMode.question else {
                 questionFocused = true
