@@ -1,0 +1,52 @@
+Data catalog with an operation step: branch, then leaf or "none of these", then an operation the
+leaf's data shape supports or "none of these". Operation "none" drops the leaf and asks for another in the
+same branch once; leaf "none" drops the branch and starts again from the top once.
+57 prompts (42 answerable), 92 catalog leaves, 3 orderings, greedy sampling.
+Version 27.0 (Build 26A428)
+Catalog: DataCatalog. Under stats the model picks what's counted, then, for views, likes and comments, how it's split, where "none of these" drops the choice as an operation's does. The operation step also reads what the data holds when it comes back. Labels: DataCatalogLabels.
+
+"chain" counts questions ending on an acceptable leaf with an acceptable operation, or, when none is
+acceptable, ending without an answer. "leaf" counts the same without checking the operation.
+"answerable" and "unanswerable" split "chain" by whether any endpoint can answer the question.
+"op none": operation steps that chose "none of these".
+"rescued": the first leaf was wrong and the question ended correct. "lost": the first leaf was
+acceptable and the question didn't end on it.
+
+order  chain       leaf         answerable  unanswerable  op none  rescued  lost  calls
+    0        49/57        51/57          36            13          2        0     1    221
+    1        47/57        47/57          35            12          4        0     1    221
+    2        46/57        48/57          34            12          3        0     1    220
+
+Chain, prompts right in all orderings: 43, in some: 7, in none: 7
+Total time: 263 seconds for 171 prompts
+
+Misses, with each attempt separated by ⟲ and the operation after ·
+order 0: [r15] "What's my all-time total pageview count?" → stats › data_views › views_total · none_of_these ⟲ stats › none_of_these ⟲ posts › views_by_post · value (expected views_total · value)
+order 0: [r19] "Which countries did my visitors come from this month?" → stats › none_of_these ⟲ comments › none_of_these (expected views_by_place · list_items or rank_items)
+order 0: [r25] "How many plays did my latest video get this month?" → stats › data_video · compare_periods (expected data_video · value)
+order 0: [r33] "Compare the likes on my last three posts." → stats › data_likes › likes_by_post · rank_items (expected likes_by_post · value or compare_items)
+order 0: [r34] "My page views seem to have jumped recently — what's driving that?" → stats › data_views › views_by_search_term · list_items (expected views_by_referrer or views_by_post · rank_items or list_items or compare_periods)
+order 0: [u7] "Are readers finishing my 2000-word posts or giving up halfway through?" → stats › data_views › views_by_post · compare_items (expected none)
+order 0: [u10] "how many of my visitors this month are returning readers vs brand new ones" → stats › data_visitors · compare_periods (expected none)
+order 0: [session-3] "What was my best day - stats-wise - this month?" → stats › data_views › views_by_hour_and_weekday · value (expected views_total or data_visitors · highest_or_lowest_period)
+order 1: [r10] "Which day this week had the most visitors?" → stats › none_of_these ⟲ posts › views_by_post · rank_items (expected data_visitors · highest_or_lowest_period)
+order 1: [r15] "What's my all-time total pageview count?" → stats › data_views › views_total · none_of_these ⟲ stats › data_visitors · none_of_these ⟲ posts › views_by_post · value (expected views_total · value)
+order 1: [r16] "When did I get my biggest traffic spike this year?" → stats › data_views › views_by_hour_and_weekday · list_items (expected views_total or data_visitors · highest_or_lowest_period)
+order 1: [r19] "Which countries did my visitors come from this month?" → stats › data_visitors · none_of_these ⟲ stats › none_of_these ⟲ site_settings › none_of_these (expected views_by_place · list_items or rank_items)
+order 1: [r33] "Compare the likes on my last three posts." → posts › views_by_post · compare_items (expected likes_by_post · value or compare_items)
+order 1: [r34] "My page views seem to have jumped recently — what's driving that?" → stats › data_views › views_by_search_term · none_of_these ⟲ stats › data_visitors · trend (expected views_by_referrer or views_by_post · rank_items or list_items or compare_periods)
+order 1: [u7] "Are readers finishing my 2000-word posts or giving up halfway through?" → stats › data_views › views_by_post · compare_periods (expected none)
+order 1: [u10] "how many of my visitors this month are returning readers vs brand new ones" → stats › data_visitors · compare_periods (expected none)
+order 1: [u11] "What do people click on right after they land on my homepage?" → stats › data_outbound_clicks · compare_items (expected none)
+order 1: [session-3] "What was my best day - stats-wise - this month?" → stats › data_views › views_by_hour_and_weekday · rank_items (expected views_total or data_visitors · highest_or_lowest_period)
+order 2: [r15] "What's my all-time total pageview count?" → stats › data_views › views_total · none_of_these ⟲ stats › none_of_these ⟲ posts › views_by_post · value (expected views_total · value)
+order 2: [r19] "Which countries did my visitors come from this month?" → stats › data_visitors · none_of_these ⟲ stats › none_of_these ⟲ posts › none_of_these (expected views_by_place · list_items or rank_items)
+order 2: [r21] "What are people searching for to find my blog this week?" → stats › data_views › views_by_search_term · compare_periods (expected views_by_search_term · list_items or rank_items)
+order 2: [r25] "How many plays did my latest video get this month?" → stats › data_video · compare_periods (expected data_video · value)
+order 2: [r33] "Compare the likes on my last three posts." → posts › posts_by_tag (expected likes_by_post · value or compare_items)
+order 2: [r34] "My page views seem to have jumped recently — what's driving that?" → stats › data_views › views_by_campaign · rank_items (expected views_by_referrer or views_by_post · rank_items or list_items or compare_periods)
+order 2: [r37] "When did my subscribers start dropping off?" → stats › none_of_these ⟲ comments › none_of_these (expected data_subscribers · trend or highest_or_lowest_period)
+order 2: [u1] "How much did I actually make from ads last month, after all the network's cuts?" → stats › none_of_these ⟲ support › report_app_problem (expected none)
+order 2: [u7] "Are readers finishing my 2000-word posts or giving up halfway through?" → stats › data_views › views_by_post · compare_periods (expected none)
+order 2: [u10] "how many of my visitors this month are returning readers vs brand new ones" → stats › data_visitors · compare_periods (expected none)
+order 2: [session-3] "What was my best day - stats-wise - this month?" → stats › data_views › views_by_hour_and_weekday · rank_items (expected views_total or data_visitors · highest_or_lowest_period)

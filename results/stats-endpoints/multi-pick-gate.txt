@@ -1,0 +1,28 @@
+The multi-pick runs read back, with a gate: when the single pick is "none of these", stop; otherwise take
+the list. No model calls. "cards" are the distinct endpoints the gate would show.
+
+Original questions, from results/stats-endpoints/multi-pick.txt:
+Answerable runs                         126
+  single pick right                     94
+  list holds a right endpoint           111
+  gate: cards hold a right endpoint     108
+  gate: first card right                92
+  gate: stopped on "none of these"      4
+  gate: 1 / 2 / 3 cards shown           77 / 6 / 39
+Unanswerable runs                       45
+  single pick "none of these"           31
+  list only "none of these"             20
+  gate: no cards                        33
+
+Paraphrases, from results/stats-endpoints/stats-paraphrases-round-1/multi-pick.txt:
+Answerable runs                         252
+  single pick right                     174
+  list holds a right endpoint           221
+  gate: cards hold a right endpoint     212
+  gate: first card right                174
+  gate: stopped on "none of these"      12
+  gate: 1 / 2 / 3 cards shown           132 / 14 / 92
+Unanswerable runs                       90
+  single pick "none of these"           63
+  list only "none of these"             37
+  gate: no cards                        63

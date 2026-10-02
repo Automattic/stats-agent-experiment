@@ -1,0 +1,33 @@
+Sighted, without-summary stats endpoints with an operation step: branch, then leaf or "none of these", then an operation the
+leaf's data shape supports or "none of these". Operation "none" drops the leaf and asks for another in the
+same branch once; leaf "none" drops the branch and starts again from the top once.
+12 prompts (12 answerable), 91 catalog leaves, 3 orderings, greedy sampling.
+Version 27.0 (Build 26A428)
+Prompts: prompts/raw/stats-questions-insights-round-1.md, which only insights answers.
+
+"chain" counts questions ending on an acceptable leaf with an acceptable operation, or, when none is
+acceptable, ending without an answer. "leaf" counts the same without checking the operation.
+"answerable" and "unanswerable" split "chain" by whether any endpoint can answer the question.
+"op none": operation steps that chose "none of these".
+"rescued": the first leaf was wrong and the question ended correct. "lost": the first leaf was
+acceptable and the question didn't end on it.
+
+order  chain       leaf         answerable  unanswerable  op none  rescued  lost  calls
+    0         8/12         8/12           8             0          0        0     0     36
+    1         9/12         9/12           9             0          0        0     0     38
+    2         9/12         9/12           9             0          0        0     0     36
+
+Chain, prompts right in all orderings: 8, in some: 2, in none: 2
+Total time: 60 seconds for 36 prompts
+
+Misses, with each attempt separated by ⟲ and the operation after ·
+order 0: [i7] "How many posts did I get out in 2023?" → stats › stats_top_posts · value (expected stats_insights · value or list_items or rank_items)
+order 0: [i8] "Was 2021 a busier writing year for me than 2022?" → stats › stats_visits · compare_periods (expected stats_insights · value or list_items or rank_items)
+order 0: [i11] "On average, how many comments did each post rack up in 2020?" → stats › stats_visits · compare_periods (expected stats_insights · value or list_items or rank_items)
+order 0: [i12] "Did people respond more to what I posted in 2024 than back in 2019?" → stats › stats_visits · compare_periods (expected stats_insights · value or list_items or rank_items)
+order 1: [i7] "How many posts did I get out in 2023?" → stats › stats_top_posts · value (expected stats_insights · value or list_items or rank_items)
+order 1: [i11] "On average, how many comments did each post rack up in 2020?" → stats › stats_post · compare_periods (expected stats_insights · value or list_items or rank_items)
+order 1: [i12] "Did people respond more to what I posted in 2024 than back in 2019?" → stats › none_of_these ⟲ posts › stats_post · compare_periods (expected stats_insights · value or list_items or rank_items)
+order 2: [i8] "Was 2021 a busier writing year for me than 2022?" → stats › stats_visits · compare_periods (expected stats_insights · value or list_items or rank_items)
+order 2: [i11] "On average, how many comments did each post rack up in 2020?" → stats › stats_post · value (expected stats_insights · value or list_items or rank_items)
+order 2: [i12] "Did people respond more to what I posted in 2024 than back in 2019?" → stats › stats_top_posts · compare_periods (expected stats_insights · value or list_items or rank_items)

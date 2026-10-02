@@ -1,0 +1,71 @@
+Sighted stats endpoints with an operation step: branch, then leaf or "none of these", then an operation the
+leaf's data shape supports or "none of these". Operation "none" drops the leaf and asks for another in the
+same branch once; leaf "none" drops the branch and starts again from the top once.
+40 prompts (32 answerable), 92 catalog leaves, 3 orderings, greedy sampling.
+Version 27.0 (Build 26A428)
+Prompts: prompts/raw/stats-questions-round-2.md, labelled after they were written.
+
+"chain" counts questions ending on an acceptable leaf with an acceptable operation, or, when none is
+acceptable, ending without an answer. "leaf" counts the same without checking the operation.
+"answerable" and "unanswerable" split "chain" by whether any endpoint can answer the question.
+"op none": operation steps that chose "none of these".
+"rescued": the first leaf was wrong and the question ended correct. "lost": the first leaf was
+acceptable and the question didn't end on it.
+
+order  chain       leaf         answerable  unanswerable  op none  rescued  lost  calls
+    0        26/40        28/40          20             6          6        1     1    141
+    1        24/40        27/40          19             5          7        0     2    134
+    2        23/40        25/40          17             6          9        1     2    142
+
+Chain, prompts right in all orderings: 17, in some: 14, in none: 9
+Runs where a model call threw, counted as missed: 3
+Total time: 229 seconds for 120 prompts
+
+Misses, with each attempt separated by ⟲ and the operation after ·
+order 0: [f3] "am I getting more readers than last month" → stats › stats_summary · compare_periods (expected stats_visits · compare_periods)
+order 0: [f5] "Did my newsletter signup post from yesterday do anything? I sent it out around 8am and want to know if people clicked through." → stats › stats_emails_summary · list_items (expected stats_emails_summary · value)
+order 0: [f7] "how many subscribers do I have" → people › list_subscribers (expected stats_subscribers or stats_summary · value)
+order 0: [f8] "how many new email subscribers did I get in the last 30 days, and how does that compare to the 30 days before?" → stats › none_of_these ⟲ account › none_of_these (expected stats_subscribers · compare_periods)
+order 0: [f12] "what were my best days ever for traffic" → stats › stats_insights · rank_items (expected stats_visits or stats_summary · highest_or_lowest_period)
+order 0: [f13] "what search terms are bringing people to my site" → stats › stats_search_terms · none_of_these ⟲ stats › stats_referrers · none_of_these ⟲ posts › stats_post · none_of_these ⟲ posts › none_of_these (expected stats_search_terms · list_items or rank_items)
+order 0: [f14] "My podcast episode 42 went live on Monday. How many plays has it gotten so far?" → stats › stats_video_plays · list_items (expected stats_file_downloads · value)
+order 0: [f17] "did the local election coverage bring in more traffic than usual last week" → failed: The model refused to answer.
+order 0: [f18] "who are my top commenters?" → comments › none_of_these ⟲ stats › stats_top_authors · rank_items (expected none)
+order 0: [f21] "Compare this month to the same month last year for me please" → stats › stats_summary · compare_periods (expected stats_visits · compare_periods)
+order 0: [f35] "which of my photo galleries gets looked at the most" → stats › none_of_these ⟲ posts › stats_post · value (expected stats_top_posts · rank_items)
+order 0: [f36] "is my audience growing" → stats › stats_summary · trend (expected stats_visits or stats_subscribers · trend or compare_periods)
+order 0: [f38] "views by month for 2025" → stats › stats_summary · none_of_these ⟲ stats › stats_visits · compare_periods (expected stats_visits · trend)
+order 0: [f40] "Who are my most loyal readers, the ones who come back every week?" → stats › stats_subscribers · compare_periods (expected none)
+order 1: [f2] "which of my posts is the most popular" → posts › stats_post · trend (expected stats_top_posts · rank_items)
+order 1: [f12] "what were my best days ever for traffic" → stats › stats_insights · rank_items (expected stats_visits or stats_summary · highest_or_lowest_period)
+order 1: [f13] "what search terms are bringing people to my site" → stats › stats_search_terms · none_of_these ⟲ stats › stats_referrers · none_of_these ⟲ reader › none_of_these (expected stats_search_terms · list_items or rank_items)
+order 1: [f14] "My podcast episode 42 went live on Monday. How many plays has it gotten so far?" → stats › stats_video_plays · value (expected stats_file_downloads · value)
+order 1: [f17] "did the local election coverage bring in more traffic than usual last week" → failed: The model refused to answer.
+order 1: [f18] "who are my top commenters?" → comments › comments_by_author (expected none)
+order 1: [f19] "how many likes did my last post get" → posts › post_comments (expected stats_post · value)
+order 1: [f21] "Compare this month to the same month last year for me please" → stats › stats_summary · compare_periods (expected stats_visits · compare_periods)
+order 1: [f22] "what's my bounce rate" → stats › none_of_these ⟲ support › list_support_requests (expected none)
+order 1: [f28] "did my post about sourdough starters get more views than the one about focaccia" → posts › stats_post · compare_periods (expected stats_top_posts or stats_post · compare_items or value)
+order 1: [f32] "any spike in traffic in the last few days? something seems off" → stats › stats_insights · rank_items (expected stats_visits or stats_summary · highest_or_lowest_period or trend)
+order 1: [f33] "Top referrers for December 2025" → stats › stats_referrers · compare_items (expected stats_referrers · rank_items or list_items)
+order 1: [f35] "which of my photo galleries gets looked at the most" → stats › stats_top_posts · none_of_these ⟲ stats › stats_city_views · compare_items (expected stats_top_posts · rank_items)
+order 1: [f36] "is my audience growing" → stats › stats_summary · trend (expected stats_visits or stats_subscribers · trend or compare_periods)
+order 1: [f38] "views by month for 2025" → stats › stats_visits · value (expected stats_visits · trend)
+order 1: [f40] "Who are my most loyal readers, the ones who come back every week?" → stats › stats_top_authors · rank_items (expected none)
+order 2: [f2] "which of my posts is the most popular" → posts › stats_post · value (expected stats_top_posts · rank_items)
+order 2: [f5] "Did my newsletter signup post from yesterday do anything? I sent it out around 8am and want to know if people clicked through." → stats › stats_emails_summary · list_items (expected stats_emails_summary · value)
+order 2: [f6] "top 5 pages on my bakery site this year" → stats › stats_top_posts · value (expected stats_top_posts · rank_items or list_items)
+order 2: [f8] "how many new email subscribers did I get in the last 30 days, and how does that compare to the 30 days before?" → stats › none_of_these ⟲ notifications › none_of_these (expected stats_subscribers · compare_periods)
+order 2: [f10] "views today" → stats › stats_country_views · list_items (expected stats_visits or stats_summary · value)
+order 2: [f12] "what were my best days ever for traffic" → stats › stats_insights · rank_items (expected stats_visits or stats_summary · highest_or_lowest_period)
+order 2: [f13] "what search terms are bringing people to my site" → stats › stats_search_terms · none_of_these ⟲ stats › stats_referrers · none_of_these ⟲ notifications › none_of_these (expected stats_search_terms · list_items or rank_items)
+order 2: [f14] "My podcast episode 42 went live on Monday. How many plays has it gotten so far?" → stats › stats_post · value (expected stats_file_downloads · value)
+order 2: [f17] "did the local election coverage bring in more traffic than usual last week" → failed: The model refused to answer.
+order 2: [f18] "who are my top commenters?" → comments › comments_by_author (expected none)
+order 2: [f19] "how many likes did my last post get" → posts › posts_by_tag (expected stats_post · value)
+order 2: [f21] "Compare this month to the same month last year for me please" → stats › stats_summary · compare_periods (expected stats_visits · compare_periods)
+order 2: [f26] "Show me a chart of visitors over the last 90 days" → stats › stats_visits · none_of_these ⟲ stats › stats_summary · none_of_these ⟲ comments › none_of_these (expected stats_visits · trend)
+order 2: [f32] "any spike in traffic in the last few days? something seems off" → stats › stats_insights · list_items (expected stats_visits or stats_summary · highest_or_lowest_period or trend)
+order 2: [f35] "which of my photo galleries gets looked at the most" → stats › none_of_these ⟲ posts › none_of_these (expected stats_top_posts · rank_items)
+order 2: [f36] "is my audience growing" → stats › stats_summary · trend (expected stats_visits or stats_subscribers · trend or compare_periods)
+order 2: [f40] "Who are my most loyal readers, the ones who come back every week?" → reader › none_of_these ⟲ stats › stats_subscribers · compare_periods (expected none)

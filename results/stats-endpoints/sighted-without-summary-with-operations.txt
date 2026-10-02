@@ -1,0 +1,60 @@
+Sighted, without-summary stats endpoints with an operation step: branch, then leaf or "none of these", then an operation the
+leaf's data shape supports or "none of these". Operation "none" drops the leaf and asks for another in the
+same branch once; leaf "none" drops the branch and starts again from the top once.
+57 prompts (42 answerable), 91 catalog leaves, 3 orderings, greedy sampling.
+Version 27.0 (Build 26A428)
+
+"chain" counts questions ending on an acceptable leaf with an acceptable operation, or, when none is
+acceptable, ending without an answer. "leaf" counts the same without checking the operation.
+"answerable" and "unanswerable" split "chain" by whether any endpoint can answer the question.
+"op none": operation steps that chose "none of these".
+"rescued": the first leaf was wrong and the question ended correct. "lost": the first leaf was
+acceptable and the question didn't end on it.
+
+order  chain       leaf         answerable  unanswerable  op none  rescued  lost  calls
+    0        44/57        45/57          32            12         10        5     1    207
+    1        45/57        48/57          33            12         10        4     2    207
+    2        44/57        44/57          32            12          9        4     0    204
+
+Chain, prompts right in all orderings: 36, in some: 15, in none: 6
+Total time: 331 seconds for 171 prompts
+
+Misses, with each attempt separated by ⟲ and the operation after ·
+order 0: [r10] "Which day this week had the most visitors?" → stats › stats_insights · value (expected stats_visits · highest_or_lowest_period)
+order 0: [r13] "Follower count right now?" → site_settings › none_of_these ⟲ stats › none_of_these (expected stats_subscribers · value)
+order 0: [r15] "What's my all-time total pageview count?" → stats › stats_visits · none_of_these ⟲ stats › stats_post · value (expected stats_visits · value)
+order 0: [r16] "When did I get my biggest traffic spike this year?" → stats › stats_insights · rank_items (expected stats_visits · highest_or_lowest_period)
+order 0: [r18] "Which country sends me the most traffic, and has that changed since last year?" → stats › stats_country_views · compare_items (expected stats_country_views · rank_items or compare_periods)
+order 0: [r31] "How has my follower growth looked over the last six months?" → stats › none_of_these ⟲ reader › none_of_these (expected stats_subscribers · trend)
+order 0: [r33] "Compare the likes on my last three posts." → stats › stats_top_posts · compare_items (expected stats_post · value)
+order 0: [r34] "My page views seem to have jumped recently — what's driving that?" → stats › stats_utm · rank_items (expected stats_referrers or stats_top_posts · rank_items or list_items or compare_periods)
+order 0: [r39] "How does mobile traffic compare to desktop traffic this month?" → stats › stats_devices_browser · compare_items (expected stats_devices_screensize · compare_items)
+order 0: [u1] "How much did I actually make from ads last month, after all the network's cuts?" → stats › none_of_these ⟲ people › stats_subscribers · value (expected none)
+order 0: [u7] "Are readers finishing my 2000-word posts or giving up halfway through?" → stats › stats_post · compare_periods (expected none)
+order 0: [u10] "how many of my visitors this month are returning readers vs brand new ones" → stats › stats_visits · compare_periods (expected none)
+order 0: [session-3] "What was my best day - stats-wise - this month?" → stats › stats_insights · list_items (expected stats_visits · highest_or_lowest_period)
+order 1: [r10] "Which day this week had the most visitors?" → stats › stats_insights · list_items (expected stats_visits · highest_or_lowest_period)
+order 1: [r12] "How does today's traffic compare to yesterday's?" → stats › stats_insights · rank_items (expected stats_visits · compare_periods or value)
+order 1: [r15] "What's my all-time total pageview count?" → stats › stats_visits · none_of_these ⟲ stats › stats_insights · none_of_these ⟲ posts › stats_post · value (expected stats_visits · value)
+order 1: [r16] "When did I get my biggest traffic spike this year?" → stats › stats_insights · list_items (expected stats_visits · highest_or_lowest_period)
+order 1: [r18] "Which country sends me the most traffic, and has that changed since last year?" → stats › stats_country_views · compare_items (expected stats_country_views · rank_items or compare_periods)
+order 1: [r22] "Is my newsletter open rate improving or getting worse?" → stats › stats_emails_summary · none_of_these ⟲ stats › none_of_these ⟲ support › none_of_these (expected stats_emails_summary · trend)
+order 1: [r33] "Compare the likes on my last three posts." → posts › stats_post · compare_periods (expected stats_post · value)
+order 1: [r35] "Who's my most popular author this quarter?" → stats › stats_top_authors · compare_periods (expected stats_top_authors · rank_items)
+order 1: [u7] "Are readers finishing my 2000-word posts or giving up halfway through?" → stats › stats_insights · none_of_these ⟲ stats › stats_video_plays · compare_items (expected none)
+order 1: [u10] "how many of my visitors this month are returning readers vs brand new ones" → stats › stats_visits · compare_periods (expected none)
+order 1: [u11] "What do people click on right after they land on my homepage?" → stats › stats_clicks · list_items (expected none)
+order 1: [session-3] "What was my best day - stats-wise - this month?" → stats › stats_insights · list_items (expected stats_visits · highest_or_lowest_period)
+order 2: [r2] "Which post got the most views this week?" → posts › stats_post · highest_or_lowest_period (expected stats_top_posts · rank_items)
+order 2: [r6] "How does this month's traffic compare to last month's?" → stats › stats_insights · list_items (expected stats_visits · compare_periods)
+order 2: [r8] "What's my best performing post of all time?" → stats › stats_post · trend (expected stats_top_posts · rank_items)
+order 2: [r10] "Which day this week had the most visitors?" → stats › stats_insights · list_items (expected stats_visits · highest_or_lowest_period)
+order 2: [r13] "Follower count right now?" → stats › none_of_these ⟲ people › none_of_these (expected stats_subscribers · value)
+order 2: [r16] "When did I get my biggest traffic spike this year?" → stats › stats_insights · rank_items (expected stats_visits · highest_or_lowest_period)
+order 2: [r24] "What changed in my traffic this week versus last week?" → stats › stats_insights · none_of_these ⟲ stats › stats_post · compare_periods (expected stats_visits · compare_periods)
+order 2: [r33] "Compare the likes on my last three posts." → posts › none_of_these ⟲ stats › stats_top_posts · compare_items (expected stats_post · value)
+order 2: [r34] "My page views seem to have jumped recently — what's driving that?" → stats › stats_insights · list_items (expected stats_referrers or stats_top_posts · rank_items or list_items or compare_periods)
+order 2: [u1] "How much did I actually make from ads last month, after all the network's cuts?" → stats › none_of_these ⟲ support › report_app_problem (expected none)
+order 2: [u7] "Are readers finishing my 2000-word posts or giving up halfway through?" → stats › stats_insights · none_of_these ⟲ stats › stats_top_posts · compare_items (expected none)
+order 2: [u10] "how many of my visitors this month are returning readers vs brand new ones" → stats › stats_subscribers · compare_periods (expected none)
+order 2: [session-3] "What was my best day - stats-wise - this month?" → stats › stats_insights · rank_items (expected stats_visits · highest_or_lowest_period)

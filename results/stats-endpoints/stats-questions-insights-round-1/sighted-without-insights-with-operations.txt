@@ -1,0 +1,53 @@
+Sighted, without-insights stats endpoints with an operation step: branch, then leaf or "none of these", then an operation the
+leaf's data shape supports or "none of these". Operation "none" drops the leaf and asks for another in the
+same branch once; leaf "none" drops the branch and starts again from the top once.
+12 prompts (0 answerable), 91 catalog leaves, 3 orderings, greedy sampling.
+Version 27.0 (Build 26A428)
+Prompts: prompts/raw/stats-questions-insights-round-1.md, which only insights answers.
+
+"chain" counts questions ending on an acceptable leaf with an acceptable operation, or, when none is
+acceptable, ending without an answer. "leaf" counts the same without checking the operation.
+"answerable" and "unanswerable" split "chain" by whether any endpoint can answer the question.
+"op none": operation steps that chose "none of these".
+"rescued": the first leaf was wrong and the question ended correct. "lost": the first leaf was
+acceptable and the question didn't end on it.
+
+order  chain       leaf         answerable  unanswerable  op none  rescued  lost  calls
+    0         1/12         1/12           0             1          0        0     0     37
+    1         2/12         2/12           0             2          0        0     0     40
+    2         3/12         3/12           0             3          0        0     0     39
+
+Chain, prompts right in all orderings: 0, in some: 3, in none: 9
+Total time: 62 seconds for 36 prompts
+
+Misses, with each attempt separated by ⟲ and the operation after ·
+order 0: [i1] "What time of day tends to bring in the most readers?" → stats › stats_summary · highest_or_lowest_period (expected none)
+order 0: [i2] "Is there one weekday that consistently outperforms the rest for traffic?" → stats › stats_summary · trend (expected none)
+order 0: [i3] "Do I see more visitors in the morning or later at night?" → stats › stats_visits · trend (expected none)
+order 0: [i4] "Saturday versus Tuesday — which one usually wins for me?" → stats › stats_summary · compare_periods (expected none)
+order 0: [i5] "Around what hour does my site tend to spike?" → stats › stats_summary · compare_periods (expected none)
+order 0: [i6] "Do I do better on weekdays or weekends overall?" → stats › stats_summary · compare_periods (expected none)
+order 0: [i7] "How many posts did I get out in 2023?" → stats › stats_emails_summary · value (expected none)
+order 0: [i8] "Was 2021 a busier writing year for me than 2022?" → stats › stats_summary · compare_periods (expected none)
+order 0: [i10] "How does what I've published this year stack up against five years back?" → stats › stats_summary · compare_periods (expected none)
+order 0: [i11] "On average, how many comments did each post rack up in 2020?" → stats › stats_summary · value (expected none)
+order 0: [i12] "Did people respond more to what I posted in 2024 than back in 2019?" → stats › stats_summary · compare_periods (expected none)
+order 1: [i3] "Do I see more visitors in the morning or later at night?" → stats › stats_visits · trend (expected none)
+order 1: [i4] "Saturday versus Tuesday — which one usually wins for me?" → stats › stats_summary · compare_periods (expected none)
+order 1: [i5] "Around what hour does my site tend to spike?" → stats › stats_visits · trend (expected none)
+order 1: [i6] "Do I do better on weekdays or weekends overall?" → stats › stats_visits · compare_periods (expected none)
+order 1: [i7] "How many posts did I get out in 2023?" → stats › stats_summary · value (expected none)
+order 1: [i8] "Was 2021 a busier writing year for me than 2022?" → stats › stats_summary · compare_periods (expected none)
+order 1: [i9] "Roughly how many words did I put down across everything I wrote last year?" → stats › none_of_these ⟲ posts › stats_post · value (expected none)
+order 1: [i10] "How does what I've published this year stack up against five years back?" → stats › stats_summary · compare_periods (expected none)
+order 1: [i11] "On average, how many comments did each post rack up in 2020?" → stats › stats_summary · value (expected none)
+order 1: [i12] "Did people respond more to what I posted in 2024 than back in 2019?" → stats › stats_summary · compare_periods (expected none)
+order 2: [i3] "Do I see more visitors in the morning or later at night?" → stats › stats_visits · compare_periods (expected none)
+order 2: [i4] "Saturday versus Tuesday — which one usually wins for me?" → stats › stats_summary · compare_periods (expected none)
+order 2: [i5] "Around what hour does my site tend to spike?" → stats › stats_summary · trend (expected none)
+order 2: [i6] "Do I do better on weekdays or weekends overall?" → stats › stats_summary · compare_periods (expected none)
+order 2: [i7] "How many posts did I get out in 2023?" → stats › stats_summary · value (expected none)
+order 2: [i8] "Was 2021 a busier writing year for me than 2022?" → stats › stats_summary · compare_periods (expected none)
+order 2: [i10] "How does what I've published this year stack up against five years back?" → stats › stats_summary · compare_periods (expected none)
+order 2: [i11] "On average, how many comments did each post rack up in 2020?" → stats › stats_post · value (expected none)
+order 2: [i12] "Did people respond more to what I posted in 2024 than back in 2019?" → stats › stats_summary · compare_periods (expected none)

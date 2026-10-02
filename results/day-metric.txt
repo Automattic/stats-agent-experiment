@@ -1,0 +1,21 @@
+Day metric: one model call fills the metric of the stats_on_day leaf, given that the leaf was chosen.
+15 phrasings of the three questions that target stats_on_day, greedy sampling.
+Version 27.0 (Build 26A428)
+
+Correct: 15/15
+
+ok    1: "How many likes did my posts get on January 13?" → likes (expected likes)
+ok    2: "How many people visited my site yesterday?" → visitors (expected visitors)
+ok    3: "How many views did I get today?" → views (expected views)
+ok    paraphrases-round-1 1A: "On January 13, how many likes did my posts receive?" → likes (expected likes)
+ok    paraphrases-round-1 1B: "Can you tell me the total number of likes my posts got on January 13?" → likes (expected likes)
+ok    paraphrases-round-1 2A: "How many visitors did my site have yesterday?" → visitors (expected visitors)
+ok    paraphrases-round-1 2B: "Can you tell me my site's visitor count from yesterday?" → visitors (expected visitors)
+ok    paraphrases-round-1 3A: "How many views have I gotten today?" → views (expected views)
+ok    paraphrases-round-1 3B: "What's my view count for today so far?" → views (expected views)
+ok    paraphrases-round-2 1A: "What's the total hearts count on my posts for January 13?" → likes (expected likes)
+ok    paraphrases-round-2 1B: "Break down how many likes my posts pulled in on January 13." → likes (expected likes)
+ok    paraphrases-round-2 2A: "Yesterday's visitor count for my site?" → visitors (expected visitors)
+ok    paraphrases-round-2 2B: "Tell me how many folks stopped by my site yesterday." → visitors (expected visitors)
+ok    paraphrases-round-2 3A: "What's my pageview count for today?" → views (expected views)
+ok    paraphrases-round-2 3B: "How many reads am I up to today?" → views (expected views)

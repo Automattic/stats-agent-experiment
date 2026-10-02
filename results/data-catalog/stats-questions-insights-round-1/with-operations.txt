@@ -1,0 +1,30 @@
+Data catalog with an operation step: branch, then leaf or "none of these", then an operation the
+leaf's data shape supports or "none of these". Operation "none" drops the leaf and asks for another in the
+same branch once; leaf "none" drops the branch and starts again from the top once.
+12 prompts (12 answerable), 92 catalog leaves, 3 orderings, greedy sampling.
+Version 27.0 (Build 26A428)
+Catalog: DataCatalog. Under stats the model picks what's counted, then, for views, likes and comments, how it's split, where "none of these" drops the choice as an operation's does. The operation step also reads what the data holds when it comes back. Labels: DataCatalogLabels.
+Prompts: prompts/raw/stats-questions-insights-round-1.md.
+
+"chain" counts questions ending on an acceptable leaf with an acceptable operation, or, when none is
+acceptable, ending without an answer. "leaf" counts the same without checking the operation.
+"answerable" and "unanswerable" split "chain" by whether any endpoint can answer the question.
+"op none": operation steps that chose "none of these".
+"rescued": the first leaf was wrong and the question ended correct. "lost": the first leaf was
+acceptable and the question didn't end on it.
+
+order  chain       leaf         answerable  unanswerable  op none  rescued  lost  calls
+    0        10/12        10/12          10             0          0        0     0     46
+    1        10/12        10/12          10             0          1        1     0     50
+    2        10/12        10/12          10             0          0        0     0     47
+
+Chain, prompts right in all orderings: 9, in some: 2, in none: 1
+Total time: 57 seconds for 36 prompts
+
+Misses, with each attempt separated by ⟲ and the operation after ·
+order 0: [i2] "Is there one weekday that consistently outperforms the rest for traffic?" → stats › data_views › none_of_these ⟲ stats › none_of_these ⟲ media › none_of_these (expected views_by_hour_and_weekday · value or list_items or rank_items)
+order 0: [i6] "Do I do better on weekdays or weekends overall?" → stats › data_views › views_total · compare_periods (expected views_by_hour_and_weekday · value or list_items or rank_items)
+order 1: [i2] "Is there one weekday that consistently outperforms the rest for traffic?" → stats › data_views › none_of_these ⟲ stats › none_of_these ⟲ notifications › none_of_these (expected views_by_hour_and_weekday · value or list_items or rank_items)
+order 1: [i8] "Was 2021 a busier writing year for me than 2022?" → stats › none_of_these ⟲ posts › views_by_post · compare_periods (expected data_publishing · value or compare_periods or trend or highest_or_lowest_period)
+order 2: [i2] "Is there one weekday that consistently outperforms the rest for traffic?" → stats › data_views › none_of_these ⟲ stats › none_of_these ⟲ reader › none_of_these (expected views_by_hour_and_weekday · value or list_items or rank_items)
+order 2: [i8] "Was 2021 a busier writing year for me than 2022?" → stats › data_views › views_total · compare_periods (expected data_publishing · value or compare_periods or trend or highest_or_lowest_period)

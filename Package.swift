@@ -1,0 +1,38 @@
+// swift-tools-version: 6.2
+
+import PackageDescription
+
+let package = Package(
+    name: "StatsAgent",
+    platforms: [
+        .macOS(.v26),
+        .iOS(.v26)
+    ],
+    products: [
+        .library(name: "StatsAgent", targets: ["StatsAgent"]),
+        .executable(name: "stats-agent", targets: ["stats-agent"]),
+        .executable(name: "stats-agent-app", targets: ["StatsAgentApp"])
+    ],
+    dependencies: [
+        // The revision the WordPress iOS app pins, for the stats views copied from it.
+        .package(
+            url: "https://github.com/Automattic/color-studio",
+            revision: "bf141adc75e2769eb469a3e095bdc93dc30be8de"
+        ),
+        // The version the WordPress iOS app pins.
+        .package(url: "https://github.com/automattic/wordpress-rs", exact: "0.9.1")
+    ],
+    targets: [
+        .target(name: "StatsAgent"),
+        .executableTarget(name: "stats-agent", dependencies: ["StatsAgent"]),
+        .executableTarget(
+            name: "StatsAgentApp",
+            dependencies: [
+                "StatsAgent",
+                .product(name: "ColorStudio", package: "color-studio"),
+                .product(name: "WordPressAPI", package: "wordpress-rs")
+            ]
+        ),
+        .testTarget(name: "StatsAgentTests", dependencies: ["StatsAgent"])
+    ]
+)

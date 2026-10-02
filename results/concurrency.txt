@@ -1,0 +1,72 @@
+Model calls in flight at once: the endpoint step for each of the 57 labelled stats questions, one pick
+each, offered the sighted stats branch's 21 endpoints and "none of these" in MultiPickTests' first order.
+The widths run one after another, in the order listed. One untimed call first loads the model.
+Version 27.0 (Build 26A428)
+
+"speedup": the first run's seconds divided by this run's. "differing": picks that differ from the first run's.
+
+width  seconds  speedup  differing  errors
+    1     53.4     1.00          0       0
+    2     46.0     1.16          0       0
+    4     46.1     1.16          0       0
+    8     46.2     1.16          0       0
+    1     53.9     0.99          0       0
+
+Per question, the pick when every run agrees, otherwise each run's pick in the order above.
+[r1] stats_summary
+[r2] stats_top_posts
+[r3] stats_summary
+[r4] stats_subscribers
+[r5] stats_visits
+[r6] stats_summary
+[r7] stats_visits
+[r8] stats_post
+[r9] stats_visits
+[r10] stats_insights
+[r11] stats_subscribers
+[r12] stats_summary
+[r13] none_of_these
+[r14] stats_visits
+[r15] stats_summary
+[r16] stats_insights
+[r17] stats_visits
+[r18] stats_country_views
+[r19] stats_country_views
+[r20] stats_top_posts
+[r21] stats_search_terms
+[r22] stats_emails_summary
+[r23] none_of_these
+[r24] stats_visits
+[r25] stats_video_plays
+[r26] stats_referrers
+[r27] stats_devices_browser
+[r28] stats_search_terms
+[r29] stats_emails_summary
+[r30] stats_post
+[r31] stats_subscribers
+[r32] stats_tags
+[r33] stats_top_posts
+[r34] stats_insights
+[r35] stats_top_authors
+[r36] stats_video_plays
+[r37] stats_subscribers
+[r38] stats_top_posts
+[r39] stats_devices_platform
+[r40] stats_summary
+[u1] none_of_these
+[u2] none_of_these
+[u3] none_of_these
+[u4] none_of_these
+[u5] none_of_these
+[u6] none_of_these
+[u7] stats_insights
+[u8] none_of_these
+[u9] none_of_these
+[u10] stats_visits
+[u11] stats_clicks
+[u12] stats_devices_screensize
+[u13] stats_referrers
+[u14] none_of_these
+[u15] stats_devices_platform
+[session-3] stats_summary
+[session-4] stats_visits

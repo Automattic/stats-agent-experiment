@@ -1,0 +1,33 @@
+Visits metric: one model call picks the figure each question asks about, among views, visitors, likes,
+comments and posts. Questions from prompts/raw/stats-questions-visits-round-1.md. Greedy sampling.
+Version 27.0 (Build 26A428)
+
+Right: 23/24
+Not scored: 1
+Time: 8 s for 25 calls
+
+ok    v1 "How many views did the site get today?" → views (expected views)
+ok    v2 "What's our total traffic for this month so far?" → visitors (expected views or visitors)
+ok    v3 "How many people visited yesterday?" → visitors (expected visitors)
+ok    v4 "Did we get more comments this week than last week?" → comments (expected comments)
+ok    v5 "How many likes has my most recent post picked up?" → likes (expected likes)
+ok    v6 "What's the view count for the last 7 days?" → views (expected views)
+ok    v7 "How many posts have I published this year?" → posts (expected posts)
+ok    v8 "Are visitors up or down compared to last month?" → visitors (expected visitors)
+ok    v9 "How many comments came in overnight?" → comments (expected comments)
+ok    v10 "What's our all-time view total?" → views (expected views)
+ok    v11 "How many unique visitors have we had since the redesign?" → visitors (expected visitors)
+ok    v12 "Did views spike after I shared that post on Twitter?" → views (expected views)
+MISS  v13 "How's engagement been the last couple of weeks?" → views (expected likes or comments)
+ok    v14 "How many likes did we rack up last month?" → likes (expected likes)
+ok    v15 "What was our busiest day for traffic this quarter?" → visitors (expected views or visitors)
+ok    v16 "How many comments am I averaging per post lately?" → comments (expected comments)
+ok    v17 "Have visitor numbers recovered since the summer slump?" → visitors (expected visitors)
+ok    v18 "How many posts went out last week?" → posts (expected posts)
+ok    v19 "What's today's traffic looking like compared to this time yesterday?" → views (expected views or visitors)
+ok    v20 "How many total likes has the blog gotten?" → likes (expected likes)
+      v21 "Did the newsletter mention bump our subscriber engagement at all?" → views (expected not scored)
+ok    v22 "How many comments have piled up that I haven't replied to?" → comments (expected comments)
+ok    v23 "What's the year-over-year change in views for September?" → views (expected views)
+ok    v24 "How active has commenting been since I turned on moderation?" → comments (expected comments)
+ok    v25 "How many views did we pull in over the holiday weekend?" → views (expected views)

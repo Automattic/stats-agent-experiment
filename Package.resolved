@@ -1,0 +1,23 @@
+{
+  "originHash" : "00f85843f769d092807b6a9a2987ec37bcf7559364f4740393ffa43491b803fa",
+  "pins" : [
+    {
+      "identity" : "color-studio",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Automattic/color-studio",
+      "state" : {
+        "revision" : "bf141adc75e2769eb469a3e095bdc93dc30be8de"
+      }
+    },
+    {
+      "identity" : "wordpress-rs",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/automattic/wordpress-rs",
+      "state" : {
+        "revision" : "68a8ab594578f2b3e058460e5a944176af20399b",
+        "version" : "0.9.1"
+      }
+    }
+  ],
+  "version" : 3
+}

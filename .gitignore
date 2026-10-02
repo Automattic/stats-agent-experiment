@@ -1,0 +1,7 @@
+.build/
+.swiftpm/
+BuildTools/.build/
+BuildTools/.swiftpm/
+logs/
+sessions/
+results/feedback-report.md

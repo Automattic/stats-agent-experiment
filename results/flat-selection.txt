@@ -1,0 +1,61 @@
+Flat selection: one model call per prompt picks a catalog leaf.
+31 prompts, 86 catalog leaves, 3 orderings per size, greedy sampling.
+Version 27.0 (Build 26A428)
+
+"all", "some" and "none" count prompts answered correctly in all, some or none of the orderings.
+"chars" is the longest instructions sent at that size, in characters.
+
+size  order 0  order 1  order 2   all  some  none  seconds  chars
+   8    31/31    29/31    31/31    29     2     0       28    599
+  16    31/31    30/31    31/31    30     1     0       32   1052
+  32    27/31    29/31    30/31    26     5     0       42   2015
+  64    26/31    27/31    26/31    22     7     2       66   3813
+  86    24/31    23/31    24/31    18    10     3       84   5032
+
+Misses, with positions counted from 1
+size 8, order 1: "Show me new posts from blogs I follow" → posts_by_category at 6/8, target following_feed at 2/8
+size 8, order 1: "Show me the posts I liked" → post_likes at 6/8, target liked_posts at 5/8
+size 16, order 1: "Find my post about sourdough bread" → posts_by_tag at 12/16, target search_posts at 13/16
+size 32, order 0: "How many likes did my posts get on January 13?" → post_likes at 6/32, target stats_on_day at 19/32
+size 32, order 0: "Show me the posts I liked" → post_likes at 12/32, target liked_posts at 3/32
+size 32, order 0: "I'd like to talk to someone from support about a billing problem" → report_app_problem at 3/32, target contact_support at 32/32
+size 32, order 0: "How do I add a contact form to my site?" → upload_media at 2/32, target search_help_articles at 14/32
+size 32, order 1: "Show me new posts from blogs I follow" → follow_site at 4/32, target following_feed at 18/32
+size 32, order 1: "How do I add a contact form to my site?" → list_followed_sites at 1/32, target search_help_articles at 28/32
+size 32, order 2: "Show me new posts from blogs I follow" → post_views at 19/32, target following_feed at 18/32
+size 64, order 0: "How many people visited my site yesterday?" → views_over_period at 33/64, target stats_on_day at 47/64
+size 64, order 0: "How many views did I get today?" → views_over_period at 8/64, target stats_on_day at 35/64
+size 64, order 0: "I want to write a new blog post about my trip" → post_comments at 1/64, target create_post at 63/64
+size 64, order 0: "Show me new posts from blogs I follow" → follow_site at 34/64, target following_feed at 19/64
+size 64, order 0: "How do I add a contact form to my site?" → change_site_icon at 1/64, target search_help_articles at 52/64
+size 64, order 1: "Show me my views over the past 6 months" → stats_on_day at 15/64, target views_over_period at 45/64
+size 64, order 1: "Show me new posts from blogs I follow" → list_followed_sites at 27/64, target following_feed at 51/64
+size 64, order 1: "Show me the posts I liked" → post_likes at 34/64, target liked_posts at 10/64
+size 64, order 1: "How do I add a contact form to my site?" → install_plugin at 23/64, target search_help_articles at 25/64
+size 64, order 2: "How many likes did my posts get on January 13?" → post_views at 36/64, target stats_on_day at 39/64
+size 64, order 2: "How many people visited my site yesterday?" → views_over_period at 8/64, target stats_on_day at 49/64
+size 64, order 2: "Which of my posts were most popular last month?" → views_over_period at 1/64, target top_posts at 54/64
+size 64, order 2: "Show me new posts from blogs I follow" → list_followed_sites at 8/64, target following_feed at 1/64
+size 64, order 2: "How do I add a contact form to my site?" → report_app_problem at 1/64, target search_help_articles at 57/64
+size 86, order 0: "How many likes did my posts get on January 13?" → post_views at 53/86, target stats_on_day at 85/86
+size 86, order 0: "Which of my posts were most popular last month?" → list_published_posts at 23/86, target top_posts at 37/86
+size 86, order 0: "Show me new posts from blogs I follow" → top_authors at 59/86, target following_feed at 60/86
+size 86, order 0: "Follow the site cooking.blog" → unfollow_site at 14/86, target follow_site at 50/86
+size 86, order 0: "Do I have any new notifications?" → mark_notifications_read at 16/86, target unread_notifications at 55/86
+size 86, order 0: "Switch my site to a darker theme" → post_views at 1/86, target change_theme at 79/86
+size 86, order 0: "How do I add a contact form to my site?" → install_plugin at 8/86, target search_help_articles at 82/86
+size 86, order 1: "How many likes did my posts get on January 13?" → post_likes at 11/86, target stats_on_day at 42/86
+size 86, order 1: "How many people visited my site yesterday?" → views_over_period at 19/86, target stats_on_day at 74/86
+size 86, order 1: "How many views did I get today?" → views_over_period at 20/86, target stats_on_day at 58/86
+size 86, order 1: "Show me my drafts" → post_likes at 51/86, target list_draft_posts at 81/86
+size 86, order 1: "Find my post about sourdough bread" → post_views at 9/86, target search_posts at 51/86
+size 86, order 1: "Show me new posts from blogs I follow" → post_likes at 2/86, target following_feed at 86/86
+size 86, order 1: "Switch my site to a darker theme" → top_referrers at 1/86, target change_theme at 69/86
+size 86, order 1: "How do I add a contact form to my site?" → install_plugin at 15/86, target search_help_articles at 8/86
+size 86, order 2: "How many likes did my posts get on January 13?" → post_views at 72/86, target stats_on_day at 68/86
+size 86, order 2: "How many views did I get today?" → views_over_period at 48/86, target stats_on_day at 50/86
+size 86, order 2: "Where is my traffic coming from?" → stats_on_day at 3/86, target top_referrers at 56/86
+size 86, order 2: "Find my post about sourdough bread" → post_views at 12/86, target search_posts at 58/86
+size 86, order 2: "Show me new posts from blogs I follow" → posts_by_tag at 10/86, target following_feed at 82/86
+size 86, order 2: "How many subscribers do I have?" → list_subscribers at 47/86, target subscriber_count at 44/86
+size 86, order 2: "How do I add a contact form to my site?" → install_plugin at 41/86, target search_help_articles at 63/86

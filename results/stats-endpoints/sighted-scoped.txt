@@ -1,0 +1,72 @@
+Pyramid with backtracking: branch, then leaf or "none of these"; "none of these" drops the branch and starts
+again from the top, at most 1 time. "none of these" is always the last leaf option.
+57 prompts, 92 catalog leaves, 3 orderings, greedy sampling.
+Version 27.0 (Build 26A428)
+Catalog: stats branch from the wordpress-rs stats endpoints, sighted-scoped. Stats leaf-level instructions: 7871 characters.
+Prompts: prompts/raw/stats-questions-round-1.md (r), prompts/raw/stats-questions-untracked-round-1.md (u) and two hand-written questions (session).
+
+Counts are of attempts (one branch choice and one leaf choice) unless noted.
+"right→none": the branch held a correct leaf but the model chose "none of these".
+"wrong→none": the branch held no correct leaf and the model chose "none of these".
+"wrong→leaf": the branch held no correct leaf and the model chose a leaf anyway.
+"recovered": prompts that ended on a correct leaf after backing up.
+"gave up": prompts that chose "none of these" on every attempt.
+
+order  end to end  right→none  wrong→none  wrong→leaf  recovered  gave up  calls
+    0       39/57           1          17           9          1        8    134
+    1       42/57           0          16           7          0        8    130
+    2       41/57           1          18           8          1        8    136
+
+End to end, prompts right in all orderings: 32, in some: 17, in none: 8
+Total time: 312 seconds for 171 prompts
+
+Misses, with each attempt separated by ⟲
+order 0: [r8] "What's my best performing post of all time?" → stats › stats_post (expected stats_top_posts)
+order 0: [r10] "Which day this week had the most visitors?" → stats › stats_insights (expected stats_visits or stats_summary or stats_summary_last_30_days)
+order 0: [r16] "When did I get my biggest traffic spike this year?" → stats › stats_insights (expected stats_visits)
+order 0: [r20] "Rank my top five posts by views this month." → posts › stats_post (expected stats_top_posts)
+order 0: [r23] "How many times was my podcast episode downloaded yesterday?" → stats › none_of_these ⟲ reader › none_of_these (expected stats_file_downloads)
+order 0: [r27] "What devices is my traffic coming from today?" → stats › stats_devices_browser (expected stats_devices_screensize or stats_devices_platform)
+order 0: [r33] "Compare the likes on my last three posts." → stats › stats_top_posts (expected stats_post)
+order 0: [r34] "My page views seem to have jumped recently — what's driving that?" → stats › stats_insights (expected stats_referrers or stats_top_posts)
+order 0: [r38] "Which page gets the most link clicks out of all of them?" → stats › stats_top_posts (expected none)
+order 0: [r39] "How does mobile traffic compare to desktop traffic this month?" → stats › stats_devices_platform (expected stats_devices_screensize)
+order 0: [r40] "This month's numbers feel off — what's different compared to my usual average?" → stats › stats_summary (expected stats_visits)
+order 0: [u4] "Do people who click in from Pinterest stick around or bounce in five seconds?" → stats › stats_referrers (expected none)
+order 0: [u7] "Are readers finishing my 2000-word posts or giving up halfway through?" → stats › stats_insights (expected none)
+order 0: [u8] "Once I subtract hosting, plugins, and tools, am I actually profitable this year?" → stats › stats_summary (expected none)
+order 0: [u9] "which specific posts are driving the most newsletter signups" → stats › stats_emails_summary (expected none)
+order 0: [u10] "how many of my visitors this month are returning readers vs brand new ones" → stats › stats_visits (expected none)
+order 0: [u11] "What do people click on right after they land on my homepage?" → pages › none_of_these ⟲ stats › stats_clicks (expected none)
+order 0: [u13] "What's the lifetime value of a subscriber who found me through search vs social?" → stats › stats_referrers (expected none)
+order 1: [r5] "How many visitors did I have on August 15th?" → stats › stats_summary (expected stats_visits)
+order 1: [r6] "How does this month's traffic compare to last month's?" → stats › stats_summary (expected stats_visits)
+order 1: [r8] "What's my best performing post of all time?" → stats › stats_post (expected stats_top_posts)
+order 1: [r16] "When did I get my biggest traffic spike this year?" → stats › stats_insights (expected stats_visits)
+order 1: [r30] "What's my worst performing post this year?" → stats › stats_post (expected stats_top_posts)
+order 1: [r34] "My page views seem to have jumped recently — what's driving that?" → stats › stats_insights (expected stats_referrers or stats_top_posts)
+order 1: [r38] "Which page gets the most link clicks out of all of them?" → stats › stats_top_posts (expected none)
+order 1: [r40] "This month's numbers feel off — what's different compared to my usual average?" → stats › stats_insights (expected stats_visits)
+order 1: [u4] "Do people who click in from Pinterest stick around or bounce in five seconds?" → stats › stats_referrers (expected none)
+order 1: [u7] "Are readers finishing my 2000-word posts or giving up halfway through?" → stats › stats_insights (expected none)
+order 1: [u9] "which specific posts are driving the most newsletter signups" → stats › stats_emails_summary (expected none)
+order 1: [u10] "how many of my visitors this month are returning readers vs brand new ones" → stats › stats_subscribers (expected none)
+order 1: [u11] "What do people click on right after they land on my homepage?" → stats › stats_clicks (expected none)
+order 1: [u13] "What's the lifetime value of a subscriber who found me through search vs social?" → stats › stats_referrers (expected none)
+order 1: [session-3] "What was my best day - stats-wise - this month?" → stats › stats_insights (expected stats_visits or stats_summary or stats_summary_last_30_days)
+order 2: [r2] "Which post got the most views this week?" → posts › stats_post (expected stats_top_posts)
+order 2: [r6] "How does this month's traffic compare to last month's?" → stats › stats_summary (expected stats_visits)
+order 2: [r10] "Which day this week had the most visitors?" → stats › stats_insights (expected stats_visits or stats_summary or stats_summary_last_30_days)
+order 2: [r16] "When did I get my biggest traffic spike this year?" → stats › stats_insights (expected stats_visits)
+order 2: [r24] "What changed in my traffic this week versus last week?" → stats › stats_insights (expected stats_visits)
+order 2: [r30] "What's my worst performing post this year?" → stats › stats_post (expected stats_top_posts)
+order 2: [r38] "Which page gets the most link clicks out of all of them?" → stats › stats_top_posts (expected none)
+order 2: [r39] "How does mobile traffic compare to desktop traffic this month?" → stats › stats_devices_browser (expected stats_devices_screensize)
+order 2: [r40] "This month's numbers feel off — what's different compared to my usual average?" → stats › stats_summary (expected stats_visits)
+order 2: [u1] "How much did I actually make from ads last month, after all the network's cuts?" → stats › none_of_these ⟲ support › report_app_problem (expected none)
+order 2: [u4] "Do people who click in from Pinterest stick around or bounce in five seconds?" → notifications › none_of_these ⟲ stats › stats_referrers (expected none)
+order 2: [u7] "Are readers finishing my 2000-word posts or giving up halfway through?" → stats › stats_video_plays (expected none)
+order 2: [u10] "how many of my visitors this month are returning readers vs brand new ones" → stats › stats_subscribers (expected none)
+order 2: [u11] "What do people click on right after they land on my homepage?" → stats › stats_clicks (expected none)
+order 2: [u13] "What's the lifetime value of a subscriber who found me through search vs social?" → stats › stats_referrers (expected none)
+order 2: [session-3] "What was my best day - stats-wise - this month?" → stats › stats_insights (expected stats_visits or stats_summary or stats_summary_last_30_days)

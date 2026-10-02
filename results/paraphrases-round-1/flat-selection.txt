@@ -1,0 +1,56 @@
+Flat selection: one model call per prompt picks a catalog leaf.
+62 prompts from prompts/raw/paraphrases-round-1.md, 86 catalog leaves, 3 orderings per size, greedy sampling.
+Version 27.0 (Build 26A428)
+
+"all", "some" and "none" count prompts answered correctly in all, some or none of the orderings.
+"chars" is the longest instructions sent at that size, in characters.
+
+size  order 0  order 1  order 2   all  some  none  seconds  chars
+  86    48/62    46/62    47/62    34    22     6      168   5032
+
+Misses, with positions counted from 1
+size 86, order 0: [1A] "On January 13, how many likes did my posts receive?" → post_likes at 60/86, target stats_on_day at 85/86
+size 86, order 0: [1B] "Can you tell me the total number of likes my posts got on January 13?" → posts_by_tag at 15/86, target stats_on_day at 16/86
+size 86, order 0: [2A] "How many visitors did my site have yesterday?" → views_over_period at 76/86, target stats_on_day at 81/86
+size 86, order 0: [3B] "What's my view count for today so far?" → post_views at 1/86, target stats_on_day at 21/86
+size 86, order 0: [4A] "What were my top-performing posts last month?" → stats_on_day at 3/86, target top_posts at 39/86
+size 86, order 0: [13A] "Can you locate my post about sourdough bread?" → post_comments at 1/86, target search_posts at 79/86
+size 86, order 0: [18A] "Can you show me recent posts from the blogs I follow?" → posts_by_tag at 49/86, target following_feed at 23/86
+size 86, order 0: [18B] "I'd like to see what's new from the blogs I'm following." → follow_site at 79/86, target following_feed at 78/86
+size 86, order 0: [19A] "Can you follow cooking.blog for me?" → unfollow_site at 50/86, target follow_site at 11/86
+size 86, order 0: [20A] "Can you pull up the posts I've liked?" → posts_by_tag at 7/86, target liked_posts at 85/86
+size 86, order 0: [27B] "Can you tell me how many people are subscribed to me?" → list_subscribers at 56/86, target subscriber_count at 22/86
+size 86, order 0: [30A] "I need to speak with support regarding a billing issue." → report_app_problem at 10/86, target contact_support at 27/86
+size 86, order 0: [31A] "What's the process for adding a contact form to my site?" → search_media at 6/86, target search_help_articles at 42/86
+size 86, order 0: [31B] "Can you walk me through adding a contact form to my site?" → change_site_icon at 27/86, target search_help_articles at 80/86
+size 86, order 1: [1A] "On January 13, how many likes did my posts receive?" → post_likes at 11/86, target stats_on_day at 42/86
+size 86, order 1: [1B] "Can you tell me the total number of likes my posts got on January 13?" → post_likes at 43/86, target stats_on_day at 74/86
+size 86, order 1: [2A] "How many visitors did my site have yesterday?" → views_over_period at 20/86, target stats_on_day at 58/86
+size 86, order 1: [4A] "What were my top-performing posts last month?" → stats_on_day at 80/86, target top_posts at 61/86
+size 86, order 1: [6A] "What search terms led people to my blog?" → list_images at 8/86, target search_terms at 24/86
+size 86, order 1: [6B] "Can you show me the searches that brought visitors to my blog?" → top_referrers at 74/86, target search_terms at 73/86
+size 86, order 1: [7A] "Can you pull up my views for the last 6 months?" → current_theme at 1/86, target views_over_period at 51/86
+size 86, order 1: [8B] "Can you show me the geographic breakdown of my readers?" → list_users at 15/86, target views_by_country at 32/86
+size 86, order 1: [18A] "Can you show me recent posts from the blogs I follow?" → list_followed_sites at 61/86, target following_feed at 68/86
+size 86, order 1: [18B] "I'd like to see what's new from the blogs I'm following." → list_followed_sites at 13/86, target following_feed at 44/86
+size 86, order 1: [20A] "Can you pull up the posts I've liked?" → post_likes at 7/86, target liked_posts at 38/86
+size 86, order 1: [20B] "I'd like to see the posts I gave a like to." → post_likes at 10/86, target liked_posts at 23/86
+size 86, order 1: [24B] "I'd like to get all my plugins up to date." → install_plugin at 42/86, target update_plugins at 69/86
+size 86, order 1: [26B] "I'd like to add my friend as a writer on my blog." → create_post at 1/86, target invite_user at 78/86
+size 86, order 1: [31A] "What's the process for adding a contact form to my site?" → list_plugins at 37/86, target search_help_articles at 33/86
+size 86, order 1: [31B] "Can you walk me through adding a contact form to my site?" → add_domain at 7/86, target search_help_articles at 23/86
+size 86, order 2: [1A] "On January 13, how many likes did my posts receive?" → post_likes at 6/86, target stats_on_day at 68/86
+size 86, order 2: [3A] "How many views have I gotten today?" → views_over_period at 3/86, target stats_on_day at 56/86
+size 86, order 2: [4A] "What were my top-performing posts last month?" → posts_by_tag at 43/86, target top_posts at 81/86
+size 86, order 2: [4B] "Last month, which posts of mine got the most attention?" → post_views at 16/86, target top_posts at 81/86
+size 86, order 2: [7B] "I'd like to see how my views have trended over the past six months." → posts_by_category at 40/86, target views_over_period at 45/86
+size 86, order 2: [9B] "Can you tell me the like count on my newest post?" → post_views at 59/86, target post_likes at 82/86
+size 86, order 2: [11A] "I'd like to start a new blog post about my trip." → list_published_posts at 4/86, target create_post at 86/86
+size 86, order 2: [18A] "Can you show me recent posts from the blogs I follow?" → list_followed_sites at 64/86, target following_feed at 54/86
+size 86, order 2: [18B] "I'd like to see what's new from the blogs I'm following." → follow_site at 62/86, target following_feed at 61/86
+size 86, order 2: [19B] "I'd like to start following the site cooking.blog." → unfollow_site at 13/86, target follow_site at 54/86
+size 86, order 2: [20A] "Can you pull up the posts I've liked?" → following_feed at 1/86, target liked_posts at 48/86
+size 86, order 2: [20B] "I'd like to see the posts I gave a like to." → post_likes at 38/86, target liked_posts at 81/86
+size 86, order 2: [24B] "I'd like to get all my plugins up to date." → install_plugin at 29/86, target update_plugins at 34/86
+size 86, order 2: [30B] "Can you connect me with someone from support about a problem with billing?" → report_app_problem at 29/86, target contact_support at 70/86
+size 86, order 2: [31A] "What's the process for adding a contact form to my site?" → reply_to_comment at 1/86, target search_help_articles at 26/86

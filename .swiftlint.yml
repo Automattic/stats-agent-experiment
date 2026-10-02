@@ -1,0 +1,80 @@
+swiftlint_version: 0.63.3
+
+included:
+  - Sources
+  - Tests
+
+# Copied from the WordPress iOS app, keeping its own style.
+excluded:
+  - Sources/StatsAgentApp/JetpackStats
+
+# Rules – Opt-in only, matching wordpress-ios minus its UIKit and localization custom rules
+#
+only_rules:
+  - array_init
+  - collection_alignment
+  - colon
+  - comma
+  - comma_inheritance
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - control_statement
+  - discarded_notification_center_observer
+  - duplicate_imports
+  - empty_count
+  - empty_enum_arguments
+  - empty_parameters
+  - empty_string
+  - explicit_init
+  - first_where
+  - flatmap_over_map_reduce
+  - joined_default_parameter
+  - last_where
+  - literal_expression_end_indentation
+  - mark
+  - opening_brace
+  - operator_usage_whitespace
+  - overridden_super_call
+  - period_spacing
+  - prefer_zero_over_explicit_init
+  - reduce_into
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - shorthand_optional_binding
+  - toggle_bool
+  - sorted_first_last
+  - trailing_newline
+  - trailing_semicolon
+  - trailing_whitespace
+  - unneeded_parentheses_in_closure_argument
+  - untyped_error_in_catch
+  - unused_closure_parameter
+  - vertical_whitespace
+  - vertical_whitespace_closing_braces
+  - weak_delegate
+
+# Rules configuration
+#
+control_statement:
+  severity: error
+
+discarded_notification_center_observer:
+  severity: error
+
+opening_brace:
+  ignore_multiline_statement_conditions: true
+
+operator_usage_whitespace:
+  skip_aligned_constants: false
+
+overridden_super_call:
+  severity: error
+
+trailing_whitespace:
+  ignores_empty_lines: false
+  ignores_comments: false
+
+weak_delegate:
+  severity: error

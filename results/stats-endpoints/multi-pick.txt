@@ -1,0 +1,264 @@
+Sighted stats endpoints, the endpoint step alone: each question is offered the stats branch's 21 endpoints
+and "none of these", and the model is asked for one option, then for up to 3, closest match first.
+Options come in the order OperationStepTests offers its first leaf choice. No branch or operation step.
+57 prompts (42 answerable), 3 orderings, greedy sampling.
+Version 27.0 (Build 26A428)
+Leaf-level instructions: 5438 characters for one pick, 5469 for the list.
+
+A right pick is an acceptable endpoint for answerable questions, and "none of these" for unanswerable ones.
+"rescued": the single pick is wrong and the list holds a right pick. "lost": the single pick is right and the
+list holds none. "right pick alongside others": the list holds a right pick and at least one other.
+
+                                      answerable  unanswerable
+runs                                         126            45
+single pick right                             94            31
+list, first pick right                        95            20
+list, a right pick anywhere                  111            20
+list's first pick = single pick              103            25
+rescued                                       19             2
+lost                                           2            13
+right pick alongside others                   42             0
+lists of 1 / 2 / 3 distinct picks    81 / 4 / 41   30 / 0 / 15
+lists repeating a pick                         1             0
+"none of these" in the list                    3            20
+"none of these" alone                          1            20
+
+order  single  first  in list
+    0   39/57   38/57    44/57
+    1   43/57   38/57    45/57
+    2   43/57   39/57    42/57
+
+Per question, right in all / some / none of the orderings: single pick 32 / 17 / 8, list 40 / 7 / 10
+Single picks pooled over the 3 orderings: a right pick for 37 of 42 answerable questions and 12 of 15 unanswerable, 1.37 distinct picks per question.
+Lists: 1.68 distinct picks per run.
+Time: 161 seconds for 171 single picks, 200 for 171 lists
+
+Every run: the single pick | the list as the model gave it. ✓ marks a right pick.
+[r1] "How many views did I get today?" (expected stats_visits or stats_summary or stats_summary_today or stats_summary_all_time)
+  0: stats_summary ✓ | stats_summary ✓
+  1: stats_summary ✓ | stats_summary ✓
+  2: stats_summary ✓ | stats_summary ✓
+[r2] "Which post got the most views this week?" (expected stats_top_posts)
+  0: stats_top_posts ✓ | stats_top_posts ✓
+  1: stats_top_posts ✓ | stats_top_posts ✓
+  2: stats_top_posts ✓ | stats_top_posts ✓
+[r3] "Yesterday's total views?" (expected stats_visits or stats_summary or stats_summary_today or stats_summary_all_time)
+  0: stats_summary ✓ | stats_summary ✓
+  1: stats_summary ✓ | stats_visits ✓, stats_summary ✓
+  2: stats_summary ✓ | stats_visits ✓, stats_summary ✓, stats_referrers
+[r4] "Is my subscriber count growing or shrinking lately?" (expected stats_subscribers)
+  0: stats_subscribers ✓ | stats_subscribers ✓
+  1: stats_subscribers ✓ | stats_subscribers ✓
+  2: stats_subscribers ✓ | stats_subscribers ✓
+[r5] "How many visitors did I have on August 15th?" (expected stats_visits)
+  0: stats_visits ✓ | stats_visits ✓
+  1: stats_summary | stats_visits ✓
+  2: stats_visits ✓ | stats_visits ✓
+[r6] "How does this month's traffic compare to last month's?" (expected stats_visits)
+  0: stats_summary | stats_summary, stats_visits ✓, stats_referrers
+  1: stats_summary | stats_summary, stats_visits ✓, stats_referrers
+  2: stats_summary | stats_summary
+[r7] "Give me this week's total number of likes." (expected stats_visits)
+  0: stats_visits ✓ | stats_visits ✓
+  1: stats_visits ✓ | stats_visits ✓
+  2: stats_visits ✓ | stats_visits ✓
+[r8] "What's my best performing post of all time?" (expected stats_top_posts)
+  0: stats_post | stats_post, stats_top_posts ✓, stats_insights
+  1: stats_post | stats_post, stats_top_posts ✓, stats_summary
+  2: stats_post | stats_post
+[r9] "How many comments came in last month?" (expected stats_visits)
+  0: stats_visits ✓ | stats_visits ✓, stats_summary
+  1: stats_visits ✓ | stats_summary, stats_visits ✓, stats_emails_summary
+  2: stats_summary | stats_visits ✓, stats_summary, stats_referrers
+[r10] "Which day this week had the most visitors?" (expected stats_visits or stats_summary or stats_summary_last_30_days)
+  0: stats_insights | stats_visits ✓, stats_insights, stats_summary ✓
+  1: stats_summary ✓ | stats_summary ✓, stats_visits ✓, stats_insights
+  2: stats_summary ✓ | stats_summary ✓
+[r11] "What's my current subscriber count?" (expected stats_subscribers or stats_summary or stats_summary_followers or stats_summary_all_time)
+  0: stats_subscribers ✓ | stats_subscribers ✓
+  1: stats_subscribers ✓ | stats_subscribers ✓
+  2: stats_subscribers ✓ | stats_subscribers ✓
+[r12] "How does today's traffic compare to yesterday's?" (expected stats_visits or stats_summary or stats_summary_today or stats_summary_all_time)
+  0: stats_summary ✓ | stats_summary ✓, stats_visits ✓, stats_referrers
+  1: stats_summary ✓ | stats_summary ✓, stats_visits ✓, stats_referrers
+  2: stats_summary ✓ | stats_summary ✓, stats_visits ✓, stats_referrers
+[r13] "Follower count right now?" (expected stats_summary or stats_subscribers or stats_summary_followers or stats_summary_all_time)
+  0: none_of_these | none_of_these
+  1: stats_summary ✓ | stats_emails_summary
+  2: stats_summary ✓ | stats_summary ✓, stats_subscribers ✓, none_of_these
+[r14] "What's the trend in comments been over the last three months?" (expected stats_visits)
+  0: stats_visits ✓ | stats_visits ✓
+  1: stats_visits ✓ | stats_visits ✓, stats_post, stats_summary
+  2: stats_visits ✓ | stats_visits ✓, stats_summary, stats_insights
+[r15] "What's my all-time total pageview count?" (expected stats_summary or stats_visits or stats_summary_totals or stats_summary_all_time)
+  0: stats_summary ✓ | stats_visits ✓, stats_summary ✓
+  1: stats_summary ✓ | stats_summary ✓, stats_visits ✓
+  2: stats_summary ✓ | stats_summary ✓
+[r16] "When did I get my biggest traffic spike this year?" (expected stats_visits)
+  0: stats_insights | stats_insights
+  1: stats_insights | stats_insights
+  2: stats_insights | stats_insights
+[r17] "How many people visited my site last week?" (expected stats_visits)
+  0: stats_visits ✓ | stats_visits ✓
+  1: stats_visits ✓ | stats_visits ✓
+  2: stats_visits ✓ | stats_visits ✓
+[r18] "Which country sends me the most traffic, and has that changed since last year?" (expected stats_country_views)
+  0: stats_country_views ✓ | stats_country_views ✓
+  1: stats_country_views ✓ | stats_region_views, stats_country_views ✓, stats_insights
+  2: stats_country_views ✓ | stats_country_views ✓
+[r19] "Which countries did my visitors come from this month?" (expected stats_country_views)
+  0: stats_country_views ✓ | stats_region_views, stats_country_views ✓, stats_referrers
+  1: stats_country_views ✓ | stats_country_views ✓
+  2: stats_country_views ✓ | stats_country_views ✓
+[r20] "Rank my top five posts by views this month." (expected stats_top_posts)
+  0: stats_top_posts ✓ | stats_top_posts ✓
+  1: stats_top_posts ✓ | stats_top_posts ✓
+  2: stats_top_posts ✓ | stats_top_posts ✓
+[r21] "What are people searching for to find my blog this week?" (expected stats_search_terms)
+  0: stats_search_terms ✓ | stats_search_terms ✓
+  1: stats_search_terms ✓ | stats_search_terms ✓
+  2: stats_search_terms ✓ | stats_search_terms ✓
+[r22] "Is my newsletter open rate improving or getting worse?" (expected stats_emails_summary)
+  0: stats_emails_summary ✓ | stats_emails_summary ✓
+  1: stats_emails_summary ✓ | stats_emails_summary ✓
+  2: stats_emails_summary ✓ | stats_emails_summary ✓
+[r23] "How many times was my podcast episode downloaded yesterday?" (expected stats_file_downloads)
+  0: none_of_these | stats_file_downloads ✓
+  1: stats_file_downloads ✓ | stats_file_downloads ✓
+  2: stats_file_downloads ✓ | stats_file_downloads ✓
+[r24] "What changed in my traffic this week versus last week?" (expected stats_visits)
+  0: stats_visits ✓ | stats_visits ✓, stats_summary, stats_insights
+  1: stats_visits ✓ | stats_visits ✓, stats_summary, stats_insights
+  2: stats_insights | stats_insights, stats_visits ✓, stats_summary
+[r25] "How many plays did my latest video get this month?" (expected stats_video_plays)
+  0: stats_video_plays ✓ | stats_video_plays ✓
+  1: stats_video_plays ✓ | stats_video_plays ✓
+  2: stats_video_plays ✓ | stats_video_plays ✓
+[r26] "Which referrer sends me the most clicks these days?" (expected stats_referrers)
+  0: stats_referrers ✓ | stats_referrers ✓, stats_clicks, stats_summary
+  1: stats_referrers ✓ | stats_referrers ✓, stats_clicks, stats_utm
+  2: stats_referrers ✓ | stats_referrers ✓
+[r27] "What devices is my traffic coming from today?" (expected stats_devices_screensize or stats_devices_platform)
+  0: stats_devices_browser | stats_devices_browser, stats_devices_platform ✓, stats_referrers
+  1: stats_devices_screensize ✓ | stats_devices_browser, stats_devices_platform ✓, stats_devices_screensize ✓
+  2: stats_devices_screensize ✓ | stats_devices_browser
+[r28] "Feels like more people are finding me through search lately — is that actually true compared to a few months ago?" (expected stats_referrers or stats_search_terms)
+  0: stats_search_terms ✓ | stats_referrers ✓, stats_search_terms ✓, stats_insights
+  1: stats_search_terms ✓ | stats_referrers ✓, stats_search_terms ✓, stats_insights
+  2: stats_search_terms ✓ | stats_referrers ✓, stats_search_terms ✓, stats_insights
+[r29] "How many people opened my last email newsletter?" (expected stats_emails_summary)
+  0: stats_emails_summary ✓ | stats_emails_summary ✓
+  1: stats_emails_summary ✓ | stats_emails_summary ✓
+  2: none_of_these | stats_emails_summary ✓
+[r30] "What's my worst performing post this year?" (expected stats_top_posts)
+  0: stats_post | stats_post
+  1: stats_post | stats_post
+  2: stats_post | stats_post
+[r31] "How has my follower growth looked over the last six months?" (expected stats_subscribers)
+  0: stats_subscribers ✓ | stats_subscribers ✓
+  1: stats_subscribers ✓ | stats_subscribers ✓
+  2: stats_subscribers ✓ | stats_subscribers ✓, stats_visits, stats_insights
+[r32] "Which tags are getting the most engagement lately?" (expected stats_tags)
+  0: stats_tags ✓ | stats_tags ✓
+  1: stats_tags ✓ | stats_tags ✓
+  2: stats_tags ✓ | stats_tags ✓
+[r33] "Compare the likes on my last three posts." (expected stats_post)
+  0: stats_top_posts | stats_post ✓
+  1: stats_post ✓ | stats_post ✓
+  2: stats_post ✓ | stats_post ✓, stats_post ✓, stats_post ✓
+[r34] "My page views seem to have jumped recently — what's driving that?" (expected stats_referrers or stats_top_posts)
+  0: stats_insights | stats_insights, stats_referrers ✓, stats_utm
+  1: stats_insights | stats_insights, stats_referrers ✓, stats_top_posts ✓
+  2: stats_referrers ✓ | stats_referrers ✓, stats_search_terms, stats_insights
+[r35] "Who's my most popular author this quarter?" (expected stats_top_authors)
+  0: stats_top_authors ✓ | stats_top_authors ✓
+  1: stats_top_authors ✓ | stats_top_authors ✓
+  2: stats_top_authors ✓ | stats_top_authors ✓
+[r36] "Is video engagement up or down compared to last month?" (expected stats_video_plays)
+  0: stats_video_plays ✓ | stats_video_plays ✓
+  1: stats_insights | stats_video_plays ✓
+  2: stats_video_plays ✓ | stats_video_plays ✓, stats_insights, none_of_these
+[r37] "When did my subscribers start dropping off?" (expected stats_subscribers)
+  0: stats_subscribers ✓ | stats_subscribers ✓
+  1: none_of_these | stats_subscribers ✓
+  2: stats_subscribers ✓ | stats_subscribers ✓
+[r38] "Which page gets the most link clicks out of all of them?" (expected none)
+  0: stats_top_posts | stats_top_posts, stats_utm, stats_clicks
+  1: none_of_these ✓ | stats_clicks, stats_utm, stats_top_authors
+  2: stats_top_posts | stats_clicks, stats_top_posts, stats_utm
+[r39] "How does mobile traffic compare to desktop traffic this month?" (expected stats_devices_screensize)
+  0: stats_devices_platform | stats_devices_platform, stats_devices_screensize ✓, stats_clicks
+  1: stats_devices_screensize ✓ | stats_devices_screensize ✓
+  2: stats_devices_browser | stats_devices_browser, stats_devices_screensize ✓, stats_summary
+[r40] "This month's numbers feel off — what's different compared to my usual average?" (expected stats_visits)
+  0: stats_summary | stats_summary, stats_referrers, stats_insights
+  1: stats_insights | stats_summary, stats_insights, stats_top_authors
+  2: stats_insights | stats_summary, stats_insights, stats_top_authors
+[u1] "How much did I actually make from ads last month, after all the network's cuts?" (expected none)
+  0: none_of_these ✓ | none_of_these ✓
+  1: none_of_these ✓ | none_of_these ✓
+  2: none_of_these ✓ | none_of_these ✓
+[u2] "what's the average time someone spends actually reading a post, not just having the tab open" (expected none)
+  0: none_of_these ✓ | stats_post
+  1: none_of_these ✓ | stats_insights
+  2: none_of_these ✓ | none_of_these ✓
+[u3] "Who are my readers really — age, gender, that kind of thing?" (expected none)
+  0: none_of_these ✓ | none_of_these ✓
+  1: none_of_these ✓ | none_of_these ✓
+  2: none_of_these ✓ | none_of_these ✓
+[u4] "Do people who click in from Pinterest stick around or bounce in five seconds?" (expected none)
+  0: none_of_these ✓ | stats_referrers, stats_insights, stats_post
+  1: none_of_these ✓ | stats_referrers, stats_insights, stats_summary
+  2: none_of_these ✓ | stats_referrers, stats_visits, stats_devices_browser
+[u5] "what percentage of visitors turn into email subscribers" (expected none)
+  0: none_of_these ✓ | stats_emails_summary
+  1: none_of_these ✓ | stats_emails_summary
+  2: none_of_these ✓ | stats_emails_summary
+[u6] "how much affiliate income did the last quarter bring in total" (expected none)
+  0: none_of_these ✓ | none_of_these ✓
+  1: none_of_these ✓ | none_of_these ✓
+  2: none_of_these ✓ | none_of_these ✓
+[u7] "Are readers finishing my 2000-word posts or giving up halfway through?" (expected none)
+  0: stats_insights | stats_post, stats_insights, stats_video_plays
+  1: stats_insights | stats_insights, stats_post, stats_top_posts
+  2: stats_video_plays | stats_post
+[u8] "Once I subtract hosting, plugins, and tools, am I actually profitable this year?" (expected none)
+  0: none_of_these ✓ | none_of_these ✓
+  1: none_of_these ✓ | none_of_these ✓
+  2: none_of_these ✓ | none_of_these ✓
+[u9] "which specific posts are driving the most newsletter signups" (expected none)
+  0: none_of_these ✓ | stats_emails_summary, stats_post, stats_utm
+  1: none_of_these ✓ | stats_emails_summary, stats_top_authors, stats_post
+  2: none_of_these ✓ | stats_emails_summary
+[u10] "how many of my visitors this month are returning readers vs brand new ones" (expected none)
+  0: stats_visits | stats_visits
+  1: stats_subscribers | none_of_these ✓
+  2: stats_subscribers | stats_visits
+[u11] "What do people click on right after they land on my homepage?" (expected none)
+  0: stats_clicks | stats_clicks, stats_summary, stats_referrers
+  1: stats_clicks | stats_clicks, stats_top_posts, stats_insights
+  2: stats_clicks | stats_clicks
+[u12] "is my audience mostly on their phones skimming, or on desktop actually reading" (expected stats_devices_screensize)
+  0: stats_devices_screensize ✓ | stats_devices_screensize ✓, stats_devices_browser, stats_summary
+  1: stats_devices_screensize ✓ | stats_devices_screensize ✓, stats_devices_browser, stats_devices_platform
+  2: stats_devices_screensize ✓ | stats_devices_browser, stats_devices_screensize ✓, stats_visits
+[u13] "What's the lifetime value of a subscriber who found me through search vs social?" (expected none)
+  0: stats_referrers | stats_search_terms, stats_referrers, stats_emails_summary
+  1: stats_referrers | stats_referrers, stats_subscribers, stats_search_terms
+  2: none_of_these ✓ | stats_subscribers, stats_search_terms, stats_referrers
+[u14] "do people who leave comments end up buying anything down the line" (expected none)
+  0: none_of_these ✓ | none_of_these ✓
+  1: none_of_these ✓ | none_of_these ✓
+  2: none_of_these ✓ | none_of_these ✓
+[u15] "roughly how many of my readers are running ad blockers" (expected none)
+  0: stats_devices_platform | none_of_these ✓
+  1: none_of_these ✓ | none_of_these ✓
+  2: none_of_these ✓ | none_of_these ✓
+[session-3] "What was my best day - stats-wise - this month?" (expected stats_visits or stats_summary or stats_summary_last_30_days)
+  0: stats_summary ✓ | stats_summary ✓
+  1: stats_insights | stats_insights, stats_summary ✓, stats_visits ✓
+  2: stats_insights | stats_insights
+[session-4] "Did I get more likes this month than I did last month?" (expected stats_visits)
+  0: stats_visits ✓ | stats_visits ✓
+  1: stats_visits ✓ | stats_visits ✓
+  2: stats_visits ✓ | stats_visits ✓
