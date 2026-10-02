@@ -22,7 +22,8 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 - `swift build --build-tests`. `make format` and `make lint` must pass before committing.
 - Without model calls, in seconds: `swift test --filter "LogEntryTests|CardPickerTests|StatsPeriodsTests"`.
 - Experiments call the model, take minutes each, and rewrite their file in `results/`. For example, `swift test --filter "OperationStepTests/sightedWithOperations"` runs the main setup in about 5.5 minutes. Add `--no-parallel` when running several suites, or their timings mean nothing.
-- `make run` opens the app. It reads `WORDPRESS_APP_TOKEN`, a WordPress.com OAuth token, and `WORDPRESS_SITE_ID` from its environment, and writes its feedback log to `logs/`. ⌘⇧S saves a screenshot to `.build/screenshots/`.
+- `make app` builds the app as a bundle, `.build/app/release/Stats agent.app`, signed ad hoc, with the commit in its `Info.plist`.
+- `make run` builds a debug bundle and opens it. It reads `WORDPRESS_APP_TOKEN`, a WordPress.com OAuth token, and `WORDPRESS_SITE_ID` from its environment, and writes its feedback log to `logs/`. ⌘⇧S saves a screenshot to `.build/screenshots/`.
 - `swift run stats-agent-app --ask "question"` answers one question with the window hidden, and saves the steps, the log entry and a picture of each card under `.build/screenshots/`.
 - `swift run stats-agent` asks questions interactively; `--catalog` lists the catalog.
 - `swift test --filter FeedbackReportTests` summarises `logs/` into `results/feedback-report.md`, which is ignored.

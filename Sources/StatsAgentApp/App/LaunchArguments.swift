@@ -1,5 +1,5 @@
-/// The app's command-line arguments: `--ask` for `AskMode`, and `--log-directory` and `--commit` for `FeedbackLog`,
-/// which `make run` gives.
+/// The app's command-line arguments: `--ask` for `AskMode`, and `--log-directory` for `FeedbackLog`, which `make run`
+/// gives.
 enum LaunchArguments {
     /// The argument after `flag`, or nil when `flag` isn't given or is last.
     static func value(after flag: String) -> String? {

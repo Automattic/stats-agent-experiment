@@ -31,7 +31,9 @@ let package = Package(
                 "StatsAgent",
                 .product(name: "ColorStudio", package: "color-studio"),
                 .product(name: "WordPressAPI", package: "wordpress-rs")
-            ]
+            ],
+            // The bundle's `Info.plist`, which `make app` copies.
+            exclude: ["Info.plist"]
         ),
         .testTarget(name: "StatsAgentTests", dependencies: ["StatsAgent"])
     ]

@@ -12,9 +12,9 @@ struct FeedbackLog {
             ?? URL.applicationSupportDirectory.appending(path: "Stats agent/logs", directoryHint: .isDirectory)
     )
 
-    /// The commit given with `--commit`, as `make run` gives it, and the macOS version.
+    /// The commit `make app` records in the bundle's `Info.plist`, and the macOS version.
     static let app = LogEntryV1.App(
-        commit: LaunchArguments.value(after: "--commit"),
+        commit: Bundle.main.object(forInfoDictionaryKey: "StatsAgentCommit") as? String,
         macOS: ProcessInfo.processInfo.operatingSystemVersionString
     )
 
