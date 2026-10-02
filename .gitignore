@@ -5,3 +5,7 @@ BuildTools/.swiftpm/
 logs/
 sessions/
 results/feedback-report.md
+wp_com_test_credentials.json
+.DS_Store
+xcuserdata/
+DerivedData/
