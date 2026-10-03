@@ -2,6 +2,24 @@ import AppKit
 import StatsAgent
 import SwiftUI
 
+/// The window's contents in ask mode: nothing, as it hides the window and runs the question on the site that
+/// `SiteStats.fromEnvironment()` reads.
+struct AskModeView: View {
+    let question: String
+    @Environment(\.context) private var context
+
+    var body: some View {
+        Color.clear
+            .onAppear {
+                NSApp.windows.forEach { $0.orderOut(nil) }
+                let context = context
+                Task {
+                    await AskMode.run(question, stats: Result { try SiteStats.fromEnvironment() }, context: context)
+                }
+            }
+    }
+}
+
 /// `stats-agent-app --ask "question"` runs one question with the window hidden, saves what the agent did to
 /// `answer.txt`, the feedback log's entry for it to `entry.json`, and a picture of each card to a folder in
 /// `.build/screenshots/`, prints the folder, and quits. The entry isn't added to the log.

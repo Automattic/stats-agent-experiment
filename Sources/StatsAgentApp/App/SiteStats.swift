@@ -2,7 +2,7 @@ import Foundation
 import WordPressAPI
 import WordPressAPIInternal
 
-/// A WordPress.com site's stats, requested with the token and site from the environment.
+/// A WordPress.com site's stats, requested with a WordPress.com OAuth token.
 ///
 /// It uses the generated `UniffiWpComApiClient`, because wordpress-rs's `WPComApiClient` has visits as its only stats
 /// call.
@@ -24,6 +24,8 @@ struct SiteStats: Sendable {
     }
 
     let siteID: WpComSiteId
+    /// A WordPress.com OAuth token.
+    let token: String
     /// Kept alongside the client, which is a Rust object and doesn't keep its delegate alive.
     private let delegate: WpApiClientDelegate
     let client: UniffiWpComApiClient
@@ -32,7 +34,19 @@ struct SiteStats: Sendable {
     static let tokenVariable = "WORDPRESS_APP_TOKEN"
     static let siteIDVariable = "WORDPRESS_SITE_ID"
 
-    /// Reads the token and the site ID from `tokenVariable` and `siteIDVariable`.
+    init(token: String, siteID: WpComSiteId) {
+        self.siteID = siteID
+        self.token = token
+        delegate = WpApiClientDelegate(
+            authProvider: .staticWithAuth(auth: .bearer(token: token)),
+            requestExecutor: WpRequestExecutor(urlSession: .shared),
+            middlewarePipeline: .default,
+            appNotifier: IgnoredAppNotifier()
+        )
+        client = UniffiWpComApiClient(delegate: delegate)
+    }
+
+    /// Reads the token and the site ID from `tokenVariable` and `siteIDVariable`, for `--ask`.
     static func fromEnvironment() throws -> SiteStats {
         let environment = ProcessInfo.processInfo.environment
         guard let token = environment[tokenVariable], !token.isEmpty else {
@@ -41,13 +55,7 @@ struct SiteStats: Sendable {
         guard let siteID = environment[siteIDVariable].flatMap(WpComSiteId.init) else {
             throw MissingVariable(name: siteIDVariable)
         }
-        let delegate = WpApiClientDelegate(
-            authProvider: .staticWithAuth(auth: .bearer(token: token)),
-            requestExecutor: WpRequestExecutor(urlSession: .shared),
-            middlewarePipeline: .default,
-            appNotifier: IgnoredAppNotifier()
-        )
-        return SiteStats(siteID: siteID, delegate: delegate, client: UniffiWpComApiClient(delegate: delegate))
+        return SiteStats(token: token, siteID: siteID)
     }
 
     /// The request's metric per period, oldest first, each dated to the start of its period in `calendar`. Views,

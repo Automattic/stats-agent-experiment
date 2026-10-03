@@ -1,10 +1,12 @@
 import StatsAgent
 import SwiftUI
 
-/// The question box, below it the question last asked with its feedback button and its answer, and under the answer
-/// the feedback form while it's open.
+/// The site questions are about with a button to switch, the question box, below it the question last asked with its
+/// feedback button and its answer, and under the answer the feedback form while it's open. The site can't be switched
+/// while an answer is being worked out.
 struct QuestionView: View {
     let questions: Questions
+    let account: Account
     @State private var question = ""
     @State private var showsFeedback = false
     @FocusState private var questionFocused: Bool
@@ -12,6 +14,20 @@ struct QuestionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            if let site = account.site {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(site.title)
+                            .font(.headline)
+                        Text(site.url)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("Switch Site") { account.isChoosingSite = true }
+                        .disabled(!questions.canAsk)
+                }
+                Divider()
+            }
             HStack {
                 TextField("Ask a question about your site's stats", text: $question)
                     .textFieldStyle(.roundedBorder)
@@ -53,18 +69,8 @@ struct QuestionView: View {
             }
         }
         .padding()
-        .frame(minWidth: 640, minHeight: 560)
         .onAppear {
-            guard let question = AskMode.question else {
-                questionFocused = true
-                return
-            }
-            NSApp.windows.forEach { $0.orderOut(nil) }
-            let stats = questions.stats
-            let context = context
-            Task {
-                await AskMode.run(question, stats: stats, context: context)
-            }
+            questionFocused = true
         }
     }
 
@@ -73,10 +79,10 @@ struct QuestionView: View {
     }
 
     private func ask() {
-        guard !trimmedQuestion.isEmpty, questions.canAsk else {
+        guard !trimmedQuestion.isEmpty, questions.canAsk, let site = account.stats else {
             return
         }
-        questions.ask(trimmedQuestion, context: context)
+        questions.ask(trimmedQuestion, site: site, context: context)
         question = ""
         showsFeedback = false
     }

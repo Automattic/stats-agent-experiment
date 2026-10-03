@@ -7,7 +7,6 @@ import StatsAgent
 /// the answer on screen when the app quits. A question still being answered then isn't written.
 @MainActor @Observable
 final class Questions {
-    let stats = Result { try SiteStats.fromEnvironment() }
     private(set) var answer: Answer?
     /// The feedback given on the answer on screen, kept until the answer is written.
     private(set) var feedback: LogEntryV1.Feedback?
@@ -26,8 +25,8 @@ final class Questions {
         answer?.outcome.map(LogEntryV1.Choice.offered) ?? []
     }
 
-    /// Writes the answer on screen to the log, then runs `question`.
-    func ask(_ question: String, context: StatsContext) {
+    /// Writes the answer on screen to the log, then runs `question` on `site`'s stats.
+    func ask(_ question: String, site: SiteStats, context: StatsContext) {
         guard canAsk else {
             return
         }
@@ -35,9 +34,8 @@ final class Questions {
         let answer = Answer(question: question)
         self.answer = answer
         feedback = nil
-        let stats = stats
         Task {
-            await answer.run(stats: stats, context: context)
+            await answer.run(stats: .success(site), context: context)
         }
     }
 

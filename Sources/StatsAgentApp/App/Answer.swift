@@ -28,6 +28,8 @@ final class Answer {
     private(set) var records: [LogEntryV1.Card] = []
     /// The endpoints of the cards the person looked at, in the order first seen.
     private(set) var cardsViewed: [String] = []
+    /// The site the stats were requested from, whose token and ID the feedback log keeps out.
+    private(set) var site: SiteStats?
     private var endpoints: [Card.ID: String] = [:]
 
     init(question: String) {
@@ -66,6 +68,7 @@ final class Answer {
     }
 
     func run(stats: Result<SiteStats, any Error>, context: StatsContext) async {
+        site = try? stats.get()
         let picker = CardPicker()
         let none = CatalogNavigator.noneOfThese.id
         do {

@@ -20,16 +20,17 @@ struct FeedbackLog {
 
     let directory: URL
 
-    /// The entry for `answer`, or nil while it's still working. Errors are scrubbed of the token and the site ID, since
-    /// an error message could quote a request.
+    /// The entry for `answer`, or nil while it's still working. Errors are scrubbed of the token and the site ID the
+    /// answer was requested with, since an error message could quote a request.
     @MainActor
     static func entry(for answer: Answer, feedback: LogEntryV1.Feedback?) -> LogEntryV1? {
         guard let outcome = answer.outcome else {
             return nil
         }
+        let scrub = { scrubbed($0, site: answer.site) }
         var cards = answer.records
         for index in cards.indices {
-            cards[index].error = cards[index].error.map(scrubbed)
+            cards[index].error = cards[index].error.map(scrub)
         }
         return LogEntryV1(
             askedAt: answer.askedAt,
@@ -37,7 +38,7 @@ struct FeedbackLog {
             question: answer.question,
             steps: answer.steps,
             outcome: outcome,
-            error: answer.error.map(scrubbed),
+            error: answer.error.map(scrub),
             cards: cards,
             cardsViewed: answer.cardsViewed,
             feedback: feedback
@@ -61,14 +62,10 @@ struct FeedbackLog {
         try handle.write(contentsOf: line)
     }
 
-    private static func scrubbed(_ text: String) -> String {
-        let environment = ProcessInfo.processInfo.environment
-        return [(SiteStats.tokenVariable, "[token]"), (SiteStats.siteIDVariable, "[site ID]")]
-            .reduce(text) { text, secret in
-                guard let value = environment[secret.0], !value.isEmpty else {
-                    return text
-                }
-                return text.replacing(value, with: secret.1)
-            }
+    private static func scrubbed(_ text: String, site: SiteStats?) -> String {
+        guard let site else {
+            return text
+        }
+        return text.replacing(site.token, with: "[token]").replacing(String(site.siteID), with: "[site ID]")
     }
 }

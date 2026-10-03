@@ -4,18 +4,21 @@ CONFIGURATION ?= release
 APP = .build/app/$(CONFIGURATION)/Stats agent.app
 
 # Builds the proof of concept's app as a bundle, .build/app/release/Stats agent.app, signed ad hoc. Its Info.plist
-# records the commit it was built from.
+# records the commit it was built from, and its resources hold wp_com_credentials.json, the WordPress.com OAuth
+# client it logs in with, which it stops without.
 app:
+	@test -f wp_com_credentials.json || { echo "make app needs wp_com_credentials.json in $(CURDIR)."; exit 1; }
 	swift build --configuration $(CONFIGURATION) --product stats-agent-app
 	rm -rf "$(APP)"
-	mkdir -p "$(APP)/Contents/MacOS"
+	mkdir -p "$(APP)/Contents/MacOS" "$(APP)/Contents/Resources"
 	cp "$$(swift build --configuration $(CONFIGURATION) --show-bin-path)/stats-agent-app" "$(APP)/Contents/MacOS/"
 	cp Sources/StatsAgentApp/Info.plist "$(APP)/Contents/"
 	plutil -insert StatsAgentCommit -string "$$(git describe --always --dirty)" "$(APP)/Contents/Info.plist"
+	cp wp_com_credentials.json "$(APP)/Contents/Resources/"
 	codesign --force --sign - "$(APP)"
 
-# Builds the app as a debug bundle, .build/app/debug/Stats agent.app, and runs it from here. It reads
-# WORDPRESS_APP_TOKEN and WORDPRESS_SITE_ID from the environment it starts in, and writes the feedback log to logs/.
+# Builds the app as a debug bundle, .build/app/debug/Stats agent.app, and runs it from here, writing the feedback log
+# to logs/.
 run: CONFIGURATION = debug
 run: app
 	"$(APP)/Contents/MacOS/stats-agent-app" --log-directory $(CURDIR)/logs

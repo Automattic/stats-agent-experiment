@@ -1,16 +1,21 @@
 import AppKit
 import SwiftUI
 
-/// The proof of concept's app: a question box, the agent's cards for each question, and the feedback form.
+/// The proof of concept's app: logging in to WordPress.com and picking a site, then a question box, the agent's cards
+/// for each question, and the feedback form.
 ///
-///     swift run stats-agent-app
+///     make run
 @main
 struct StatsAgentApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
         Window("Stats agent", id: "main") {
-            QuestionView(questions: appDelegate.questions)
+            if let question = AskMode.question {
+                AskModeView(question: question)
+            } else {
+                RootView(account: appDelegate.account, questions: appDelegate.questions)
+            }
         }
         .defaultSize(width: 760, height: 900)
     }
@@ -22,6 +27,8 @@ struct StatsAgentApp: App {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let questions = Questions()
+    /// Made on first use, so ask mode, which doesn't use it, never reads the keychain.
+    lazy var account = Account()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard AskMode.question == nil else {
