@@ -28,6 +28,14 @@ struct Card: Identifiable {
         let value: Int
         /// What the figure covers, such as "All time", when the title doesn't say.
         var detail: String?
+        /// Whether the figure is a change, shown with its sign.
+        var isChange = false
+
+        /// The value as shown: with its sign for a change, such as "+29", otherwise shortened from 10,000, such as
+        /// "184K".
+        var formattedValue: String {
+            isChange ? Card.signed(value) : StatsValueFormatter.formatNumber(value, onlyLarge: true)
+        }
     }
 
     /// A figure against an earlier one, such as today's views against yesterday's.
@@ -36,6 +44,8 @@ struct Card: Identifiable {
         let trend: TrendViewModel
         /// What the earlier figure covers, such as "Yesterday".
         let earlier: String
+        /// Whether the figures are changes, shown with their signs.
+        var isChange = false
     }
 
     let id: Int
@@ -49,6 +59,16 @@ struct Card: Identifiable {
 }
 
 extension Card {
+    /// `value` with its sign, such as "+29" or "-3", and "0" without one.
+    static func signed(_ value: Int) -> String {
+        value.formatted(.number.sign(strategy: .always(includingZero: false)))
+    }
+
+    /// A day such as "Oct 4, 2026", in the site's time zone, where the stats' days start at midnight.
+    static func day(in context: StatsContext) -> Date.FormatStyle {
+        Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: context.timeZone)
+    }
+
     /// A visits card for `operation` from `points`, oldest first, fetched for `request`. `asked` is the span the model
     /// named, in plain words. When comparing periods, `previous` is the same call for the span before.
     ///

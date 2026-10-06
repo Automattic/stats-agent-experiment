@@ -76,10 +76,10 @@ extension Card {
         )
         switch operation {
         case "value":
-            let lastDay = current.points.last?.date.formatted(date: .abbreviated, time: .omitted)
+            let lastDay = current.points.last?.date.formatted(day(in: context))
             var figures = [Figure(title: "Subscribers", value: current.endTotal, detail: lastDay.map { "On \($0)" })]
             if let change = current.change {
-                figures.append(Figure(title: "Change", value: change, detail: range))
+                figures.append(Figure(title: "Change", value: change, detail: range, isChange: true))
             }
             return Card(
                 id: id,
@@ -119,7 +119,8 @@ extension Card {
                             previousValue: beforeChange,
                             metric: SiteMetric.subscribers
                         ),
-                        earlier: beforeRange
+                        earlier: beforeRange,
+                        isChange: true
                     )
                 )
             }

@@ -10,7 +10,7 @@ extension Card {
         let bestDay = Figure(
             title: "Best day",
             value: summary.bestDayViews,
-            detail: summary.bestDay.map { "Views on \($0.formatted(date: .abbreviated, time: .omitted))" }
+            detail: summary.bestDay.map { "Views on \($0.formatted(day(in: context)))" }
         )
         switch operation {
         case "compare_periods":

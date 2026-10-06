@@ -278,7 +278,7 @@ struct HeroFigureView: View {
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
-            Text(StatsValueFormatter.formatNumber(figure.value, onlyLarge: true))
+            Text(figure.formattedValue)
                 .font(Constants.Typography.largeDisplayFont)
                 .kerning(Constants.Typography.largeDisplayKerning)
             if let detail = figure.detail {
@@ -301,14 +301,17 @@ struct HeadlineView: View {
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
-            Text(trend.formattedCurrentValue)
+            Text(headline.isChange ? Card.signed(trend.currentValue) : trend.formattedCurrentValue)
                 .font(Constants.Typography.mediumDisplayFont)
             Text(verbatim: "\(trend.formattedChange)  \(trend.iconSign) \(trend.formattedPercentage)")
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(trend.sentiment.foregroundColor)
-            Text("\(headline.earlier): \(trend.formattedPreviousValue)")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            Text(
+                "\(headline.earlier): "
+                    + (headline.isChange ? Card.signed(trend.previousValue) : trend.formattedPreviousValue)
+            )
+            .font(.footnote)
+            .foregroundStyle(.secondary)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -326,7 +329,7 @@ struct FigureView: View {
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
-            Text(StatsValueFormatter.formatNumber(figure.value, onlyLarge: true))
+            Text(figure.formattedValue)
                 .font(Constants.Typography.smallDisplayFont)
             if let detail = figure.detail {
                 Text(detail)
