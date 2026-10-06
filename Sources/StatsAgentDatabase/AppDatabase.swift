@@ -190,41 +190,32 @@ public struct AppDatabase: Sendable {
         }
     }
 
-    /// Records that the feedback form for the question with `questionID` was cleared, as a save with no choice.
-    /// Earlier saves are kept.
-    public func clearFeedback(questionID: Int64, at clearedAt: Date) async throws {
+    /// Records the feedback form for the question with `questionID` as it stands, filled in or not: `cardID` is the card
+    /// that answered. Earlier saves are kept.
+    public func saveFeedback(
+        choice: LogEntryV1.Choice?,
+        cardID: Int64?,
+        note: String?,
+        looksBroken: Bool,
+        questionID: Int64,
+        at savedAt: Date
+    ) async throws {
         _ = try await insert(
             FeedbackRecord(
                 id: nil,
                 questionId: questionID,
-                choice: nil,
-                cardId: nil,
-                note: nil,
-                looksBroken: false,
-                savedAt: clearedAt
-            )
-        )
-    }
-
-    /// Records the feedback form as saved for the question with `questionID`. Earlier saves are kept.
-    public func saveFeedback(_ feedback: LogEntryV1.Feedback, questionID: Int64, cardID: Int64?) async throws {
-        _ = try await insert(
-            FeedbackRecord(
-                id: nil,
-                questionId: questionID,
-                choice: feedback.choice.rawValue,
+                choice: choice?.rawValue,
                 cardId: cardID,
-                note: feedback.note,
-                looksBroken: feedback.looksBroken,
-                savedAt: feedback.savedAt
+                note: note,
+                looksBroken: looksBroken,
+                savedAt: savedAt
             )
         )
     }
 
     // MARK: - Reading
 
-    /// The feedback last saved for the question with `questionID`, or nil when none was. A record with no choice means
-    /// the form was last cleared.
+    /// The feedback form as last saved for the question with `questionID`, or nil when it never was.
     public func latestFeedback(questionID: Int64) async throws -> FeedbackRecord? {
         try await writer.read { db in
             try FeedbackRecord
@@ -325,8 +316,8 @@ public struct AppDatabase: Sendable {
                 table.column("savedAt", .datetime).notNull()
             }
         }
-        // A save of the feedback form can have no choice, for a cleared form. SQLite can't drop a column's NOT NULL, so
-        // the table is made again and its rows copied over.
+        // A save of the feedback form can have no choice. SQLite can't drop a column's NOT NULL, so the table is made
+        // again and its rows copied over.
         migrator.registerMigration("v2") { db in
             try db.create(table: "feedbackV2") { table in
                 table.autoIncrementedPrimaryKey("id")

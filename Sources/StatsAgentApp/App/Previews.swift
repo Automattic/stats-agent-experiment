@@ -80,13 +80,23 @@ enum Previews {
                         status: .done,
                         cards: cards,
                         endpoints: ["stats_visits", "stats_top_posts", "stats_visits"],
-                        feedback: LogEntryV1.Feedback(
+                        feedback: FeedbackForm(
                             choice: .answersCompletely,
                             card: "stats_visits",
-                            note: "Exactly the comparison I wanted.",
-                            looksBroken: false,
-                            savedAt: .now
+                            note: "Exactly the comparison I wanted."
                         )
+                    ),
+                    showsFeedback: true
+                )
+            },
+            Screen(name: "feedback-unfinished") {
+                window(
+                    Answer(
+                        previewing: question,
+                        status: .done,
+                        cards: cards,
+                        endpoints: ["stats_visits", "stats_top_posts", "stats_visits"],
+                        feedback: FeedbackForm(choice: .answersMost, note: "The right weeks, but I meant visitors.")
                     ),
                     showsFeedback: true
                 )

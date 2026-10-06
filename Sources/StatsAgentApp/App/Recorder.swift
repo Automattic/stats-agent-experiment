@@ -208,23 +208,18 @@ final class QuestionRecorder {
         }
     }
 
-    /// Records the feedback form as saved. `card` is the place in the agent's list of the card that answered.
-    func saveFeedback(_ feedback: LogEntryV1.Feedback, card position: Int?) async {
+    /// Records the feedback form as it stands, filled in or not. `card` is the place in the agent's list of the card
+    /// that answered.
+    func saveFeedback(_ form: FeedbackForm, card position: Int?, at savedAt: Date) async {
         do {
             try await database.saveFeedback(
-                feedback,
+                choice: form.choice,
+                cardID: position.flatMap { cardIDs[$0] },
+                note: form.note.isEmpty ? nil : form.note,
+                looksBroken: form.looksBroken,
                 questionID: questionID,
-                cardID: position.flatMap { cardIDs[$0] }
+                at: savedAt
             )
-        } catch {
-            failed(error)
-        }
-    }
-
-    /// Records that the feedback form was cleared.
-    func clearFeedback(at clearedAt: Date) async {
-        do {
-            try await database.clearFeedback(questionID: questionID, at: clearedAt)
         } catch {
             failed(error)
         }

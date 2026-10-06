@@ -5,9 +5,9 @@ import StatsAgent
 /// One question's answer, built a step at a time: the single pick, the list, then each card in turn, so the cards
 /// appear as they're ready. Summary, visits, subscribers and the stats calls that rank items are drawn; the others get
 /// a card saying they aren't drawn. Alongside the cards it keeps what a feedback log entry records: every model call,
-/// each stats call's requests and status, the cards the person looked at, and the feedback. Given a
-/// `QuestionRecorder`, it writes them to the database as they happen; feedback can be saved at any time, and every save
-/// is kept.
+/// each stats call's requests and status, the cards the person looked at, and the feedback form. Given a
+/// `QuestionRecorder`, it writes them to the database as they happen; the feedback form is saved as it changes, filled
+/// in or not, and every save is kept.
 @MainActor @Observable
 final class Answer: Identifiable {
     enum Status: Equatable {
@@ -23,7 +23,7 @@ final class Answer: Identifiable {
     let id = UUID()
     let question: String
     let askedAt = Date.now
-    /// Whether the window shows its feedback form.
+    /// Whether its page shows the feedback form, under the Give Feedback header.
     var isFeedbackOpen = false
     private(set) var status = Status.working("Choosing a stats call") {
         didSet {
@@ -41,32 +41,43 @@ final class Answer: Identifiable {
     private(set) var records: [LogEntryV1.Card] = []
     /// The endpoints of the cards the person looked at, in the order first seen.
     private(set) var cardsViewed: [String] = []
-    /// The feedback last saved, or nil when none was.
-    private(set) var feedback: LogEntryV1.Feedback?
+    /// The feedback form as filled in, finished or not. Each change is saved: a choice, a card or the checkbox at once,
+    /// the note once typing stops for a moment.
+    var feedbackForm = FeedbackForm() {
+        didSet {
+            feedbackFormChanged(from: oldValue)
+        }
+    }
+    /// The feedback form as last saved, empty when it never was.
+    private(set) var savedFeedback = FeedbackForm()
     /// The site the stats were requested from, whose token and ID the feedback log keeps out.
     private(set) var site: SiteStats?
     private var endpoints: [Card.ID: String] = [:]
     private var recorder: QuestionRecorder?
+    /// Saves the feedback form once typing in the note stops.
+    private var noteSave: Task<Void, Never>?
 
     init(question: String) {
         self.question = question
     }
 
-    /// An answer as `--previews` draws it: made up, not worked out. `endpoints` are the cards' stats calls, in order.
+    /// An answer as `--previews` draws it: made up, not worked out. `endpoints` are the cards' stats calls, in order;
+    /// `feedback` is the form as saved.
     init(
         previewing question: String,
         status: Status,
         cards: [Card],
         endpoints: [String] = [],
         finishedSteps: [String] = [],
-        feedback: LogEntryV1.Feedback? = nil
+        feedback: FeedbackForm = FeedbackForm()
     ) {
         self.question = question
         self.status = status
         self.cards = cards
         self.endpoints = Dictionary(uniqueKeysWithValues: zip(cards.map(\.id), endpoints))
         self.finishedSteps = finishedSteps
-        self.feedback = feedback
+        self.feedbackForm = feedback
+        savedFeedback = formToSave
     }
 
     /// How the answer ended, or nil while it's working.
@@ -110,22 +121,64 @@ final class Answer: Identifiable {
         }
     }
 
-    /// Keeps `feedback` in place of any saved before, and writes it to the database next to the earlier saves.
-    func save(_ feedback: LogEntryV1.Feedback) {
-        self.feedback = feedback
-        let card = feedback.card.flatMap(position(of:))
-        Task { [recorder] in
-            await recorder?.saveFeedback(feedback, card: card)
+    /// Whether the database has the feedback form as it stands, with something in it.
+    var isFeedbackSaved: Bool {
+        savedFeedback != FeedbackForm() && savedFeedback == formToSave
+    }
+
+    /// Empties the feedback form and saves it at once.
+    func clearFeedback() {
+        feedbackForm = FeedbackForm()
+        saveFeedback()
+    }
+
+    private func feedbackFormChanged(from old: FeedbackForm) {
+        guard feedbackForm != old else {
+            return
+        }
+        var withOldNote = feedbackForm
+        withOldNote.note = old.note
+        guard withOldNote == old else {
+            saveFeedback()
+            return
+        }
+        // Each keystroke starts the wait again, so the note is saved once typing stops.
+        noteSave?.cancel()
+        noteSave = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(800))
+            guard !Task.isCancelled else {
+                return
+            }
+            self?.saveFeedback()
         }
     }
 
-    /// Forgets the feedback, and writes that it was cleared to the database next to the earlier saves.
-    func clearFeedback() {
-        feedback = nil
-        let clearedAt = Date.now
-        Task { [recorder] in
-            await recorder?.clearFeedback(at: clearedAt)
+    /// Writes the feedback form to the database as it stands, next to the earlier saves, unless it says what the last
+    /// one did.
+    private func saveFeedback() {
+        noteSave?.cancel()
+        let form = formToSave
+        guard form != savedFeedback else {
+            return
         }
+        savedFeedback = form
+        let card = form.card.flatMap(position(of:))
+        let savedAt = Date.now
+        Task { [recorder] in
+            await recorder?.saveFeedback(form, card: card, at: savedAt)
+        }
+    }
+
+    /// The feedback form as it's saved: the card that answered only for a choice that asks for one, and the only card
+    /// when there's one, with the note trimmed.
+    private var formToSave: FeedbackForm {
+        let answered = cards.count == 1 ? cards.first.flatMap(endpoint(of:)) : feedbackForm.card
+        return FeedbackForm(
+            choice: feedbackForm.choice,
+            card: feedbackForm.choice?.asksForCard == true ? answered : nil,
+            note: feedbackForm.note.trimmingCharacters(in: .whitespacesAndNewlines),
+            looksBroken: feedbackForm.looksBroken
+        )
     }
 
     /// The place in the agent's list of the stats call with `endpoint`.

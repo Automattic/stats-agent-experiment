@@ -101,22 +101,22 @@ struct AppDatabaseTests {
         try await database.saveSite(id: 42, name: "Example", url: "https://example.com", timeZone: nil)
         let question = try await database.startQuestion("Top posts?", launchID: launch, siteID: 42, at: Self.asked)
         let card = try await database.startCard(endpoint: "stats_top_posts", questionID: question, position: 0)
-        let first = LogEntryV1.Feedback(
+        try await database.saveFeedback(
             choice: .answersMost,
-            card: "stats_top_posts",
+            cardID: card,
             note: nil,
             looksBroken: false,
-            savedAt: Self.asked
+            questionID: question,
+            at: Self.asked
         )
-        let second = LogEntryV1.Feedback(
+        try await database.saveFeedback(
             choice: .nothingUseful,
-            card: nil,
+            cardID: nil,
             note: "Changed my mind",
             looksBroken: true,
-            savedAt: Self.asked.addingTimeInterval(60)
+            questionID: question,
+            at: Self.asked.addingTimeInterval(60)
         )
-        try await database.saveFeedback(first, questionID: question, cardID: card)
-        try await database.saveFeedback(second, questionID: question, cardID: nil)
 
         let latest = try await database.latestFeedback(questionID: question)
         #expect(latest?.choice == "nothingUseful")
@@ -126,25 +126,33 @@ struct AppDatabaseTests {
         #expect(count == 2)
     }
 
-    @Test func keepsAClearedFormAsASaveWithNoChoice() async throws {
+    @Test func keepsAFormSavedBeforeItsFilledIn() async throws {
         let database = try AppDatabase.inMemory()
         let launch = try await database.startLaunch(at: Self.asked, version: nil, build: nil, commit: nil, macOS: "")
         try await database.saveSite(id: 42, name: "Example", url: "https://example.com", timeZone: nil)
         let question = try await database.startQuestion("Top posts?", launchID: launch, siteID: 42, at: Self.asked)
-        let saved = LogEntryV1.Feedback(
-            choice: .other,
-            card: nil,
+        try await database.saveFeedback(
+            choice: nil,
+            cardID: nil,
+            note: "Not what I meant",
+            looksBroken: false,
+            questionID: question,
+            at: Self.asked
+        )
+        try await database.saveFeedback(
+            choice: .answersMost,
+            cardID: nil,
             note: "Not what I meant",
             looksBroken: true,
-            savedAt: Self.asked
+            questionID: question,
+            at: Self.asked.addingTimeInterval(30)
         )
-        try await database.saveFeedback(saved, questionID: question, cardID: nil)
-        try await database.clearFeedback(questionID: question, at: Self.asked.addingTimeInterval(30))
 
         let latest = try await database.latestFeedback(questionID: question)
-        #expect(latest?.choice == nil)
-        #expect(latest?.note == nil)
-        #expect(latest?.looksBroken == false)
+        #expect(latest?.choice == "answersMost")
+        #expect(latest?.cardId == nil)
+        #expect(latest?.note == "Not what I meant")
+        #expect(latest?.looksBroken == true)
         let count = try await database.reader.read { db in try FeedbackRecord.fetchCount(db) }
         #expect(count == 2)
     }

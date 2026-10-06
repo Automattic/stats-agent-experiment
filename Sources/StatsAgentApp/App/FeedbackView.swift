@@ -1,40 +1,70 @@
 import StatsAgent
 import SwiftUI
 
-/// The feedback form for an answer, in a box under its cards: one choice, which card answered for the choices that
-/// ask, a note, and whether something looks broken. It opens with the feedback saved last, if any, and saves itself as
-/// it changes: a choice, a card or the checkbox at once, the note once typing stops for a moment. Until the form has a
-/// choice, and the note or the card that choice needs, it isn't saved, and it says what's missing. Clear empties the
+/// The feedback on an answer, in a box under its cards: a Give Feedback header, which opens and closes the form under
+/// it, and says when feedback is saved while the form is closed. The form has one choice, which card answered for the
+/// choices that ask, a note, and whether something looks broken. It shows the answer's `feedbackForm`, which the answer
+/// saves as it changes, so the form keeps what was typed when it's closed or scrolled away. It says when the form as it
+/// stands is saved, and what's missing from it: a choice, or the note or card the choice asks for. Clear empties the
 /// form and saves that. The choices and their rules come from `LogEntryV1.Choice`.
 struct FeedbackView: View {
-    let answer: Answer
-    @State private var choice: LogEntryV1.Choice?
-    @State private var card: String?
-    @State private var note: String
-    @State private var looksBroken: Bool
-
-    init(answer: Answer) {
-        self.answer = answer
-        let saved = answer.feedback
-        _choice = State(initialValue: saved?.choice)
-        _card = State(initialValue: saved?.card)
-        _note = State(initialValue: saved?.note ?? "")
-        _looksBroken = State(initialValue: saved?.looksBroken ?? false)
-    }
+    @Bindable var answer: Answer
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            header
+            if answer.isFeedbackOpen {
+                Divider()
+                fields
+                    .padding(20)
+                    .transition(.opacity)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .boxStyle(RoundedRectangle(cornerRadius: 14))
+    }
+
+    private var header: some View {
+        Button {
+            withAnimation(reduceMotion ? nil : .smooth(duration: 0.3)) {
+                answer.isFeedbackOpen.toggle()
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(answer.isFeedbackOpen ? 90 : 0))
+                Text("Give Feedback")
+                    .font(.headline)
+                Spacer()
+                if !answer.isFeedbackOpen, answer.isFeedbackSaved {
+                    Label("Saved", systemImage: "checkmark")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityValue(answer.isFeedbackOpen ? "Expanded" : "Collapsed")
+    }
+
+    private var fields: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("How well did this answer your question?")
                 .font(.headline)
-            Picker("How well did this answer your question?", selection: $choice) {
+            Picker("How well did this answer your question?", selection: $answer.feedbackForm.choice) {
                 ForEach(answer.feedbackChoices, id: \.self) { choice in
                     Text(choice.label).tag(Optional(choice))
                 }
             }
             .pickerStyle(.radioGroup)
             .labelsHidden()
-            if choice?.asksForCard == true, answer.cards.count > 1 {
-                Picker("Which card answered it?", selection: $card) {
+            if form.choice?.asksForCard == true, answer.cards.count > 1 {
+                Picker("Which card answered it?", selection: $answer.feedbackForm.card) {
                     Text("Choose a card").tag(String?.none)
                     ForEach(answer.cards) { card in
                         Text("\(card.id + 1). \(card.title)").tag(answer.endpoint(of: card))
@@ -42,104 +72,56 @@ struct FeedbackView: View {
                 }
             }
             TextField(
-                choice?.needsNote == true ? "Note (required)" : "Note (optional)",
-                text: $note,
+                form.choice?.needsNote == true ? "Note (required)" : "Note (optional)",
+                text: $answer.feedbackForm.note,
                 axis: .vertical
             )
             .lineLimit(3...6)
             .textFieldStyle(.roundedBorder)
-            Toggle("Something looks broken: wrong numbers, errors or bad charts", isOn: $looksBroken)
-            HStack {
-                status
-                Spacer()
-                Button("Clear", action: clear)
-                    .disabled(isEmpty)
-            }
-        }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .boxStyle(RoundedRectangle(cornerRadius: 14))
-        .onChange(of: choice) { saveIfChanged() }
-        .onChange(of: card) { saveIfChanged() }
-        .onChange(of: looksBroken) { saveIfChanged() }
-        .task(id: note) {
-            // Each keystroke starts the wait again, so the note is saved once typing stops.
-            try? await Task.sleep(for: .milliseconds(800))
-            guard !Task.isCancelled else {
-                return
-            }
-            saveIfChanged()
-        }
-    }
-
-    /// "Saved" when the form says what was saved last, or what's missing before it can be saved.
-    @ViewBuilder private var status: some View {
-        if let feedback {
-            if Self.says(feedback, sameAs: answer.feedback) {
-                Label("Saved", systemImage: "checkmark")
-                    .foregroundStyle(.secondary)
-            }
-        } else if let choice {
-            Text(
-                choice.needsNote && trimmedNote.isEmpty
-                    ? "Add a note to save this answer."
-                    : "Choose the card that answered it to save this answer."
+            Toggle(
+                "Something looks broken: wrong numbers, errors or bad charts",
+                isOn: $answer.feedbackForm.looksBroken
             )
-            .foregroundStyle(.secondary)
-        } else if !isEmpty {
-            Text("Choose how well it answered to save this.")
-                .foregroundStyle(.secondary)
+            HStack(spacing: 12) {
+                if answer.isFeedbackSaved {
+                    Label("Saved", systemImage: "checkmark")
+                        .foregroundStyle(.secondary)
+                }
+                if let missing {
+                    Text(missing)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Clear", action: answer.clearFeedback)
+                    .disabled(form == FeedbackForm() && answer.savedFeedback == FeedbackForm())
+            }
         }
     }
 
-    private var trimmedNote: String {
-        note.trimmingCharacters(in: .whitespacesAndNewlines)
+    private var form: FeedbackForm {
+        answer.feedbackForm
     }
 
-    private var isEmpty: Bool {
-        choice == nil && card == nil && trimmedNote.isEmpty && !looksBroken && answer.feedback == nil
-    }
-
-    /// The feedback as filled in, or nil while a choice, a card it asks for, or a note it needs is missing.
-    private var feedback: LogEntryV1.Feedback? {
-        guard let choice else {
-            return nil
+    /// What the form still needs, or nil when it needs nothing or is empty.
+    private var missing: String? {
+        guard let choice = form.choice else {
+            return form == FeedbackForm() ? nil : "Choose how well it answered."
         }
-        let answered = answer.cards.count == 1 ? answer.cards.first.flatMap(answer.endpoint(of:)) : card
-        guard !choice.needsNote || !trimmedNote.isEmpty, !choice.asksForCard || answered != nil else {
-            return nil
+        if choice.asksForCard, answer.cards.count > 1, form.card == nil {
+            return "Choose the card that answered it."
         }
-        return LogEntryV1.Feedback(
-            choice: choice,
-            card: choice.asksForCard ? answered : nil,
-            note: trimmedNote.isEmpty ? nil : trimmedNote,
-            looksBroken: looksBroken,
-            savedAt: .now
-        )
-    }
-
-    /// Saves the form when it's complete and says something other than what was saved last.
-    private func saveIfChanged() {
-        guard let feedback, !Self.says(feedback, sameAs: answer.feedback) else {
-            return
+        if choice.needsNote, form.note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return "Add a note."
         }
-        answer.save(feedback)
+        return nil
     }
+}
 
-    private func clear() {
-        choice = nil
-        card = nil
-        note = ""
-        looksBroken = false
-        answer.clearFeedback()
-    }
-
-    /// Whether `feedback` says what `saved` says, whenever each was saved.
-    private static func says(_ feedback: LogEntryV1.Feedback, sameAs saved: LogEntryV1.Feedback?) -> Bool {
-        guard let saved else {
-            return false
-        }
-        return feedback.choice == saved.choice && feedback.card == saved.card && feedback.note == saved.note
-            && feedback.looksBroken == saved.looksBroken
-    }
+/// The feedback form for an answer as filled in, finished or not.
+struct FeedbackForm: Equatable {
+    var choice: LogEntryV1.Choice?
+    /// The endpoint of the card that answered.
+    var card: String?
+    var note = ""
+    var looksBroken = false
 }

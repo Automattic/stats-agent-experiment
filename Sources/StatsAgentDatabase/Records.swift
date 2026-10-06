@@ -115,15 +115,16 @@ public struct CardViewRecord: Codable, Sendable, Equatable, FetchableRecord, Per
     public var viewedAt: Date
 }
 
-/// The feedback form as saved once. Each save adds a row; the latest is the question's feedback.
+/// The feedback form as it stood when saved, filled in or not. Each save adds a row; the latest is the question's
+/// feedback.
 public struct FeedbackRecord: Codable, Sendable, Equatable, FetchableRecord, PersistableRecord {
     public static let databaseTableName = "feedback"
 
     public var id: Int64?
     public var questionId: Int64
-    /// A `LogEntryV1.Choice`, or nil when the form was cleared.
+    /// A `LogEntryV1.Choice`, or nil when none was chosen.
     public var choice: String?
-    /// The card that answered, for a choice that asks for one.
+    /// The card that answered, for a choice that asks for one, once it's known.
     public var cardId: Int64?
     public var note: String?
     public var looksBroken: Bool

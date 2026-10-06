@@ -3,9 +3,9 @@ import SwiftUI
 
 /// The window's questions as one scroll, oldest first: a page for each answer, and the ask page after them while
 /// asking. Each page is at least as tall as the window, so scrolling up goes back through the questions. Asking scrolls
-/// to the new answer, Ask Another down to the ask page, and Give Feedback down to the form, smoothly or, with Reduce
-/// Motion, at once. A bar along the bottom gives feedback on the answer at the top of the window and asks another
-/// question; it hides on the ask page. A database error shows under the scroll.
+/// to the new answer, Ask Another down to the ask page, and opening an answer's feedback form as little as shows all of
+/// it, smoothly or, with Reduce Motion, at once. A bar along the bottom asks another question; it hides on the ask
+/// page. A database error shows under the scroll.
 struct QuestionView: View {
     let questions: Questions
     let account: Account
@@ -26,6 +26,15 @@ struct QuestionView: View {
                                 AnswerPage(answer: answer)
                             }
                             .id(answer.id)
+                            .onChange(of: answer.isFeedbackOpen) { _, isOpen in
+                                guard isOpen else {
+                                    return
+                                }
+                                // Once the form is laid out.
+                                Task {
+                                    move { scroll.scrollTo(AnswerPage.feedbackID(of: answer)) }
+                                }
+                            }
                         }
                         if questions.isAsking {
                             page(alignment: .center) {
@@ -40,8 +49,8 @@ struct QuestionView: View {
                 // Opens on the latest page, and on its feedback form when that's open.
                 .defaultScrollAnchor(.bottom, for: .initialOffset)
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    if let answer = answerInView {
-                        bar(for: answer, scroll: scroll)
+                    if answerInView != nil {
+                        bar
                     }
                 }
             }
@@ -71,18 +80,8 @@ struct QuestionView: View {
         }
     }
 
-    private func bar(for answer: Answer, scroll: ScrollViewProxy) -> some View {
+    private var bar: some View {
         HStack {
-            Button(feedbackTitle(for: answer), systemImage: "hand.thumbsup") {
-                answer.isFeedbackOpen.toggle()
-                if answer.isFeedbackOpen {
-                    // Once the form is laid out.
-                    Task {
-                        move { scroll.scrollTo(AnswerPage.feedbackID(of: answer), anchor: .bottom) }
-                    }
-                }
-            }
-            .disabled(answer.feedbackChoices.isEmpty)
             Spacer()
             Button("Ask Another", systemImage: "plus.bubble") {
                 questions.askAnother()
@@ -102,13 +101,6 @@ struct QuestionView: View {
         .overlay(alignment: .top) {
             Divider()
         }
-    }
-
-    private func feedbackTitle(for answer: Answer) -> String {
-        if answer.isFeedbackOpen {
-            return "Hide Feedback"
-        }
-        return answer.feedback == nil ? "Give Feedback" : "Edit Feedback"
     }
 
     private func ask(_ question: String) {

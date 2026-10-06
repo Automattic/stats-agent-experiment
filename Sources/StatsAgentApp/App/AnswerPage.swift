@@ -1,11 +1,11 @@
 import SwiftUI
 
 /// An answer's page in the window's scroll: the question as its title, what the agent is doing or its cards, and under
-/// them the feedback form while it's open.
+/// them, once the answer is one feedback is asked about, the feedback.
 struct AnswerPage: View {
     let answer: Answer
 
-    /// The feedback form's ID in the window's scroll, to scroll to it.
+    /// The feedback's ID in the window's scroll, to scroll to it.
     static func feedbackID(of answer: Answer) -> String {
         "feedback-\(answer.id)"
     }
@@ -16,16 +16,14 @@ struct AnswerPage: View {
                 .font(.title2.weight(.semibold))
                 .textSelection(.enabled)
             AnswerView(answer: answer)
-            if answer.isFeedbackOpen {
+            if !answer.feedbackChoices.isEmpty {
                 FeedbackView(answer: answer)
                     .id(Self.feedbackID(of: answer))
-                    .transition(.opacity)
             }
         }
         .frame(maxWidth: Constants.maxHortizontalWidth)
         .padding(24)
         .frame(maxWidth: .infinity)
-        .animation(.smooth(duration: 0.3), value: answer.isFeedbackOpen)
     }
 }
 
