@@ -1,37 +1,51 @@
 import SwiftUI
 
-/// Cards side by side, one at a time: a two-finger swipe on a trackpad pages between them, and the arrow buttons do
-/// the same with a mouse. `viewed` is called with each card shown, the first one included.
+/// Cards side by side, one at a time, each as tall as its content: a two-finger swipe on a trackpad pages between
+/// them, and the arrow buttons under them do the same with a mouse when there's more than one. `viewed` is called with
+/// each card shown, the first one included.
 struct CardsView: View {
     let cards: [Card]
     var viewed: @MainActor (Card.ID) -> Void = { _ in }
     @State private var position: Int?
+    /// Each card's height at the window's width.
+    @State private var heights: [Card.ID: CGFloat] = [:]
 
     var body: some View {
         VStack(spacing: 12) {
             ScrollView(.horizontal) {
-                LazyHStack(spacing: 0) {
+                // A plain stack rather than a lazy one, so every card is measured before it's shown.
+                HStack(alignment: .top, spacing: 0) {
                     ForEach(cards) { card in
                         CardView(card: card)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .onGeometryChange(for: CGFloat.self) {
+                                $0.size.height
+                            } action: {
+                                heights[card.id] = $0
+                            }
                             .padding(.horizontal, 4)
                             .containerRelativeFrame(.horizontal)
                     }
                 }
                 .scrollTargetLayout()
             }
+            .frame(height: height)
+            .animation(.smooth, value: height)
             .scrollTargetBehavior(.paging)
             .scrollPosition(id: $position)
             .scrollIndicators(.never)
-            HStack(spacing: 16) {
-                Button("Previous card", systemImage: "chevron.left") { move(by: -1) }
-                    .disabled(index == 0)
-                Text("\(index + 1) of \(cards.count)")
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                Button("Next card", systemImage: "chevron.right") { move(by: 1) }
-                    .disabled(index == cards.count - 1)
+            if cards.count > 1 {
+                HStack(spacing: 16) {
+                    Button("Previous card", systemImage: "chevron.left") { move(by: -1) }
+                        .disabled(index == 0)
+                    Text("\(index + 1) of \(cards.count)")
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                    Button("Next card", systemImage: "chevron.right") { move(by: 1) }
+                        .disabled(index == cards.count - 1)
+                }
+                .labelStyle(.iconOnly)
             }
-            .labelStyle(.iconOnly)
         }
         .onAppear {
             position = cards.first?.id
@@ -44,6 +58,11 @@ struct CardsView: View {
 
     private var index: Int {
         cards.firstIndex { $0.id == position } ?? 0
+    }
+
+    /// The shown card's height, or the tallest card's until it's measured.
+    private var height: CGFloat? {
+        cards.indices.contains(index) ? heights[cards[index].id] ?? heights.values.max() : nil
     }
 
     private func move(by offset: Int) {
@@ -166,7 +185,7 @@ struct CardView: View {
 }
 
 extension EnvironmentValues {
-    /// Whether the view is rendered off screen into a picture, where a scroll view's contents aren't drawn.
+    /// Whether the view is rendered off screen into a picture of a fixed size, which cuts a long ranking short.
     @Entry var isRenderingPicture = false
 }
 
@@ -189,9 +208,7 @@ struct RankedListView: View {
                 .frame(maxHeight: .infinity, alignment: .top)
                 .clipped()
         } else {
-            ScrollView {
-                rows
-            }
+            rows
         }
     }
 

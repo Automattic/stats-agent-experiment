@@ -100,6 +100,9 @@ enum Previews {
                     )
                 )
             },
+            Screen(name: "card-ranking") {
+                window(Answer(previewing: "What were my top posts this month?", status: .done, cards: [cards[1]]))
+            },
             Screen(name: "card-likes") {
                 window(Answer(previewing: "How many likes did I get this week?", status: .done, cards: [cards[2]]))
             },

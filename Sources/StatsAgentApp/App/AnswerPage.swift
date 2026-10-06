@@ -41,8 +41,6 @@ struct AnswerView: View {
         } else {
             VStack(alignment: .leading, spacing: 12) {
                 CardsView(cards: answer.cards, viewed: answer.viewed)
-                    // Tall enough for a chart or a ranking, whatever the window's height.
-                    .frame(height: 480)
                 if case .working(let step) = answer.status {
                     HStack(spacing: 8) {
                         ProgressView()
