@@ -1,5 +1,5 @@
 {
-  "originHash" : "00f85843f769d092807b6a9a2987ec37bcf7559364f4740393ffa43491b803fa",
+  "originHash" : "387f8fdaef4d10d5f47d9a71f56fa50ae0be15e9907cef1036594798825adf42",
   "pins" : [
     {
       "identity" : "color-studio",
@@ -7,6 +7,15 @@
       "location" : "https://github.com/Automattic/color-studio",
       "state" : {
         "revision" : "bf141adc75e2769eb469a3e095bdc93dc30be8de"
+      }
+    },
+    {
+      "identity" : "grdb.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/groue/GRDB.swift",
+      "state" : {
+        "revision" : "b83108d10f42680d78f23fe4d4d80fc88dab3212",
+        "version" : "7.11.1"
       }
     },
     {

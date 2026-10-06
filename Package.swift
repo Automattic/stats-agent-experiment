@@ -20,10 +20,15 @@ let package = Package(
             revision: "bf141adc75e2769eb469a3e095bdc93dc30be8de"
         ),
         // The version the WordPress iOS app pins.
-        .package(url: "https://github.com/automattic/wordpress-rs", exact: "0.9.1")
+        .package(url: "https://github.com/automattic/wordpress-rs", exact: "0.9.1"),
+        .package(url: "https://github.com/groue/GRDB.swift", exact: "7.11.1")
     ],
     targets: [
         .target(name: "StatsAgent"),
+        .target(
+            name: "StatsAgentDatabase",
+            dependencies: ["StatsAgent", .product(name: "GRDB", package: "GRDB.swift")]
+        ),
         .executableTarget(name: "stats-agent", dependencies: ["StatsAgent"]),
         .executableTarget(
             name: "StatsAgentApp",
@@ -38,6 +43,9 @@ let package = Package(
         ),
         .executableTarget(name: "generate-credentials"),
         .plugin(name: "CredentialsPlugin", capability: .buildTool(), dependencies: ["generate-credentials"]),
-        .testTarget(name: "StatsAgentTests", dependencies: ["StatsAgent"])
+        .testTarget(
+            name: "StatsAgentTests",
+            dependencies: ["StatsAgent", "StatsAgentDatabase", .product(name: "GRDB", package: "GRDB.swift")]
+        )
     ]
 )

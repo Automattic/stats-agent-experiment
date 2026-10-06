@@ -42,7 +42,7 @@ prompt-set:
 # out here and in .swiftlint.yml.
 format:
 	swift format --in-place --recursive Package.swift Sources/StatsAgent Sources/stats-agent Sources/StatsAgentApp/App \
-		Sources/generate-credentials Plugins Tests
+		Sources/StatsAgentDatabase Sources/generate-credentials Plugins Tests
 
 # SwiftLint runs through the BuildTools package plugin, pinned to `swiftlint_version` in .swiftlint.yml.
 lint:
