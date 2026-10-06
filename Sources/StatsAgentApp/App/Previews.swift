@@ -51,6 +51,11 @@ enum Previews {
             Screen(name: "login") {
                 AnyView(RootView(account: Account(previewToken: nil, site: nil), questions: questions(nil)))
             },
+            Screen(name: "sites") {
+                let account = Account(previewToken: "preview", site: site, sites: sites)
+                account.isChoosingSite = true
+                return AnyView(RootView(account: account, questions: questions(nil)))
+            },
             Screen(name: "ask") { window(nil) },
             Screen(name: "working") {
                 window(
@@ -91,6 +96,15 @@ enum Previews {
         url: "https://fieldnotes.example.com",
         timeZone: TimeZone(identifier: "Europe/Lisbon")
     )
+
+    /// The account's sites in the site list, `site` among them, sorted by name as the app sorts them.
+    private static let sites = [
+        site,
+        Site(id: 2, name: "Kitchen Table Recipes", url: "https://kitchentable.example.com", timeZone: nil),
+        Site(id: 3, name: "Lisbon Running Club", url: "https://lisbonrunning.example.com", timeZone: nil),
+        Site(id: 4, name: "Margins", url: "https://margins.example.com", timeZone: nil),
+        Site(id: 5, name: "Studio Diary", url: "https://studiodiary.example.com", timeZone: nil)
+    ]
 
     /// The window logged in to `site`, with `answer` on screen, and its feedback form open when `showsFeedback`.
     private static func window(_ answer: Answer?, showsFeedback: Bool = false) -> AnyView {

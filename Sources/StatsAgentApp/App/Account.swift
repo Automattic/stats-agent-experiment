@@ -44,6 +44,9 @@ final class Account {
     /// Whether the site list shows in place of the questions while another site is picked.
     var isChoosingSite = false
 
+    /// The sites `--previews` gives in place of the account's.
+    private var previewSites: [Site]?
+
     private static let siteKey = "site"
 
     init() {
@@ -52,10 +55,12 @@ final class Account {
             .flatMap { try? JSONDecoder().decode(Site.self, from: $0) }
     }
 
-    /// An account as `--previews` draws it, without the keychain or the app's defaults.
-    init(previewToken token: String?, site: Site?) {
+    /// An account as `--previews` draws it, without the keychain, the app's defaults or WordPress.com: `sites` is
+    /// what `sites()` returns.
+    init(previewToken token: String?, site: Site?, sites: [Site] = []) {
         self.token = token
         self.site = site
+        previewSites = sites
     }
 
     /// The selected site's stats, or nil before logging in and picking a site.
@@ -74,6 +79,9 @@ final class Account {
 
     /// The account's sites, sorted by name.
     func sites() async throws -> [Site] {
+        if let previewSites {
+            return previewSites
+        }
         guard let token else {
             return []
         }

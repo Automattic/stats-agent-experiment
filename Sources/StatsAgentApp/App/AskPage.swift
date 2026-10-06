@@ -57,8 +57,7 @@ struct AskPage: View {
         .padding(.leading, 20)
         .padding(.trailing, 8)
         .padding(.vertical, 8)
-        .background(Constants.Colors.secondaryBackground, in: Capsule())
-        .overlay(Capsule().stroke(Color(.opaqueSeparator), lineWidth: 0.5))
+        .boxStyle(Capsule())
     }
 
     private func exampleButton(_ example: String, symbol: String) -> some View {
@@ -76,8 +75,7 @@ struct AskPage: View {
             }
             .frame(maxWidth: .infinity, minHeight: 72, alignment: .topLeading)
             .padding(14)
-            .background(Constants.Colors.secondaryBackground, in: shape)
-            .overlay(shape.stroke(Color(.opaqueSeparator), lineWidth: 0.5))
+            .boxStyle(shape)
             .contentShape(shape)
         }
         .buttonStyle(.plain)

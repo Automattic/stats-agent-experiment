@@ -16,6 +16,7 @@ struct AnswerPage: View {
             AnswerView(answer: answer)
                 .id(ObjectIdentifier(answer))
         }
+        .frame(maxWidth: Constants.maxHortizontalWidth)
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -70,6 +71,8 @@ struct AnswerView: View {
         } else {
             VStack(alignment: .leading, spacing: 12) {
                 CardsView(cards: answer.cards, viewed: answer.viewed)
+                    // Tall enough for a chart or a ranking, so a card doesn't stretch empty down a tall window.
+                    .frame(maxHeight: 500)
                 if case .working(let step) = answer.status {
                     StepsView(finished: [], current: step)
                 }
