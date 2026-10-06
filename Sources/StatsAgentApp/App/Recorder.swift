@@ -82,6 +82,14 @@ final class Recorder {
         }
     }
 
+    /// Deletes everything in the database but this launch, which questions asked from now on belong to.
+    func deleteEverything() async throws {
+        guard let database, let launch else {
+            return
+        }
+        try await database.deleteEverything(keepingLaunch: launch.value)
+    }
+
     private func failed(_ error: any Error) {
         self.error = "Couldn't write to the database: \(Answer.message(for: error))"
     }

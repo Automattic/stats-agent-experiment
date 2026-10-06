@@ -213,6 +213,25 @@ public struct AppDatabase: Sendable {
         )
     }
 
+    /// Deletes every question, with everything recorded for it, every site, and every launch but `launchID`, which
+    /// questions asked from now on belong to. Then compacts the file, so what was deleted doesn't stay in it.
+    public func deleteEverything(keepingLaunch launchID: Int64) async throws {
+        try await writer.write { db in
+            _ = try ResponseRecord.deleteAll(db)
+            _ = try RequestRecord.deleteAll(db)
+            _ = try CardViewRecord.deleteAll(db)
+            _ = try FeedbackRecord.deleteAll(db)
+            _ = try StepRecord.deleteAll(db)
+            _ = try CardRecord.deleteAll(db)
+            _ = try QuestionRecord.deleteAll(db)
+            _ = try SiteRecord.deleteAll(db)
+            _ = try LaunchRecord.filter(Column("id") != launchID).deleteAll(db)
+        }
+        try await writer.writeWithoutTransaction { db in
+            try db.execute(sql: "VACUUM")
+        }
+    }
+
     // MARK: - Reading
 
     /// The feedback form as last saved for the question with `questionID`, or nil when it never was.

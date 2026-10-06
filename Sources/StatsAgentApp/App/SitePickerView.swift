@@ -4,6 +4,8 @@ import SwiftUI
 /// window. Logging out is here too, for using another account.
 struct SitePickerView: View {
     let account: Account
+    /// Asks whether to log out.
+    let logOut: () -> Void
     @State private var sites: [Site]?
     @State private var error: String?
     @State private var filter = ""
@@ -31,7 +33,7 @@ struct SitePickerView: View {
                 if account.site != nil {
                     Button("Cancel") { account.isChoosingSite = false }
                 }
-                Button("Log Out", action: account.logOut)
+                Button("Log Out…", action: logOut)
             }
             TextField("Filter by name or URL", text: $filter)
                 .textFieldStyle(.plain)

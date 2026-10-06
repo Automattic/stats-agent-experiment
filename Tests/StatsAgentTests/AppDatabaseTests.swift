@@ -229,6 +229,35 @@ struct AppDatabaseTests {
         }
     }
 
+    /// What's asked after the delete is recorded against the launch kept.
+    @Test func deletesEverythingButThisLaunch() async throws {
+        let database = try await Self.exportFixture()
+        let launch = try await database.startLaunch(
+            at: Self.asked.addingTimeInterval(9000),
+            version: "0.1.0",
+            build: "1",
+            commit: nil,
+            macOS: ""
+        )
+        try await database.deleteEverything(keepingLaunch: launch)
+
+        let launches = try await database.reader.read { db in try LaunchRecord.fetchAll(db).map(\.id) }
+        let rows = try await database.reader.read { db in
+            try [
+                SiteRecord.fetchCount(db), QuestionRecord.fetchCount(db), CardRecord.fetchCount(db),
+                StepRecord.fetchCount(db), RequestRecord.fetchCount(db), ResponseRecord.fetchCount(db),
+                CardViewRecord.fetchCount(db), FeedbackRecord.fetchCount(db)
+            ]
+        }
+        let freePages = try await database.reader.read { db in try Int.fetchOne(db, sql: "PRAGMA freelist_count") }
+        #expect(launches == [launch])
+        #expect(rows == Array(repeating: 0, count: 8))
+        // Compacted: no free pages are left holding what was deleted.
+        #expect(freePages == 0)
+        try await database.saveSite(id: Self.fieldNotes, name: "Field Notes", url: "", timeZone: nil)
+        _ = try await database.startQuestion("Again?", launchID: launch, siteID: Self.fieldNotes, at: Self.asked)
+    }
+
     @Test func savesASiteInPlaceOfHowItWas() async throws {
         let database = try AppDatabase.inMemory()
         try await database.saveSite(id: 42, name: "Old name", url: "https://example.com", timeZone: nil)
