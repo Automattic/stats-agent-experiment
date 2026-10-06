@@ -14,7 +14,7 @@ struct Card: Identifiable {
         /// Labelled figures, with a chart below them when there is one.
         case figures([Figure], chart: ChartData?)
         /// Figures against earlier ones, such as today against yesterday, with a chart below them when there is one.
-        case headlines([ChartCardHeaderView.ViewModel], chart: ChartData?)
+        case headlines([Headline], chart: ChartData?)
         /// Items ranked by a figure, with each item's figure for the span before when comparing periods.
         case ranking(RankedList, previous: [String: Int]?)
         /// A stats call the app doesn't draw yet.
@@ -28,6 +28,14 @@ struct Card: Identifiable {
         let value: Int
         /// What the figure covers, such as "All time", when the title doesn't say.
         var detail: String?
+    }
+
+    /// A figure against an earlier one, such as today's views against yesterday's.
+    struct Headline {
+        let title: String
+        let trend: TrendViewModel
+        /// What the earlier figure covers, such as "Yesterday".
+        let earlier: String
     }
 
     let id: Int

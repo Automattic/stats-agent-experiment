@@ -19,10 +19,10 @@ extension Card {
                 (SiteMetric.visitors, summary.visitorsToday, summary.visitorsYesterday)
             ]
             .map { metric, today, yesterday in
-                ChartCardHeaderView.ViewModel(
+                Headline(
+                    title: "\(metric.localizedTitle) today",
                     trend: TrendViewModel(currentValue: today, previousValue: yesterday, metric: metric),
-                    metricTitle: metric.localizedTitle,
-                    period: "Today, against yesterday"
+                    earlier: "Yesterday"
                 )
             }
             return Card(

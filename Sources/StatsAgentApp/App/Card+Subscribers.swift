@@ -100,26 +100,26 @@ extension Card {
             }
             let beforeRange = context.formatters.dateRange.string(from: before.interval)
             var headlines = [
-                ChartCardHeaderView.ViewModel(
+                Headline(
+                    title: "Subscribers at the end",
                     trend: TrendViewModel(
                         currentValue: current.endTotal,
                         previousValue: before.endTotal,
                         metric: SiteMetric.subscribers
                     ),
-                    metricTitle: "Subscribers at the end",
-                    period: "\(range), against \(beforeRange)"
+                    earlier: beforeRange
                 )
             ]
             if let change = current.change, let beforeChange = before.change {
                 headlines.append(
-                    ChartCardHeaderView.ViewModel(
+                    Headline(
+                        title: "Change",
                         trend: TrendViewModel(
                             currentValue: change,
                             previousValue: beforeChange,
                             metric: SiteMetric.subscribers
                         ),
-                        metricTitle: "Change",
-                        period: "\(range), against \(beforeRange)"
+                        earlier: beforeRange
                     )
                 )
             }

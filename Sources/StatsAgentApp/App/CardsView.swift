@@ -137,10 +137,19 @@ struct CardView: View {
                 trendChart(chart)
             }
         case let .headlines(headlines, chart):
-            ForEach(headlines.indices, id: \.self) { index in
-                ChartCardHeaderView(viewModel: headlines[index])
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible())], spacing: 12) {
+                ForEach(headlines.indices, id: \.self) { index in
+                    HeadlineView(headline: headlines[index])
+                }
             }
             if let chart {
+                Text(
+                    "\(chart.metric.localizedTitle) by \(chart.granularity), "
+                        + context.formatters.dateRange.string(from: chart.dateInterval)
+                )
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.top, 8)
                 trendChart(chart)
             }
         case let .series(data, note):
@@ -278,6 +287,32 @@ struct HeroFigureView: View {
                     .foregroundStyle(.secondary)
             }
         }
+    }
+}
+
+/// A figure against an earlier one, in a tile: the figure, its change, and the earlier figure.
+struct HeadlineView: View {
+    let headline: Card.Headline
+
+    var body: some View {
+        let trend = headline.trend
+        VStack(alignment: .leading, spacing: 4) {
+            Text(headline.title)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+            Text(trend.formattedCurrentValue)
+                .font(Constants.Typography.mediumDisplayFont)
+            Text(verbatim: "\(trend.formattedChange)  \(trend.iconSign) \(trend.formattedPercentage)")
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(trend.sentiment.foregroundColor)
+            Text("\(headline.earlier): \(trend.formattedPreviousValue)")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 12))
     }
 }
 
