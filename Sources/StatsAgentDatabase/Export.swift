@@ -48,7 +48,7 @@ public struct ExportV1: Codable, Sendable, Equatable {
         /// The site's number in `sites`.
         public var site: Int
         public var app: App
-        /// A `LogEntryV1.Outcome`, or nil when the answer never finished.
+        /// A `AnswerOutcome`, or nil when the answer never finished.
         public var outcome: String?
         public var error: String?
         public var finishedAt: Date?
@@ -71,7 +71,7 @@ public struct ExportV1: Codable, Sendable, Equatable {
 
     public struct Card: Codable, Sendable, Equatable {
         public var endpoint: String
-        /// A `LogEntryV1.Card.Status`.
+        /// A `StatsCall.Status`.
         public var status: String
         /// The card as shown: its title, its path such as stats call and operation, and its parameters.
         public var title: String?
@@ -105,7 +105,7 @@ public struct ExportV1: Codable, Sendable, Equatable {
     }
 
     public struct Feedback: Codable, Sendable, Equatable {
-        /// A `LogEntryV1.Choice`, or nil when none was chosen.
+        /// A `FeedbackChoice`, or nil when none was chosen.
         public var choice: String?
         /// The endpoint of the card that answered.
         public var card: String?

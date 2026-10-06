@@ -124,7 +124,7 @@ final class QuestionRecorder {
     }
 
     /// Records a model call before the cards, at `position` among them.
-    func step(_ step: LogEntryV1.Step, position: Int) async {
+    func step(_ step: AgentStep, position: Int) async {
         do {
             try await database.addStep(step, questionID: questionID, cardID: nil, position: position)
         } catch {
@@ -133,7 +133,7 @@ final class QuestionRecorder {
     }
 
     /// Records a stats call from the agent's list at `position`, with its operation step.
-    func startCard(_ card: LogEntryV1.Card, position: Int) async {
+    func startCard(_ card: StatsCall, position: Int) async {
         do {
             let id = try await database.startCard(endpoint: card.endpoint, questionID: questionID, position: position)
             cardIDs[position] = id
@@ -147,7 +147,7 @@ final class QuestionRecorder {
 
     /// Records how the stats call at `position` ended: the model calls after its operation step, its status, and the
     /// card shown for it.
-    func finishCard(_ card: LogEntryV1.Card, position: Int, shown: Card) async {
+    func finishCard(_ card: StatsCall, position: Int, shown: Card) async {
         guard let id = cardIDs[position] else {
             return
         }
@@ -234,7 +234,7 @@ final class QuestionRecorder {
         }
     }
 
-    func finish(outcome: LogEntryV1.Outcome, error: String?) async {
+    func finish(outcome: AnswerOutcome, error: String?) async {
         do {
             try await database.finishQuestion(questionID, outcome: outcome, error: error.map(scrubbed), at: .now)
         } catch {

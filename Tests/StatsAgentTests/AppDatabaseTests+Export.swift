@@ -54,7 +54,7 @@ extension AppDatabaseTests {
             position: 0
         )
         try await database.addStep(
-            LogEntryV1.Step(ModelCalls.Call(kind: "span", values: ["span": "lastWeek"], duration: .seconds(1))),
+            AgentStep(ModelCalls.Call(kind: "span", values: ["span": "lastWeek"], duration: .seconds(1))),
             questionID: views,
             cardID: visits,
             position: 1

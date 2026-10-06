@@ -76,7 +76,7 @@ public struct AppDatabase: Sendable {
     /// Records how the question with `id` ended.
     public func finishQuestion(
         _ id: Int64,
-        outcome: LogEntryV1.Outcome,
+        outcome: AnswerOutcome,
         error: String?,
         at finishedAt: Date
     ) async throws {
@@ -90,7 +90,7 @@ public struct AppDatabase: Sendable {
     }
 
     /// Records a model call at `position` among the question's steps, or the card's when `cardID` is given.
-    public func addStep(_ step: LogEntryV1.Step, questionID: Int64, cardID: Int64?, position: Int) async throws {
+    public func addStep(_ step: AgentStep, questionID: Int64, cardID: Int64?, position: Int) async throws {
         _ = try await insert(
             StepRecord(
                 id: nil,
@@ -99,8 +99,8 @@ public struct AppDatabase: Sendable {
                 position: position,
                 kind: step.kind,
                 offered: step.offered,
-                chosen: step.chose,
-                generated: step.values,
+                chosen: step.chosen,
+                generated: step.generated,
                 seconds: step.seconds
             )
         )
@@ -115,7 +115,7 @@ public struct AppDatabase: Sendable {
                 questionId: questionID,
                 position: position,
                 endpoint: endpoint,
-                status: LogEntryV1.Card.Status.dropped.rawValue,
+                status: StatsCall.Status.dropped.rawValue,
                 title: nil,
                 path: nil,
                 parameters: nil,
@@ -128,7 +128,7 @@ public struct AppDatabase: Sendable {
     /// Records how the card with `id` ended, and what it showed.
     public func finishCard(
         _ id: Int64,
-        status: LogEntryV1.Card.Status,
+        status: StatsCall.Status,
         title: String?,
         path: [String]?,
         parameters: String?,
@@ -193,7 +193,7 @@ public struct AppDatabase: Sendable {
     /// Records the feedback form for the question with `questionID` as it stands, filled in or not: `cardID` is the card
     /// that answered. Earlier saves are kept.
     public func saveFeedback(
-        choice: LogEntryV1.Choice?,
+        choice: FeedbackChoice?,
         cardID: Int64?,
         note: String?,
         looksBroken: Bool,

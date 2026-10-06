@@ -39,7 +39,7 @@ public struct QuestionRecord: Codable, Sendable, Equatable, FetchableRecord, Per
     public var siteId: Int64
     public var askedAt: Date
     public var text: String
-    /// A `LogEntryV1.Outcome`, or nil while the answer is being worked out, or when it never finished.
+    /// A `AnswerOutcome`, or nil while the answer is being worked out, or when it never finished.
     public var outcome: String?
     public var error: String?
     public var finishedAt: Date?
@@ -54,7 +54,7 @@ public struct CardRecord: Codable, Sendable, Equatable, FetchableRecord, Persist
     /// Its place in the list, from 0.
     public var position: Int
     public var endpoint: String
-    /// A `LogEntryV1.Card.Status`.
+    /// A `StatsCall.Status`.
     public var status: String
     /// The card as shown: its title, its path such as stats call and operation, and its parameters.
     public var title: String?
@@ -122,7 +122,7 @@ public struct FeedbackRecord: Codable, Sendable, Equatable, FetchableRecord, Per
 
     public var id: Int64?
     public var questionId: Int64
-    /// A `LogEntryV1.Choice`, or nil when none was chosen.
+    /// A `FeedbackChoice`, or nil when none was chosen.
     public var choice: String?
     /// The card that answered, for a choice that asks for one, once it's known.
     public var cardId: Int64?

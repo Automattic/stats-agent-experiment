@@ -45,9 +45,9 @@ enum AskMode {
         let directory = Screenshots.directory.appending(path: Screenshots.timestamp)
         var lines = ["Question: \(question)", "Outcome: \(answer.status)", "", "Steps:"]
         lines += answer.steps.map { "  \(describe($0))" }
-        for record in answer.records {
-            lines.append("  \(Names.endpoint(record.endpoint)), \(record.status):")
-            lines += record.steps.map { "    \(describe($0))" }
+        for statsCall in answer.statsCalls {
+            lines.append("  \(Names.endpoint(statsCall.endpoint)), \(statsCall.status):")
+            lines += statsCall.steps.map { "    \(describe($0))" }
         }
         lines += ["", "Cards:"]
         let appearance = NSApp.effectiveAppearance
@@ -99,12 +99,13 @@ enum AskMode {
     }
 
     /// A model call, such as `span: span=lastMonth (1.02 s)` or `endpoint: stats_visits (of 22, 0.91 s)`.
-    private static func describe(_ step: LogEntryV1.Step) -> String {
-        let chose =
-            step.chose?.joined(separator: ", ")
-            ?? (step.values ?? [:]).sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ", ")
+    private static func describe(_ step: AgentStep) -> String {
+        let chosen =
+            step.chosen?.joined(separator: ", ")
+            ?? (step.generated ?? [:]).sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }
+            .joined(separator: ", ")
         let offered = step.offered.map { "of \($0.count), " } ?? ""
-        return "\(step.kind): \(chose) (\(offered)\(String(format: "%.2f s", step.seconds)))"
+        return "\(step.kind): \(chosen) (\(offered)\(String(format: "%.2f s", step.seconds)))"
     }
 
     private static func describe(_ content: Card.Content) -> String {

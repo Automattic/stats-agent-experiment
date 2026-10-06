@@ -17,7 +17,7 @@ struct VisitsRequest: Equatable, Sendable {
         return "\(quantity) \(unit)\(quantity == 1 ? "" : "s"), \(end)"
     }
 
-    /// The parameters as the database and feedback log entries record them.
+    /// The parameters as the database records them.
     var logged: [String: String] {
         ["granularity": "\(granularity)", "quantity": "\(quantity)", "endDate": endDate].compactMapValues(\.self)
     }

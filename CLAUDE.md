@@ -24,7 +24,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 ## Commands
 
 - `swift build --build-tests`. `make format` and `make lint` must pass before committing.
-- Without model calls, in seconds: `swift test --filter "LogEntryTests|CardPickerTests|StatsPeriodsTests|AppDatabaseTests"`.
+- Without model calls, in seconds: `swift test --filter "CardPickerTests|StatsPeriodsTests|AppDatabaseTests|FeedbackReportTests"`.
 - Experiments call the model, take minutes each, and rewrite their file in `results/`. For example, `swift test --filter "OperationStepTests/sightedWithOperations"` runs the main setup in about 5.5 minutes. Add `--no-parallel` when running several suites, or their timings mean nothing.
 - `make app` builds the app as a bundle, `.build/app/release/Stats agent.app`, signed with `SIGNING_IDENTITY` or ad hoc without it, with the commit in its `Info.plist`. Its version and build number are `CFBundleShortVersionString` and `CFBundleVersion` in `Sources/StatsAgentApp/Info.plist`. It stops without `wp_com_credentials.json`, the WordPress.com OAuth client the app logs in with, in the package's root; git ignores it, and `wp_com_credentials.json-example` shows its format.
 - `make run` builds a debug bundle and opens it, with its database in `data/`.

@@ -157,7 +157,7 @@ struct FeedbackReportTests {
         }
         let feedback = questions.compactMap(\.question.feedback)
         lines += ["", "| Choice | Questions |", "|---|---|"]
-        for choice in LogEntryV1.Choice.allCases {
+        for choice in FeedbackChoice.allCases {
             lines.append("| \(choice.label) | \(feedback.count { $0.choice == choice.rawValue }) |")
         }
         let shared = questions.filter(\.export.included.feedback)
