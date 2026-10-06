@@ -52,7 +52,18 @@ enum Previews {
             },
             Screen(name: "ask") { window(nil) },
             Screen(name: "working") {
-                window(Answer(previewing: question, status: .working("Filling in the dates for visits"), cards: []))
+                window(
+                    Answer(
+                        previewing: question,
+                        status: .working("Filling in the dates for visits"),
+                        cards: [],
+                        finishedSteps: [
+                            "Choosing a stats call",
+                            "Choosing up to 3 stats calls",
+                            "Choosing what to show from Visits"
+                        ]
+                    )
+                )
             },
             Screen(name: "answer") { window(Answer(previewing: question, status: .done, cards: cards)) },
             Screen(name: "feedback") {

@@ -22,7 +22,15 @@ final class Answer {
 
     let question: String
     let askedAt = Date.now
-    private(set) var status = Status.working("Choosing a stats call")
+    private(set) var status = Status.working("Choosing a stats call") {
+        didSet {
+            if case .working(let step) = oldValue, status != oldValue {
+                finishedSteps.append(step)
+            }
+        }
+    }
+    /// What the agent has done so far, in the words `status` gave each step while it was working on it.
+    private(set) var finishedSteps: [String] = []
     private(set) var cards: [Card] = []
     /// The model calls before the cards, in order.
     private(set) var steps: [LogEntryV1.Step] = []
@@ -42,10 +50,11 @@ final class Answer {
     }
 
     /// An answer as `--previews` draws it: made up, not worked out.
-    init(previewing question: String, status: Status, cards: [Card]) {
+    init(previewing question: String, status: Status, cards: [Card], finishedSteps: [String] = []) {
         self.question = question
         self.status = status
         self.cards = cards
+        self.finishedSteps = finishedSteps
     }
 
     /// How the answer ended, or nil while it's working.
