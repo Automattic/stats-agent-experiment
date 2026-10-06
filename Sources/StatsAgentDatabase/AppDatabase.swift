@@ -190,6 +190,22 @@ public struct AppDatabase: Sendable {
         }
     }
 
+    /// Records that the feedback form for the question with `questionID` was cleared, as a save with no choice.
+    /// Earlier saves are kept.
+    public func clearFeedback(questionID: Int64, at clearedAt: Date) async throws {
+        _ = try await insert(
+            FeedbackRecord(
+                id: nil,
+                questionId: questionID,
+                choice: nil,
+                cardId: nil,
+                note: nil,
+                looksBroken: false,
+                savedAt: clearedAt
+            )
+        )
+    }
+
     /// Records the feedback form as saved for the question with `questionID`. Earlier saves are kept.
     public func saveFeedback(_ feedback: LogEntryV1.Feedback, questionID: Int64, cardID: Int64?) async throws {
         _ = try await insert(
@@ -207,7 +223,8 @@ public struct AppDatabase: Sendable {
 
     // MARK: - Reading
 
-    /// The feedback last saved for the question with `questionID`, or nil when none was.
+    /// The feedback last saved for the question with `questionID`, or nil when none was. A record with no choice means
+    /// the form was last cleared.
     public func latestFeedback(questionID: Int64) async throws -> FeedbackRecord? {
         try await writer.read { db in
             try FeedbackRecord
@@ -226,7 +243,8 @@ public struct AppDatabase: Sendable {
         }
     }
 
-    private static var migrator: DatabaseMigrator {
+    /// The schema's migrations, in order. One that has shipped never changes: databases on other Macs have applied it.
+    static var migrator: DatabaseMigrator {
         var migrator = DatabaseMigrator()
         migrator.registerMigration("v1") { db in
             try db.create(table: LaunchRecord.databaseTableName) { table in
@@ -306,6 +324,23 @@ public struct AppDatabase: Sendable {
                 table.column("looksBroken", .boolean).notNull()
                 table.column("savedAt", .datetime).notNull()
             }
+        }
+        // A save of the feedback form can have no choice, for a cleared form. SQLite can't drop a column's NOT NULL, so
+        // the table is made again and its rows copied over.
+        migrator.registerMigration("v2") { db in
+            try db.create(table: "feedbackV2") { table in
+                table.autoIncrementedPrimaryKey("id")
+                table.belongsTo(QuestionRecord.databaseTableName, onDelete: .cascade).notNull()
+                table.column("choice", .text)
+                table.belongsTo(CardRecord.databaseTableName, onDelete: .setNull)
+                table.column("note", .text)
+                table.column("looksBroken", .boolean).notNull()
+                table.column("savedAt", .datetime).notNull()
+            }
+            let columns = "id, questionId, choice, cardId, note, looksBroken, savedAt"
+            try db.execute(sql: "INSERT INTO feedbackV2 (\(columns)) SELECT \(columns) FROM feedback")
+            try db.drop(table: FeedbackRecord.databaseTableName)
+            try db.rename(table: "feedbackV2", to: FeedbackRecord.databaseTableName)
         }
         return migrator
     }

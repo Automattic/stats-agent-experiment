@@ -121,8 +121,8 @@ public struct FeedbackRecord: Codable, Sendable, Equatable, FetchableRecord, Per
 
     public var id: Int64?
     public var questionId: Int64
-    /// A `LogEntryV1.Choice`.
-    public var choice: String
+    /// A `LogEntryV1.Choice`, or nil when the form was cleared.
+    public var choice: String?
     /// The card that answered, for a choice that asks for one.
     public var cardId: Int64?
     public var note: String?

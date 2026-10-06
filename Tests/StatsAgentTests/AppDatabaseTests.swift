@@ -126,6 +126,101 @@ struct AppDatabaseTests {
         #expect(count == 2)
     }
 
+    @Test func keepsAClearedFormAsASaveWithNoChoice() async throws {
+        let database = try AppDatabase.inMemory()
+        let launch = try await database.startLaunch(at: Self.asked, version: nil, build: nil, commit: nil, macOS: "")
+        try await database.saveSite(id: 42, name: "Example", url: "https://example.com", timeZone: nil)
+        let question = try await database.startQuestion("Top posts?", launchID: launch, siteID: 42, at: Self.asked)
+        let saved = LogEntryV1.Feedback(
+            choice: .other,
+            card: nil,
+            note: "Not what I meant",
+            looksBroken: true,
+            savedAt: Self.asked
+        )
+        try await database.saveFeedback(saved, questionID: question, cardID: nil)
+        try await database.clearFeedback(questionID: question, at: Self.asked.addingTimeInterval(30))
+
+        let latest = try await database.latestFeedback(questionID: question)
+        #expect(latest?.choice == nil)
+        #expect(latest?.note == nil)
+        #expect(latest?.looksBroken == false)
+        let count = try await database.reader.read { db in try FeedbackRecord.fetchCount(db) }
+        #expect(count == 2)
+    }
+
+    /// v2 makes the feedback table again so a save can have no choice; the saves from before it stay.
+    @Test func keepsFeedbackSavedBeforeVersion2() throws {
+        let queue = try DatabaseQueue()
+        try AppDatabase.migrator.migrate(queue, upTo: "v1")
+        try queue.write { db in
+            try LaunchRecord(id: 1, startedAt: Self.asked, version: nil, build: nil, commit: nil, macOS: "").insert(db)
+            try SiteRecord(id: 42, name: "Example", url: "https://example.com", timeZone: nil).insert(db)
+            try QuestionRecord(
+                id: 1,
+                launchId: 1,
+                siteId: 42,
+                askedAt: Self.asked,
+                text: "Top posts?",
+                outcome: "cards",
+                error: nil,
+                finishedAt: nil
+            )
+            .insert(db)
+            try CardRecord(
+                id: 1,
+                questionId: 1,
+                position: 0,
+                endpoint: "stats_top_posts",
+                status: "drawn",
+                title: nil,
+                path: nil,
+                parameters: nil,
+                content: nil,
+                error: nil
+            )
+            .insert(db)
+            try FeedbackRecord(
+                id: 1,
+                questionId: 1,
+                choice: "answersMost",
+                cardId: 1,
+                note: "Close",
+                looksBroken: false,
+                savedAt: Self.asked
+            )
+            .insert(db)
+        }
+        try AppDatabase.migrator.migrate(queue)
+
+        let feedback = try queue.read { db in try FeedbackRecord.fetchAll(db) }
+        #expect(
+            feedback == [
+                FeedbackRecord(
+                    id: 1,
+                    questionId: 1,
+                    choice: "answersMost",
+                    cardId: 1,
+                    note: "Close",
+                    looksBroken: false,
+                    savedAt: Self.asked
+                )
+            ]
+        )
+        try queue.write { db in
+            try FeedbackRecord(
+                id: nil,
+                questionId: 1,
+                choice: nil,
+                cardId: nil,
+                note: nil,
+                looksBroken: false,
+                savedAt: Self.asked
+            )
+            .insert(db)
+        }
+    }
+
     @Test func savesASiteInPlaceOfHowItWas() async throws {
         let database = try AppDatabase.inMemory()
         try await database.saveSite(id: 42, name: "Old name", url: "https://example.com", timeZone: nil)
