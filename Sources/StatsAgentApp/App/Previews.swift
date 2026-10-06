@@ -55,6 +55,9 @@ enum Previews {
                 window(Answer(previewing: question, status: .working("Filling in the dates for visits"), cards: []))
             },
             Screen(name: "answer") { window(Answer(previewing: question, status: .done, cards: cards)) },
+            Screen(name: "feedback") {
+                window(Answer(previewing: question, status: .done, cards: cards), showsFeedback: true)
+            },
             Screen(name: "cant-answer") {
                 window(Answer(previewing: "What will the weather be like tomorrow?", status: .cantAnswer, cards: []))
             },
@@ -77,9 +80,11 @@ enum Previews {
         timeZone: TimeZone(identifier: "Europe/Lisbon")
     )
 
-    /// The window logged in to `site`, with `answer` on screen.
-    private static func window(_ answer: Answer?) -> AnyView {
-        AnyView(RootView(account: Account(previewToken: "preview", site: site), questions: questions(answer)))
+    /// The window logged in to `site`, with `answer` on screen, and its feedback form open when `showsFeedback`.
+    private static func window(_ answer: Answer?, showsFeedback: Bool = false) -> AnyView {
+        let questions = questions(answer)
+        questions.showsFeedback = showsFeedback
+        return AnyView(RootView(account: Account(previewToken: "preview", site: site), questions: questions))
     }
 
     private static func questions(_ answer: Answer?) -> Questions {

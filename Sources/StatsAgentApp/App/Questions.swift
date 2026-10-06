@@ -7,6 +7,8 @@ import StatsAgent
 @MainActor @Observable
 final class Questions {
     private(set) var answer: Answer?
+    /// Whether the feedback form is open for the answer on screen.
+    var showsFeedback = false
     let recorder: Recorder
 
     init(recorder: Recorder, answer: Answer? = nil) {
@@ -32,14 +34,16 @@ final class Questions {
         }
         let answer = Answer(question: question)
         self.answer = answer
+        showsFeedback = false
         Task {
             let recorder = await recorder.start(answer, site: site, stats: stats)
             await answer.run(stats: .success(stats), context: context, recorder: recorder)
         }
     }
 
-    /// Takes the answer off the screen, as when the site changes. It's in the database already.
+    /// Takes the answer off the screen, as for another question or when the site changes. It's in the database already.
     func clear() {
         answer = nil
+        showsFeedback = false
     }
 }
