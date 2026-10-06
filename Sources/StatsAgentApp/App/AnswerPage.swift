@@ -1,11 +1,12 @@
 import SwiftUI
 
-/// An answer's page: the question as its title, what the agent is doing or its cards, the feedback form while it's
-/// open, and a bar along the bottom to give feedback or ask another question. Feedback waits until there's an answer
-/// to give it on, and Ask Another until the answer is worked out.
+/// An answer's page: the question as its title, what the agent is doing or its cards, and a bar along the bottom to
+/// give feedback or ask another question. The feedback form opens in an inspector beside the cards, which can still be
+/// swiped while it's open. Feedback waits until there's an answer to give it on, and Ask Another until the answer is
+/// worked out.
 struct AnswerPage: View {
     let answer: Answer
-    let questions: Questions
+    @Bindable var questions: Questions
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -14,21 +15,22 @@ struct AnswerPage: View {
                 .textSelection(.enabled)
             AnswerView(answer: answer)
                 .id(ObjectIdentifier(answer))
-            if questions.showsFeedback {
-                FeedbackView(
-                    answer: answer,
-                    choices: questions.choices,
-                    saved: answer.feedback,
-                    save: answer.save,
-                    close: { questions.showsFeedback = false }
-                )
-                .id(ObjectIdentifier(answer))
-            }
         }
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             bar
+        }
+        .inspector(isPresented: $questions.showsFeedback) {
+            FeedbackView(
+                answer: answer,
+                choices: questions.choices,
+                saved: answer.feedback,
+                save: answer.save,
+                close: { questions.showsFeedback = false }
+            )
+            .id(ObjectIdentifier(answer))
+            .inspectorColumnWidth(min: 300, ideal: 340, max: 440)
         }
     }
 

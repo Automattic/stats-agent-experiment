@@ -1,9 +1,9 @@
 import StatsAgent
 import SwiftUI
 
-/// The feedback form for the answer on screen, shown under its cards so they can still be swiped: one choice, which
-/// card answered for the choices that ask, a note, and whether something looks broken. It opens with the feedback
-/// saved before, if any. The choices and their rules come from `LogEntryV1.Choice`.
+/// The feedback form for the answer on screen, in an inspector beside its cards: one choice, which card answered for
+/// the choices that ask, a note, and whether something looks broken. It opens with the feedback saved before, if any.
+/// The choices and their rules come from `LogEntryV1.Choice`.
 struct FeedbackView: View {
     let answer: Answer
     let choices: [LogEntryV1.Choice]
@@ -32,46 +32,50 @@ struct FeedbackView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("How well did this answer your question?")
-                .font(.headline)
-            Picker("How well did this answer your question?", selection: $choice) {
-                ForEach(choices, id: \.self) { choice in
-                    Text(choice.label).tag(Optional(choice))
-                }
-            }
-            .pickerStyle(.radioGroup)
-            .labelsHidden()
-            if choice?.asksForCard == true, answer.cards.count > 1 {
-                Picker("Which card answered it?", selection: $card) {
-                    Text("Choose a card").tag(String?.none)
-                    ForEach(answer.cards) { card in
-                        Text("\(card.id + 1). \(card.title)").tag(answer.endpoint(of: card))
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("How well did this answer your question?")
+                    .font(.headline)
+                Picker("How well did this answer your question?", selection: $choice) {
+                    ForEach(choices, id: \.self) { choice in
+                        Text(choice.label).tag(Optional(choice))
                     }
                 }
-                .fixedSize()
-            }
-            TextField(choice?.needsNote == true ? "Note (required)" : "Note (optional)", text: $note, axis: .vertical)
-                .lineLimit(1...3)
+                .pickerStyle(.radioGroup)
+                .labelsHidden()
+                if choice?.asksForCard == true, answer.cards.count > 1 {
+                    Picker("Which card answered it?", selection: $card) {
+                        Text("Choose a card").tag(String?.none)
+                        ForEach(answer.cards) { card in
+                            Text("\(card.id + 1). \(card.title)").tag(answer.endpoint(of: card))
+                        }
+                    }
+                }
+                TextField(
+                    choice?.needsNote == true ? "Note (required)" : "Note (optional)",
+                    text: $note,
+                    axis: .vertical
+                )
+                .lineLimit(3...6)
                 .textFieldStyle(.roundedBorder)
-            Toggle("Something looks broken: wrong numbers, errors or bad charts", isOn: $looksBroken)
-            HStack {
-                Spacer()
-                Button("Cancel", action: close)
-                    .keyboardShortcut(.cancelAction)
-                Button("Save") {
-                    guard let feedback else {
-                        return
+                Toggle("Something looks broken: wrong numbers, errors or bad charts", isOn: $looksBroken)
+                HStack {
+                    Spacer()
+                    Button("Cancel", action: close)
+                        .keyboardShortcut(.cancelAction)
+                    Button("Save") {
+                        guard let feedback else {
+                            return
+                        }
+                        save(feedback)
+                        close()
                     }
-                    save(feedback)
-                    close()
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(feedback == nil)
                 }
-                .keyboardShortcut(.defaultAction)
-                .disabled(feedback == nil)
             }
+            .padding()
         }
-        .padding()
-        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
     }
 
     /// The feedback as filled in, or nil while a choice, a card it asks for, or a note it needs is missing.

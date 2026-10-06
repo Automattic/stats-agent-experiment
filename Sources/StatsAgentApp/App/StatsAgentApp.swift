@@ -19,7 +19,7 @@ struct StatsAgentApp: App {
                 RootView(account: appDelegate.account, questions: appDelegate.questions)
             }
         }
-        .defaultSize(width: 760, height: 900)
+        .defaultSize(width: Previews.size.width, height: Previews.size.height)
     }
 }
 
