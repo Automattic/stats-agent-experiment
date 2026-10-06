@@ -96,7 +96,10 @@ enum Previews {
                         status: .done,
                         cards: cards,
                         endpoints: ["stats_visits", "stats_top_posts", "stats_visits"],
-                        feedback: FeedbackForm(choice: .answersMost, note: "The right weeks, but I meant visitors.")
+                        feedback: FeedbackForm(
+                            choice: .answersRelated,
+                            note: "Not what I asked, but the top posts were handy."
+                        )
                     ),
                     showsFeedback: true
                 )

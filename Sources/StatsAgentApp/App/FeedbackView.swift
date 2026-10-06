@@ -2,11 +2,11 @@ import StatsAgent
 import SwiftUI
 
 /// The feedback on an answer, in a box under its cards: a Give Feedback header, which opens and closes the form under
-/// it, and says when feedback is saved while the form is closed. The form has one choice, which card answered for the
-/// choices that ask, a note, and whether something looks broken. It shows the answer's `feedbackForm`, which the answer
-/// saves as it changes, so the form keeps what was typed when it's closed or scrolled away. It says when the form as it
-/// stands is saved, and what's missing from it: a choice, or the note or card the choice asks for. Clear empties the
-/// form and saves that. The choices and their rules come from `LogEntryV1.Choice`.
+/// it, and says when feedback is saved while the form is closed. The form has one choice, which card answered, or was
+/// useful or interesting, for the choices that ask, a note, and whether something looks broken. It shows the answer's
+/// `feedbackForm`, which the answer saves as it changes, so the form keeps what was typed when it's closed or scrolled
+/// away. It says when the form as it stands is saved, and what's missing from it: a choice, or the note or card the
+/// choice asks for. Clear empties the form and saves that. The choices and their rules come from `LogEntryV1.Choice`.
 struct FeedbackView: View {
     @Bindable var answer: Answer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -63,8 +63,8 @@ struct FeedbackView: View {
             }
             .pickerStyle(.radioGroup)
             .labelsHidden()
-            if form.choice?.asksForCard == true, answer.cards.count > 1 {
-                Picker("Which card answered it?", selection: $answer.feedbackForm.card) {
+            if let choice = form.choice, choice.asksForCard, answer.cards.count > 1 {
+                Picker("Which card \(Self.cardRole(for: choice))?", selection: $answer.feedbackForm.card) {
                     Text("Choose a card").tag(String?.none)
                     ForEach(answer.cards) { card in
                         Text("\(card.id + 1). \(card.title)").tag(answer.endpoint(of: card))
@@ -108,12 +108,21 @@ struct FeedbackView: View {
             return form == FeedbackForm() ? nil : "Choose how well it answered."
         }
         if choice.asksForCard, answer.cards.count > 1, form.card == nil {
-            return "Choose the card that answered it."
+            return "Choose the card that \(Self.cardRole(for: choice))."
         }
         if choice.needsNote, form.note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return "Add a note."
         }
         return nil
+    }
+
+    /// What the card picked for `choice` did, as the form asks it: "Which card answered it?"
+    private static func cardRole(for choice: LogEntryV1.Choice) -> String {
+        switch choice {
+        case .answersRelated: "was useful"
+        case .somethingInteresting: "was interesting"
+        default: "answered it"
+        }
     }
 }
 
