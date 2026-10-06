@@ -58,7 +58,7 @@ extension Card {
         context: StatsContext
     ) -> Card {
         let calendar = context.calendar
-        let path = [Names.endpoint("stats_visits"), Names.operation(operation)]
+        let path = [DisplayNames.endpoint("stats_visits"), DisplayNames.operation(operation)]
         let metric = request.metric
         let parameters = "\(request.summary) (asked: \(asked))"
         guard let interval = interval(of: points, granularity: request.granularity, calendar: calendar) else {

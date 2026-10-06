@@ -46,7 +46,7 @@ enum AskMode {
         var lines = ["Question: \(question)", "Outcome: \(answer.status)", "", "Steps:"]
         lines += answer.steps.map { "  \(describe($0))" }
         for statsCall in answer.statsCalls {
-            lines.append("  \(Names.endpoint(statsCall.endpoint)), \(statsCall.status):")
+            lines.append("  \(DisplayNames.endpoint(statsCall.endpoint)), \(statsCall.status):")
             lines += statsCall.steps.map { "    \(describe($0))" }
         }
         lines += ["", "Cards:"]

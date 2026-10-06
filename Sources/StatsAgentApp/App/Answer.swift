@@ -209,7 +209,7 @@ final class Answer: Identifiable {
             await add(AgentStep(list))
             for endpoint in CardPicker.cardEndpoints(single: single, list: list) {
                 try Task.checkCancellation()
-                status = .working("Choosing what to show from \(Names.endpoint(endpoint.id))")
+                status = .working("Choosing what to show from \(DisplayNames.endpoint(endpoint.id))")
                 let operationStep = try await picker.operation(for: question, endpoint: endpoint)
                 statsCalls.append(StatsCall(endpoint: endpoint.id, operationStep: AgentStep(operationStep)))
                 await recorder?.startCard(statsCalls[statsCalls.count - 1], position: statsCalls.count - 1)
@@ -296,7 +296,7 @@ final class Answer: Identifiable {
         stats: Result<SiteStats, any Error>,
         context: StatsContext
     ) async -> Card {
-        let name = Names.endpoint(endpoint.id)
+        let name = DisplayNames.endpoint(endpoint.id)
         let agent = StatsAgent(currentDate: .now, timeZone: context.timeZone, calls: calls)
         do {
             switch endpoint.id {
@@ -321,7 +321,7 @@ final class Answer: Identifiable {
                 return Card(
                     id: cards.count,
                     title: StatsEndpoints.all.first { $0.id == endpoint.id }?.about ?? name,
-                    path: [name, Names.operation(operation)],
+                    path: [name, DisplayNames.operation(operation)],
                     parameters: nil,
                     content: .notDrawn
                 )
@@ -330,7 +330,7 @@ final class Answer: Identifiable {
             return Card(
                 id: cards.count,
                 title: name,
-                path: [name, Names.operation(operation)],
+                path: [name, DisplayNames.operation(operation)],
                 parameters: nil,
                 content: .failed(Self.message(for: error))
             )
@@ -499,7 +499,7 @@ final class Answer: Identifiable {
         stats: Result<SiteStats, any Error>,
         context: StatsContext
     ) async throws -> Card {
-        let name = Names.endpoint(endpoint)
+        let name = DisplayNames.endpoint(endpoint)
         status = .working("Filling in the dates for \(name.lowercased())")
         let comparing = operation == StatsOperations.comparePeriods.id
         let params = try await agent.spanParams(for: question, endpoint: name.lowercased(), comparingPeriods: comparing)

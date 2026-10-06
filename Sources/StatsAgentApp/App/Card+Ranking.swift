@@ -14,8 +14,8 @@ extension Card {
         previous: (list: RankedList, request: RankingRequest)?,
         context: StatsContext
     ) -> Card {
-        let name = Names.endpoint(endpoint)
-        let path = [name, Names.operation(operation)]
+        let name = DisplayNames.endpoint(endpoint)
+        let path = [name, DisplayNames.operation(operation)]
         let range = describe(request, context: context)
         let parameters = "\(request.summary) (asked: \(asked))"
         guard let previous else {
