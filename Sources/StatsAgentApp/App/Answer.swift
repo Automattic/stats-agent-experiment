@@ -49,12 +49,21 @@ final class Answer {
         self.question = question
     }
 
-    /// An answer as `--previews` draws it: made up, not worked out.
-    init(previewing question: String, status: Status, cards: [Card], finishedSteps: [String] = []) {
+    /// An answer as `--previews` draws it: made up, not worked out. `endpoints` are the cards' stats calls, in order.
+    init(
+        previewing question: String,
+        status: Status,
+        cards: [Card],
+        endpoints: [String] = [],
+        finishedSteps: [String] = [],
+        feedback: LogEntryV1.Feedback? = nil
+    ) {
         self.question = question
         self.status = status
         self.cards = cards
+        self.endpoints = Dictionary(uniqueKeysWithValues: zip(cards.map(\.id), endpoints))
         self.finishedSteps = finishedSteps
+        self.feedback = feedback
     }
 
     /// How the answer ended, or nil while it's working.
@@ -99,6 +108,15 @@ final class Answer {
         let card = feedback.card.flatMap(position(of:))
         Task { [recorder] in
             await recorder?.saveFeedback(feedback, card: card)
+        }
+    }
+
+    /// Forgets the feedback, and writes that it was cleared to the database next to the earlier saves.
+    func clearFeedback() {
+        feedback = nil
+        let clearedAt = Date.now
+        Task { [recorder] in
+            await recorder?.clearFeedback(at: clearedAt)
         }
     }
 

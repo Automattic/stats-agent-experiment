@@ -221,6 +221,15 @@ final class QuestionRecorder {
         }
     }
 
+    /// Records that the feedback form was cleared.
+    func clearFeedback(at clearedAt: Date) async {
+        do {
+            try await database.clearFeedback(questionID: questionID, at: clearedAt)
+        } catch {
+            failed(error)
+        }
+    }
+
     func finish(outcome: LogEntryV1.Outcome, error: String?) async {
         do {
             try await database.finishQuestion(questionID, outcome: outcome, error: error.map(scrubbed), at: .now)

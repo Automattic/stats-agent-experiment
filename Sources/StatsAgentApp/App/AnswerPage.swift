@@ -20,15 +20,9 @@ struct AnswerPage: View {
                     AnswerView(answer: answer)
                         .id(ObjectIdentifier(answer))
                     if questions.showsFeedback {
-                        FeedbackView(
-                            answer: answer,
-                            choices: questions.choices,
-                            saved: answer.feedback,
-                            save: answer.save,
-                            close: { questions.showsFeedback = false }
-                        )
-                        .id(Self.feedbackID)
-                        .transition(.opacity)
+                        FeedbackView(answer: answer, choices: questions.choices)
+                            .id(Self.feedbackID)
+                            .transition(.opacity)
                     }
                 }
                 .frame(maxWidth: Constants.maxHortizontalWidth)

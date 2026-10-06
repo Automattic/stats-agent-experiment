@@ -1,4 +1,5 @@
 import AppKit
+import StatsAgent
 import StatsAgentDatabase
 import SwiftUI
 
@@ -73,7 +74,22 @@ enum Previews {
             },
             Screen(name: "answer") { window(Answer(previewing: question, status: .done, cards: cards)) },
             Screen(name: "feedback") {
-                window(Answer(previewing: question, status: .done, cards: cards), showsFeedback: true)
+                window(
+                    Answer(
+                        previewing: question,
+                        status: .done,
+                        cards: cards,
+                        endpoints: ["stats_visits", "stats_top_posts", "stats_visits"],
+                        feedback: LogEntryV1.Feedback(
+                            choice: .answersCompletely,
+                            card: "stats_visits",
+                            note: "Exactly the comparison I wanted.",
+                            looksBroken: false,
+                            savedAt: .now
+                        )
+                    ),
+                    showsFeedback: true
+                )
             },
             Screen(name: "cant-answer") {
                 window(Answer(previewing: "What will the weather be like tomorrow?", status: .cantAnswer, cards: []))
