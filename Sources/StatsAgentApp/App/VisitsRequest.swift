@@ -1,6 +1,6 @@
 import Foundation
 
-/// A visits request as the app makes it. It sits between the model's parameters, in `StatsAgent`, and the wordpress-rs
+/// A visits request as the app makes it. It sits between the model's parameters, in `ParameterAgent`, and the wordpress-rs
 /// request, in `SiteStats`, whose types share names.
 struct VisitsRequest: Equatable, Sendable {
     var granularity: DateRangeGranularity

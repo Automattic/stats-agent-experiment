@@ -22,7 +22,7 @@ struct LikesOnADayTests {
         likes(on: "2025-12-25", prompt: "How many likes did my posts get on Christmas Day last year?")
     ]
 
-    let agent = StatsAgent(currentDate: currentDate, timeZone: .gmt)
+    let agent = ParameterAgent(currentDate: currentDate, timeZone: .gmt)
 
     @Test(arguments: cases)
     func params(for testCase: PromptCase) async throws {

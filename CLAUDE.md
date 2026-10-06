@@ -10,7 +10,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 
 ## Map
 
-- `Sources/StatsAgent/`: the model steps. `OptionSelector` picks among options in one call; `CatalogNavigator` descends a catalog, with "none of these" and backtracking; `StatsEndpoints` describes the 21 wordpress-rs stats calls, and `DataCatalog` the same data by what's counted; `CardPicker` holds the app's steps; `StatsAgent` fills in spans and figures, which `StatsPeriods` turns into dates.
+- `Sources/StatsAgent/`: the model steps. `OptionSelector` picks among options in one call; `CatalogNavigator` descends a catalog, with "none of these" and backtracking; `StatsEndpoints` describes the 21 wordpress-rs stats calls, and `DataCatalog` the same data by what's counted; `CardPicker` holds the app's steps; `ParameterAgent` fills in spans and figures, which `StatsPeriods` turns into dates.
 - `Sources/StatsAgentApp/`: the macOS app. `JetpackStats/` is copied from the WordPress iOS app and left out of `make format` and SwiftLint.
 - `Sources/StatsAgentDatabase/`: the app's SQLite database, through GRDB. `AppDatabase` holds the migrations and the writes; `Records` has a type per table; `Export` reads questions into `ExportV1`, the JSON people share. The schema changes only through a new migration.
 - `Plugins/CredentialsPlugin/` and `Sources/generate-credentials/`: compile `wp_com_credentials.json` into the app on every build, as `CompiledCredentials`, with the secret's bytes reversed. Without the file, the app builds and can't log in.
@@ -42,6 +42,6 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 ## Gotchas
 
 - swift-format moves a brace onto its own line when a signature is too long, which SwiftLint's `opening_brace` rejects. Put the parameters one per line.
-- `StatsAgent` and `ParameterFiller` cap generation at 200 tokens, because greedy sampling can loop.
+- `ParameterAgent` and `ParameterFiller` cap generation at 200 tokens, because greedy sampling can loop.
 - The model can refuse a harmless question with a `LanguageModelError`. Catching it needs `#available(macOS 27.0, *)`.
 - An ad hoc signature's designated requirement is the build's hash, so the keychain asks for the token again after each build. `SIGNING_IDENTITY` set to a certificate's identity keeps the requirement the same from one build to the next.

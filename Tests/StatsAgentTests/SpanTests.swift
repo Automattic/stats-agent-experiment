@@ -289,7 +289,7 @@ struct SpanTests {
         let calendar = Self.calendar
         let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 11, day: 18, hour: 12)))
         let today = calendar.startOfDay(for: now)
-        let agent = StatsAgent(currentDate: now, timeZone: calendar.timeZone)
+        let agent = ParameterAgent(currentDate: now, timeZone: calendar.timeZone)
         let cases = try Self.cases()
         var rows: [String] = []
         var scored: [Group: Int] = [:]

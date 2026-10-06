@@ -297,7 +297,7 @@ final class Answer: Identifiable {
         context: StatsContext
     ) async -> Card {
         let name = DisplayNames.endpoint(endpoint.id)
-        let agent = StatsAgent(currentDate: .now, timeZone: context.timeZone, calls: calls)
+        let agent = ParameterAgent(currentDate: .now, timeZone: context.timeZone, calls: calls)
         do {
             switch endpoint.id {
             case StatsEndpoints.summary.id:
@@ -342,7 +342,7 @@ final class Answer: Identifiable {
     /// short, otherwise all of it.
     private func visitsCard(
         operation: String,
-        agent: StatsAgent,
+        agent: ParameterAgent,
         stats: Result<SiteStats, any Error>,
         context: StatsContext
     ) async throws -> Card {
@@ -438,7 +438,7 @@ final class Answer: Identifiable {
     /// again for the span before: the same stretch of it when today cuts the span short, otherwise all of it.
     private func subscribersCard(
         operation: String,
-        agent: StatsAgent,
+        agent: ParameterAgent,
         stats: Result<SiteStats, any Error>,
         context: StatsContext
     ) async throws -> Card {
@@ -495,7 +495,7 @@ final class Answer: Identifiable {
     private func rankingCard(
         endpoint: String,
         operation: String,
-        agent: StatsAgent,
+        agent: ParameterAgent,
         stats: Result<SiteStats, any Error>,
         context: StatsContext
     ) async throws -> Card {
