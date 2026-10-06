@@ -12,7 +12,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 
 - `Sources/StatsAgent/`: the model steps. `OptionSelector` picks among options in one call; `CatalogNavigator` descends a catalog, with "none of these" and backtracking; `StatsEndpoints` describes the 21 wordpress-rs stats calls, and `DataCatalog` the same data by what's counted; `CardPicker` holds the app's steps; `StatsAgent` fills in spans and figures, which `StatsPeriods` turns into dates.
 - `Sources/StatsAgentApp/`: the macOS app. `JetpackStats/` is copied from the WordPress iOS app and left out of `make format` and SwiftLint.
-- `Sources/StatsAgentDatabase/`: the app's SQLite database, through GRDB. `AppDatabase` holds the migrations and the writes; `Records` has a type per table. The schema changes only through a new migration.
+- `Sources/StatsAgentDatabase/`: the app's SQLite database, through GRDB. `AppDatabase` holds the migrations and the writes; `Records` has a type per table; `Export` reads questions into `ExportV1`, the JSON people share. The schema changes only through a new migration.
 - `Plugins/CredentialsPlugin/` and `Sources/generate-credentials/`: compile `wp_com_credentials.json` into the app on every build, as `CompiledCredentials`, with the secret's bytes reversed. Without the file, the app builds and can't log in.
 - `Sources/generate-icon/`: draws the app's icon, which `make icon` makes into `Sources/StatsAgentApp/AppIcon.icns`.
 - `Sources/stats-agent/`: a command-line tool on the placeholder `Catalog`.
