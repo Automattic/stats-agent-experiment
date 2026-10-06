@@ -9,7 +9,7 @@ import StatsAgent
 /// `QuestionRecorder`, it writes them to the database as they happen; feedback can be saved at any time, and every save
 /// is kept.
 @MainActor @Observable
-final class Answer {
+final class Answer: Identifiable {
     enum Status: Equatable {
         case working(String)
         /// The single pick chose "none of these".
@@ -20,8 +20,11 @@ final class Answer {
         case failed(String)
     }
 
+    let id = UUID()
     let question: String
     let askedAt = Date.now
+    /// Whether the window shows its feedback form.
+    var isFeedbackOpen = false
     private(set) var status = Status.working("Choosing a stats call") {
         didSet {
             if case .working(let step) = oldValue, status != oldValue {
@@ -82,6 +85,11 @@ final class Answer {
             return nil
         }
         return message
+    }
+
+    /// The feedback choices for this answer, or none while it's being worked out or when it isn't asked about.
+    var feedbackChoices: [LogEntryV1.Choice] {
+        outcome.map(LogEntryV1.Choice.offered) ?? []
     }
 
     /// The endpoint of the stats call `card` shows.

@@ -8,15 +8,13 @@ import SwiftUI
 /// form and saves that. The choices and their rules come from `LogEntryV1.Choice`.
 struct FeedbackView: View {
     let answer: Answer
-    let choices: [LogEntryV1.Choice]
     @State private var choice: LogEntryV1.Choice?
     @State private var card: String?
     @State private var note: String
     @State private var looksBroken: Bool
 
-    init(answer: Answer, choices: [LogEntryV1.Choice]) {
+    init(answer: Answer) {
         self.answer = answer
-        self.choices = choices
         let saved = answer.feedback
         _choice = State(initialValue: saved?.choice)
         _card = State(initialValue: saved?.card)
@@ -29,7 +27,7 @@ struct FeedbackView: View {
             Text("How well did this answer your question?")
                 .font(.headline)
             Picker("How well did this answer your question?", selection: $choice) {
-                ForEach(choices, id: \.self) { choice in
+                ForEach(answer.feedbackChoices, id: \.self) { choice in
                     Text(choice.label).tag(Optional(choice))
                 }
             }

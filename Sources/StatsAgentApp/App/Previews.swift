@@ -122,15 +122,19 @@ enum Previews {
         Site(id: 5, name: "Studio Diary", url: "https://studiodiary.example.com", timeZone: nil)
     ]
 
-    /// The window logged in to `site`, with `answer` on screen, and its feedback form open when `showsFeedback`.
+    /// The window logged in to `site`, with `answer` as its only question, and its feedback form open when
+    /// `showsFeedback`; or the ask page without `answer`.
     private static func window(_ answer: Answer?, showsFeedback: Bool = false) -> AnyView {
-        let questions = questions(answer)
-        questions.showsFeedback = showsFeedback
-        return AnyView(RootView(account: Account(previewToken: "preview", site: site), questions: questions))
+        answer?.isFeedbackOpen = showsFeedback
+        return AnyView(RootView(account: Account(previewToken: "preview", site: site), questions: questions(answer)))
     }
 
     private static func questions(_ answer: Answer?) -> Questions {
-        Questions(recorder: Recorder(database: Result { try AppDatabase.inMemory() }), answer: answer)
+        Questions(
+            recorder: Recorder(database: Result { try AppDatabase.inMemory() }),
+            answers: answer.map { [$0] } ?? [],
+            isAsking: answer == nil
+        )
     }
 
     // MARK: - Cards

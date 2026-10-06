@@ -2,48 +2,52 @@ import Foundation
 import Observation
 import StatsAgent
 
-/// The window's questions in turn, each written to the database by `recorder` as it's answered, with the feedback
-/// given on it.
+/// The questions asked in the window since it opened on the site, oldest first, each written to the database by
+/// `recorder` as it's answered, with the feedback given on it. The ask page follows them while `isAsking`. One question
+/// is worked out at a time. Switching sites starts over.
 @MainActor @Observable
 final class Questions {
-    private(set) var answer: Answer?
-    /// Whether the feedback form is open for the answer on screen.
-    var showsFeedback = false
+    private(set) var answers: [Answer]
+    /// Whether the ask page follows the answers: until the first question, and again after Ask Another until the next.
+    private(set) var isAsking: Bool
     let recorder: Recorder
 
-    init(recorder: Recorder, answer: Answer? = nil) {
+    init(recorder: Recorder, answers: [Answer] = [], isAsking: Bool = true) {
         self.recorder = recorder
-        self.answer = answer
+        self.answers = answers
+        self.isAsking = isAsking
     }
 
-    /// Whether a question can be asked now: not while an answer is being worked out.
+    /// Whether another question can be asked now: not while the latest answer is being worked out.
     var canAsk: Bool {
-        answer == nil || answer?.outcome != nil
+        answers.last.map { $0.outcome != nil } ?? true
     }
 
-    /// The feedback choices for the answer on screen, or none while it's being worked out or when it isn't asked
-    /// about.
-    var choices: [LogEntryV1.Choice] {
-        answer?.outcome.map(LogEntryV1.Choice.offered) ?? []
-    }
-
-    /// Runs `question` on `stats`, the stats of `site`, in place of the answer on screen.
+    /// Runs `question` on `stats`, the stats of `site`, in place of the ask page.
     func ask(_ question: String, on site: Site, stats: SiteStats, context: StatsContext) {
         guard canAsk else {
             return
         }
         let answer = Answer(question: question)
-        self.answer = answer
-        showsFeedback = false
+        answers.append(answer)
+        isAsking = false
         Task {
             let recorder = await recorder.start(answer, site: site, stats: stats)
             await answer.run(stats: .success(stats), context: context, recorder: recorder)
         }
     }
 
-    /// Takes the answer off the screen, as for another question or when the site changes. It's in the database already.
+    /// Opens the ask page after the answers.
+    func askAnother() {
+        guard canAsk else {
+            return
+        }
+        isAsking = true
+    }
+
+    /// Starts over, as when the site changes. The answers are in the database already.
     func clear() {
-        answer = nil
-        showsFeedback = false
+        answers = []
+        isAsking = true
     }
 }

@@ -1,82 +1,31 @@
 import SwiftUI
 
-/// An answer's page, which scrolls: the question as its title, what the agent is doing or its cards, and under them the
-/// feedback form while it's open, with a bar along the bottom to open or close the form and to ask another question.
-/// The form opens with the feedback saved before, if any, and the page scrolls down to it. Feedback waits until there's
-/// an answer to give it on, and Ask Another until the answer is worked out.
+/// An answer's page in the window's scroll: the question as its title, what the agent is doing or its cards, and under
+/// them the feedback form while it's open.
 struct AnswerPage: View {
     let answer: Answer
-    let questions: Questions
 
-    private static let feedbackID = "feedback"
+    /// The feedback form's ID in the window's scroll, to scroll to it.
+    static func feedbackID(of answer: Answer) -> String {
+        "feedback-\(answer.id)"
+    }
 
     var body: some View {
-        ScrollViewReader { scroll in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text(answer.question)
-                        .font(.title2.weight(.semibold))
-                        .textSelection(.enabled)
-                    AnswerView(answer: answer)
-                        .id(ObjectIdentifier(answer))
-                    if questions.showsFeedback {
-                        FeedbackView(answer: answer, choices: questions.choices)
-                            .id(Self.feedbackID)
-                            .transition(.opacity)
-                    }
-                }
-                .frame(maxWidth: Constants.maxHortizontalWidth)
-                .padding(24)
-                .frame(maxWidth: .infinity)
-            }
-            .animation(.smooth(duration: 0.3), value: questions.showsFeedback)
-            .onChange(of: questions.showsFeedback) { _, showsFeedback in
-                guard showsFeedback else {
-                    return
-                }
-                withAnimation {
-                    scroll.scrollTo(Self.feedbackID, anchor: .bottom)
-                }
-            }
-            .onAppear {
-                if questions.showsFeedback {
-                    scroll.scrollTo(Self.feedbackID, anchor: .bottom)
-                }
+        VStack(alignment: .leading, spacing: 16) {
+            Text(answer.question)
+                .font(.title2.weight(.semibold))
+                .textSelection(.enabled)
+            AnswerView(answer: answer)
+            if answer.isFeedbackOpen {
+                FeedbackView(answer: answer)
+                    .id(Self.feedbackID(of: answer))
+                    .transition(.opacity)
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            bar
-        }
-    }
-
-    private var bar: some View {
-        HStack {
-            Button(feedbackTitle, systemImage: "hand.thumbsup") {
-                questions.showsFeedback.toggle()
-            }
-            .disabled(questions.choices.isEmpty)
-            Spacer()
-            Button("Ask Another", systemImage: "plus.bubble") {
-                questions.clear()
-            }
-            .buttonStyle(.borderedProminent)
-            .keyboardShortcut("n")
-            .disabled(!questions.canAsk)
-        }
-        .controlSize(.large)
-        .padding(.horizontal, 24)
-        .padding(.vertical, 12)
-        .background(.bar)
-        .overlay(alignment: .top) {
-            Divider()
-        }
-    }
-
-    private var feedbackTitle: String {
-        if questions.showsFeedback {
-            return "Hide Feedback"
-        }
-        return answer.feedback == nil ? "Give Feedback" : "Edit Feedback"
+        .frame(maxWidth: Constants.maxHortizontalWidth)
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .animation(.smooth(duration: 0.3), value: answer.isFeedbackOpen)
     }
 }
 
