@@ -163,11 +163,10 @@ public struct Export: Sendable {
     public var responseBodies: [String: String]
 
     /// The export as the file a person saves: the JSON alone, or, when it includes responses, a zip of a folder named
-    /// `name` holding the JSON as `export.json` and each response's body under the file name the export gives it.
+    /// `name` holding what `write(into:)` writes.
     public func file(named name: String) throws -> ExportFile {
-        let json = try content.json()
         guard content.included.responses else {
-            return ExportFile(data: json, pathExtension: "json")
+            return ExportFile(data: try content.json(), pathExtension: "json")
         }
         let temporary = FileManager.default.temporaryDirectory.appending(
             path: UUID().uuidString,
@@ -175,15 +174,25 @@ public struct Export: Sendable {
         )
         defer { try? FileManager.default.removeItem(at: temporary) }
         let folder = temporary.appending(path: name, directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try write(into: folder)
+        return ExportFile(data: try zipped(folder), pathExtension: "zip")
+    }
+
+    /// Writes the export into `folder`, which exists: the JSON as `export.json`, and each response's body under the
+    /// file name the export gives it, in `responses/`.
+    public func write(into folder: URL) throws {
+        try content.json().write(to: folder.appending(path: "export.json"))
+        guard !responseBodies.isEmpty else {
+            return
+        }
         try FileManager.default.createDirectory(
             at: folder.appending(path: "responses", directoryHint: .isDirectory),
             withIntermediateDirectories: true
         )
-        try json.write(to: folder.appending(path: "export.json"))
         for (file, body) in responseBodies {
             try Data(body.utf8).write(to: folder.appending(path: file))
         }
-        return ExportFile(data: try zipped(folder), pathExtension: "zip")
     }
 }
 

@@ -30,7 +30,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 - `make run` builds a debug bundle and opens it, with its database in `data/`.
 - `make icon` redraws the app's icon into `Sources/StatsAgentApp/AppIcon.icns`, which is committed and which `make app` copies into the bundle.
 - `make previews` draws the window's screens from made-up data, title bar and toolbar included, in light and dark, as PNGs in `.build/previews/`. It doesn't log in, read the keychain, open the database or call the model, so it's the way to look at a UI change from the command line. The screens and their data are in `Previews`. The app keeps its WordPress.com token in the keychain and the site picked in its defaults.
-- `swift run stats-agent-app --ask "question"` answers one question with the window hidden, and saves the steps, the log entry and a picture of each card under `.build/screenshots/`. It reads `WORDPRESS_APP_TOKEN`, a WordPress.com OAuth token, and `WORDPRESS_SITE_ID` from its environment.
+- `swift run stats-agent-app --ask "question"` answers one question with the window hidden, and saves the steps, an export of the question with WordPress.com's responses, and a picture of each card under `.build/screenshots/`. It records into a database in memory, not the app's. It reads `WORDPRESS_APP_TOKEN`, a WordPress.com OAuth token, and `WORDPRESS_SITE_ID` from its environment.
 - `swift run stats-agent` asks questions interactively; `--catalog` lists the catalog.
 - `swift test --filter FeedbackReportTests` summarises `exports/` into `results/feedback-report.md`, which is ignored. A question in more than one export counts once.
 

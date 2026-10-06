@@ -270,6 +270,25 @@ extension AppDatabaseTests {
         #expect(zip.data.starts(with: [0x50, 0x4B, 0x03, 0x04]))
     }
 
+    @Test func writesTheJSONAndEachResponseIntoAFolder() async throws {
+        let database = try await Self.exportFixture()
+        let export = try await database.export(Self.options(including: true), at: Self.asked)
+        let folder = FileManager.default.temporaryDirectory.appending(
+            path: "AppDatabaseTests-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try export.write(into: folder)
+
+        #expect(try ExportV1.decoded(from: Data(contentsOf: folder.appending(path: "export.json"))) == export.content)
+        let responses = try FileManager.default.contentsOfDirectory(atPath: folder.appending(path: "responses").path())
+        #expect(responses.sorted() == ["1-1.json", "1-2.json", "3-1.json"])
+        #expect(
+            try String(contentsOf: folder.appending(path: "responses/1-2.json"), encoding: .utf8) == #"{"data":[1]}"#
+        )
+    }
+
     @Test func exportReadsBackFromItsJSON() async throws {
         let database = try await Self.exportFixture()
         let content = try await database.export(Self.options(including: true), at: Self.asked).content

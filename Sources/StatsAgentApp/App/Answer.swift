@@ -50,8 +50,6 @@ final class Answer: Identifiable {
     }
     /// The feedback form as last saved, empty when it never was.
     private(set) var savedFeedback = FeedbackForm()
-    /// The site the stats were requested from, whose token and ID the feedback log keeps out.
-    private(set) var site: SiteStats?
     private var endpoints: [Card.ID: String] = [:]
     private var recorder: QuestionRecorder?
     /// Saves the feedback form once typing in the note stops.
@@ -188,7 +186,6 @@ final class Answer: Identifiable {
 
     /// Works out the answer, writing each step to `recorder` as it happens, and how it ended unless it was cancelled.
     func run(stats: Result<SiteStats, any Error>, context: StatsContext, recorder: QuestionRecorder? = nil) async {
-        site = try? stats.get()
         self.recorder = recorder
         await build(stats: stats, context: context)
         if let outcome {
