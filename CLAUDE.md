@@ -18,6 +18,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 - `Tests/StatsAgentTests/`: the experiments, each writing a file in `results/`, and tests without model calls. Labels are in `StatsQuestionCases` and `DataCatalogLabels`.
 - `prompts/raw/`: the question sets the tests read, kept as written.
 - `logs/` and `sessions/`: output of the app and the command-line tool, ignored.
+- `data/`: the database `make run` uses, ignored. The app's own is `Stats agent/stats-agent.sqlite` in Application Support.
 
 ## Commands
 
@@ -25,7 +26,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 - Without model calls, in seconds: `swift test --filter "LogEntryTests|CardPickerTests|StatsPeriodsTests|AppDatabaseTests"`.
 - Experiments call the model, take minutes each, and rewrite their file in `results/`. For example, `swift test --filter "OperationStepTests/sightedWithOperations"` runs the main setup in about 5.5 minutes. Add `--no-parallel` when running several suites, or their timings mean nothing.
 - `make app` builds the app as a bundle, `.build/app/release/Stats agent.app`, signed ad hoc, with the commit in its `Info.plist`. Its version and build number are `CFBundleShortVersionString` and `CFBundleVersion` in `Sources/StatsAgentApp/Info.plist`. It stops without `wp_com_credentials.json`, the WordPress.com OAuth client the app logs in with, in the package's root; git ignores it.
-- `make run` builds a debug bundle and opens it, and writes its feedback log to `logs/`. The app keeps its WordPress.com token in the keychain and the site picked in its defaults.
+- `make run` builds a debug bundle and opens it, and writes its feedback log to `logs/` and its database to `data/`. The app keeps its WordPress.com token in the keychain and the site picked in its defaults.
 - `swift run stats-agent-app --ask "question"` answers one question with the window hidden, and saves the steps, the log entry and a picture of each card under `.build/screenshots/`. It reads `WORDPRESS_APP_TOKEN`, a WordPress.com OAuth token, and `WORDPRESS_SITE_ID` from its environment.
 - `swift run stats-agent` asks questions interactively; `--catalog` lists the catalog.
 - `swift test --filter FeedbackReportTests` summarises `logs/` into `results/feedback-report.md`, which is ignored.

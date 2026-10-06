@@ -17,10 +17,10 @@ app:
 	codesign --force --sign - "$(APP)"
 
 # Builds the app as a debug bundle, .build/app/debug/Stats agent.app, and runs it from here, writing the feedback log
-# to logs/.
+# to logs/ and its database to data/.
 run: CONFIGURATION = debug
 run: app
-	"$(APP)/Contents/MacOS/stats-agent-app" --log-directory $(CURDIR)/logs
+	"$(APP)/Contents/MacOS/stats-agent-app" --log-directory $(CURDIR)/logs --data-directory $(CURDIR)/data
 
 test:
 	swift test

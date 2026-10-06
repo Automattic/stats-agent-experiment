@@ -34,6 +34,7 @@ let package = Package(
             name: "StatsAgentApp",
             dependencies: [
                 "StatsAgent",
+                "StatsAgentDatabase",
                 .product(name: "ColorStudio", package: "color-studio"),
                 .product(name: "WordPressAPI", package: "wordpress-rs")
             ],

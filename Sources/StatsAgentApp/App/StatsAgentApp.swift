@@ -26,8 +26,8 @@ struct StatsAgentApp: App {
 /// quits it, and quitting writes the answer on screen to the feedback log with the feedback it has, if any.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    let questions = Questions()
-    /// Made on first use, so ask mode, which doesn't use it, never reads the keychain.
+    // Made on first use, so ask mode, which uses neither, never reads the keychain or opens the database.
+    lazy var questions = Questions(recorder: Recorder())
     lazy var account = Account()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -45,6 +45,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        guard AskMode.question == nil else {
+            return
+        }
         questions.writeAnswer()
     }
 }

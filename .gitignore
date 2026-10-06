@@ -4,6 +4,7 @@ BuildTools/.build/
 BuildTools/.swiftpm/
 logs/
 sessions/
+data/
 results/feedback-report.md
 wp_com_credentials.json
 .DS_Store

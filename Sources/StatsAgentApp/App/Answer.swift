@@ -5,7 +5,8 @@ import StatsAgent
 /// One question's answer, built a step at a time: the single pick, the list, then each card in turn, so the cards
 /// appear as they're ready. Summary, visits, subscribers and the stats calls that rank items are drawn; the others get
 /// a card saying they aren't drawn. Alongside the cards it keeps what the feedback log records: every model call, each
-/// stats call's requests and status, and the cards the person looked at.
+/// stats call's requests and status, and the cards the person looked at. Given a `QuestionRecorder`, it writes them to
+/// the database as they happen.
 @MainActor @Observable
 final class Answer {
     enum Status: Equatable {
@@ -31,6 +32,7 @@ final class Answer {
     /// The site the stats were requested from, whose token and ID the feedback log keeps out.
     private(set) var site: SiteStats?
     private var endpoints: [Card.ID: String] = [:]
+    private var recorder: QuestionRecorder?
 
     init(question: String) {
         self.question = question
@@ -67,13 +69,22 @@ final class Answer {
         cardsViewed.append(endpoint)
     }
 
-    func run(stats: Result<SiteStats, any Error>, context: StatsContext) async {
+    /// Works out the answer, writing each step to `recorder` as it happens, and how it ended unless it was cancelled.
+    func run(stats: Result<SiteStats, any Error>, context: StatsContext, recorder: QuestionRecorder? = nil) async {
         site = try? stats.get()
+        self.recorder = recorder
+        await build(stats: stats, context: context)
+        if let outcome {
+            await recorder?.finish(outcome: outcome, error: error)
+        }
+    }
+
+    private func build(stats: Result<SiteStats, any Error>, context: StatsContext) async {
         let picker = CardPicker()
         let none = CatalogNavigator.noneOfThese.id
         do {
             let single = try await picker.endpoint(for: question)
-            steps.append(LogEntryV1.Step(single))
+            await add(LogEntryV1.Step(single))
             guard single.chosen.first != none else {
                 status = .cantAnswer
                 return
@@ -81,12 +92,13 @@ final class Answer {
             try Task.checkCancellation()
             status = .working("Choosing up to \(CardPicker.maximumCards) stats calls")
             let list = try await picker.endpoints(for: question)
-            steps.append(LogEntryV1.Step(list))
+            await add(LogEntryV1.Step(list))
             for endpoint in CardPicker.cardEndpoints(single: single, list: list) {
                 try Task.checkCancellation()
                 status = .working("Choosing what to show from \(Names.endpoint(endpoint.id))")
                 let operationStep = try await picker.operation(for: question, endpoint: endpoint)
                 records.append(LogEntryV1.Card(endpoint: endpoint.id, operationStep: LogEntryV1.Step(operationStep)))
+                await recorder?.startCard(records[records.count - 1], position: records.count - 1)
                 guard let operation = operationStep.chosen.first, operation != none else {
                     continue
                 }
@@ -98,7 +110,7 @@ final class Answer {
                     stats: stats,
                     context: context
                 )
-                record(card, calls: calls)
+                await record(card, calls: calls)
                 endpoints[card.id] = endpoint.id
                 cards.append(card)
             }
@@ -110,8 +122,14 @@ final class Answer {
         }
     }
 
+    /// Adds a model call before the cards.
+    private func add(_ step: LogEntryV1.Step) async {
+        steps.append(step)
+        await recorder?.step(step, position: steps.count - 1)
+    }
+
     /// Completes the record of the card being built with its parameter calls and status.
-    private func record(_ card: Card, calls: ModelCalls) {
+    private func record(_ card: Card, calls: ModelCalls) async {
         let index = records.count - 1
         records[index].steps += calls.all.map(LogEntryV1.Step.init)
         switch card.content {
@@ -123,6 +141,7 @@ final class Answer {
         default:
             records[index].status = .drawn
         }
+        await recorder?.finishCard(records[index], position: index, shown: card)
     }
 
     /// Makes one of the card's stats requests, adding `parameters` and the time it takes to the card's record.
@@ -132,13 +151,28 @@ final class Answer {
     ) async throws -> Value {
         let index = records.count - 1
         records[index].requests.append(parameters)
-        let clock = ContinuousClock()
-        let start = clock.now
-        defer {
-            records[index].requestSeconds =
-                (records[index].requestSeconds ?? 0) + LogEntryV1.seconds(clock.now - start)
+        let requestID = await recorder?
+            .startRequest(
+                parameters,
+                card: index,
+                position: records[index].requests.count - 1
+            )
+        let start = ContinuousClock.Instant.now
+        do {
+            let value = try await make()
+            await finishRequest(requestID, card: index, startedAt: start)
+            return value
+        } catch {
+            await finishRequest(requestID, card: index, startedAt: start)
+            throw error
         }
-        return try await make()
+    }
+
+    /// Adds the time since `start` to the card's record, and to the request's row.
+    private func finishRequest(_ requestID: Int64?, card index: Int, startedAt start: ContinuousClock.Instant) async {
+        let seconds = LogEntryV1.seconds(ContinuousClock.Instant.now - start)
+        records[index].requestSeconds = (records[index].requestSeconds ?? 0) + seconds
+        await recorder?.finishRequest(requestID, seconds: seconds)
     }
 
     private func card(

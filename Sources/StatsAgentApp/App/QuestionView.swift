@@ -67,6 +67,11 @@ struct QuestionView: View {
                     .foregroundStyle(.red)
                     .textSelection(.enabled)
             }
+            if let databaseError = questions.recorder.error {
+                Text(databaseError)
+                    .foregroundStyle(.red)
+                    .textSelection(.enabled)
+            }
         }
         .padding()
         .onAppear {
@@ -79,10 +84,10 @@ struct QuestionView: View {
     }
 
     private func ask() {
-        guard !trimmedQuestion.isEmpty, questions.canAsk, let site = account.stats else {
+        guard !trimmedQuestion.isEmpty, questions.canAsk, let site = account.site, let stats = account.stats else {
             return
         }
-        questions.ask(trimmedQuestion, site: site, context: context)
+        questions.ask(trimmedQuestion, on: site, stats: stats, context: context)
         question = ""
         showsFeedback = false
     }

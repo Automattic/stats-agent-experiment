@@ -2,9 +2,10 @@ import Foundation
 import Observation
 import StatsAgent
 
-/// The window's questions in turn. Feedback on the answer on screen is optional, and can be given and changed until
-/// the next question is asked; then the answer is written to the feedback log with the feedback it has, if any. So is
-/// the answer on screen when the app quits. A question still being answered then isn't written.
+/// The window's questions in turn, each written to the database by `recorder` as it's answered. Feedback on the answer
+/// on screen is optional, and can be given and changed until the next question is asked; then the answer is written to
+/// the feedback log with the feedback it has, if any. So is the answer on screen when the app quits. A question still
+/// being answered then isn't written to the log.
 @MainActor @Observable
 final class Questions {
     private(set) var answer: Answer?
@@ -12,7 +13,12 @@ final class Questions {
     private(set) var feedback: LogEntryV1.Feedback?
     /// Why the last entry couldn't be written to the log.
     private(set) var logError: String?
+    let recorder: Recorder
     private let log = FeedbackLog.current
+
+    init(recorder: Recorder) {
+        self.recorder = recorder
+    }
 
     /// Whether a question can be asked now: not while an answer is being worked out.
     var canAsk: Bool {
@@ -25,8 +31,8 @@ final class Questions {
         answer?.outcome.map(LogEntryV1.Choice.offered) ?? []
     }
 
-    /// Writes the answer on screen to the log, then runs `question` on `site`'s stats.
-    func ask(_ question: String, site: SiteStats, context: StatsContext) {
+    /// Writes the answer on screen to the log, then runs `question` on `stats`, the stats of `site`.
+    func ask(_ question: String, on site: Site, stats: SiteStats, context: StatsContext) {
         guard canAsk else {
             return
         }
@@ -35,7 +41,8 @@ final class Questions {
         self.answer = answer
         feedback = nil
         Task {
-            await answer.run(stats: .success(site), context: context)
+            let recorder = await recorder.start(answer, site: site, stats: stats)
+            await answer.run(stats: .success(stats), context: context, recorder: recorder)
         }
     }
 
