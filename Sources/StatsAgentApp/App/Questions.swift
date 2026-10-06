@@ -2,19 +2,12 @@ import Foundation
 import Observation
 import StatsAgent
 
-/// The window's questions in turn, each written to the database by `recorder` as it's answered. Feedback on the answer
-/// on screen is optional, and can be given and changed until the next question is asked; then the answer is written to
-/// the feedback log with the feedback it has, if any. So is the answer on screen when the app quits. A question still
-/// being answered then isn't written to the log.
+/// The window's questions in turn, each written to the database by `recorder` as it's answered, with the feedback
+/// given on it.
 @MainActor @Observable
 final class Questions {
     private(set) var answer: Answer?
-    /// The feedback given on the answer on screen, kept until the answer is written.
-    private(set) var feedback: LogEntryV1.Feedback?
-    /// Why the last entry couldn't be written to the log.
-    private(set) var logError: String?
     let recorder: Recorder
-    private let log = FeedbackLog.current
 
     init(recorder: Recorder) {
         self.recorder = recorder
@@ -31,37 +24,21 @@ final class Questions {
         answer?.outcome.map(LogEntryV1.Choice.offered) ?? []
     }
 
-    /// Writes the answer on screen to the log, then runs `question` on `stats`, the stats of `site`.
+    /// Runs `question` on `stats`, the stats of `site`, in place of the answer on screen.
     func ask(_ question: String, on site: Site, stats: SiteStats, context: StatsContext) {
         guard canAsk else {
             return
         }
-        writeAnswer()
         let answer = Answer(question: question)
         self.answer = answer
-        feedback = nil
         Task {
             let recorder = await recorder.start(answer, site: site, stats: stats)
             await answer.run(stats: .success(stats), context: context, recorder: recorder)
         }
     }
 
-    /// Keeps `feedback` for the answer on screen, in place of any given before.
-    func save(_ feedback: LogEntryV1.Feedback) {
-        self.feedback = feedback
-    }
-
-    /// Writes the answer on screen to the log with the feedback it has, if it's done and not written yet.
-    func writeAnswer() {
-        guard let answer, let entry = FeedbackLog.entry(for: answer, feedback: feedback) else {
-            return
-        }
-        self.answer = nil
-        do {
-            try log.append(entry)
-            logError = nil
-        } catch {
-            logError = "Couldn't write to the feedback log: \(error.localizedDescription)"
-        }
+    /// Takes the answer off the screen, as when the site changes. It's in the database already.
+    func clear() {
+        answer = nil
     }
 }

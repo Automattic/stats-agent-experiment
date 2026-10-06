@@ -4,9 +4,10 @@ import StatsAgent
 
 /// One question's answer, built a step at a time: the single pick, the list, then each card in turn, so the cards
 /// appear as they're ready. Summary, visits, subscribers and the stats calls that rank items are drawn; the others get
-/// a card saying they aren't drawn. Alongside the cards it keeps what the feedback log records: every model call, each
-/// stats call's requests and status, and the cards the person looked at. Given a `QuestionRecorder`, it writes them to
-/// the database as they happen.
+/// a card saying they aren't drawn. Alongside the cards it keeps what a feedback log entry records: every model call,
+/// each stats call's requests and status, the cards the person looked at, and the feedback. Given a
+/// `QuestionRecorder`, it writes them to the database as they happen; feedback can be saved at any time, and every save
+/// is kept.
 @MainActor @Observable
 final class Answer {
     enum Status: Equatable {
@@ -29,6 +30,8 @@ final class Answer {
     private(set) var records: [LogEntryV1.Card] = []
     /// The endpoints of the cards the person looked at, in the order first seen.
     private(set) var cardsViewed: [String] = []
+    /// The feedback last saved, or nil when none was.
+    private(set) var feedback: LogEntryV1.Feedback?
     /// The site the stats were requested from, whose token and ID the feedback log keeps out.
     private(set) var site: SiteStats?
     private var endpoints: [Card.ID: String] = [:]
@@ -67,6 +70,25 @@ final class Answer {
             return
         }
         cardsViewed.append(endpoint)
+        let position = position(of: endpoint)
+        let viewedAt = Date.now
+        Task { [recorder] in
+            await recorder?.markViewed(card: position, at: viewedAt)
+        }
+    }
+
+    /// Keeps `feedback` in place of any saved before, and writes it to the database next to the earlier saves.
+    func save(_ feedback: LogEntryV1.Feedback) {
+        self.feedback = feedback
+        let card = feedback.card.flatMap(position(of:))
+        Task { [recorder] in
+            await recorder?.saveFeedback(feedback, card: card)
+        }
+    }
+
+    /// The place in the agent's list of the stats call with `endpoint`.
+    private func position(of endpoint: String) -> Int? {
+        records.firstIndex { $0.endpoint == endpoint }
     }
 
     /// Works out the answer, writing each step to `recorder` as it happens, and how it ended unless it was cancelled.

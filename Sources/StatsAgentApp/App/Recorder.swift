@@ -191,6 +191,31 @@ final class QuestionRecorder {
         }
     }
 
+    /// Records that the person looked at the card for the stats call at `card` in the agent's list.
+    func markViewed(card position: Int?, at viewedAt: Date) async {
+        guard let position, let id = cardIDs[position] else {
+            return
+        }
+        do {
+            try await database.markViewed(cardID: id, at: viewedAt)
+        } catch {
+            failed(error)
+        }
+    }
+
+    /// Records the feedback form as saved. `card` is the place in the agent's list of the card that answered.
+    func saveFeedback(_ feedback: LogEntryV1.Feedback, card position: Int?) async {
+        do {
+            try await database.saveFeedback(
+                feedback,
+                questionID: questionID,
+                cardID: position.flatMap { cardIDs[$0] }
+            )
+        } catch {
+            failed(error)
+        }
+    }
+
     func finish(outcome: LogEntryV1.Outcome, error: String?) async {
         do {
             try await database.finishQuestion(questionID, outcome: outcome, error: error.map(scrubbed), at: .now)

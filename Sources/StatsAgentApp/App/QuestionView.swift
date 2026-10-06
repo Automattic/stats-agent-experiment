@@ -42,7 +42,7 @@ struct QuestionView: View {
                         .foregroundStyle(.secondary)
                     Spacer()
                     if !questions.choices.isEmpty, !showsFeedback {
-                        Button(questions.feedback == nil ? "Give Feedback" : "Edit Feedback") {
+                        Button(answer.feedback == nil ? "Give Feedback" : "Edit Feedback") {
                             showsFeedback = true
                         }
                     }
@@ -53,19 +53,14 @@ struct QuestionView: View {
                     FeedbackView(
                         answer: answer,
                         choices: questions.choices,
-                        saved: questions.feedback,
-                        save: questions.save,
+                        saved: answer.feedback,
+                        save: answer.save,
                         close: { showsFeedback = false }
                     )
                     .id(ObjectIdentifier(answer))
                 }
             } else {
                 Spacer()
-            }
-            if let logError = questions.logError {
-                Text(logError)
-                    .foregroundStyle(.red)
-                    .textSelection(.enabled)
             }
             if let databaseError = questions.recorder.error {
                 Text(databaseError)

@@ -16,11 +16,10 @@ app:
 	plutil -insert StatsAgentCommit -string "$$(git describe --always --dirty)" "$(APP)/Contents/Info.plist"
 	codesign --force --sign - "$(APP)"
 
-# Builds the app as a debug bundle, .build/app/debug/Stats agent.app, and runs it from here, writing the feedback log
-# to logs/ and its database to data/.
+# Builds the app as a debug bundle, .build/app/debug/Stats agent.app, and runs it from here, with its database in data/.
 run: CONFIGURATION = debug
 run: app
-	"$(APP)/Contents/MacOS/stats-agent-app" --log-directory $(CURDIR)/logs --data-directory $(CURDIR)/data
+	"$(APP)/Contents/MacOS/stats-agent-app" --data-directory $(CURDIR)/data
 
 test:
 	swift test

@@ -23,7 +23,7 @@ struct StatsAgentApp: App {
 
 /// `swift run` starts a bare executable rather than an app bundle. This makes it a regular app with a Dock icon, whose
 /// window can take the keyboard, and asks macOS to bring it to the front, which macOS can decline. Closing the window
-/// quits it, and quitting writes the answer on screen to the feedback log with the feedback it has, if any.
+/// quits it.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     // Made on first use, so ask mode, which uses neither, never reads the keychain or opens the database.
@@ -42,12 +42,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Not in ask mode, which hides the window and quits when it's done.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         AskMode.question == nil
-    }
-
-    func applicationWillTerminate(_ notification: Notification) {
-        guard AskMode.question == nil else {
-            return
-        }
-        questions.writeAnswer()
     }
 }

@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The window's contents: the login while there's no token, the site list while there's no site or another is being
-/// picked, and otherwise the questions. When the site changes, the answer on screen is written to the feedback log.
+/// picked, and otherwise the questions. When the site changes, the answer on screen goes.
 /// Dates are worked out and shown in the site's time zone, or the Mac's when the site's isn't known.
 struct RootView: View {
     let account: Account
@@ -20,7 +20,7 @@ struct RootView: View {
         .frame(minWidth: 640, minHeight: 560)
         .environment(\.context, account.site?.timeZone.map { StatsContext(timeZone: $0) } ?? .demo)
         .onChange(of: account.site) {
-            questions.writeAnswer()
+            questions.clear()
         }
     }
 }

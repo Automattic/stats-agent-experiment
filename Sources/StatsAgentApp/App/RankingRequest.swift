@@ -18,7 +18,7 @@ struct RankingRequest: Equatable, Sendable {
         return "\(periods) \(unit)\(periods == 1 ? "" : "s"), \(end), top \(maximumItems)"
     }
 
-    /// The parameters as the feedback log records them.
+    /// The parameters as the database and feedback log entries record them.
     var logged: [String: String] {
         ["granularity": "\(granularity)", "date": date, "periods": "\(periods)", "maximumItems": "\(maximumItems)"]
             .compactMapValues(\.self)
