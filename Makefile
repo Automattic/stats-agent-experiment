@@ -2,10 +2,14 @@
 
 CONFIGURATION ?= release
 APP = .build/app/$(CONFIGURATION)/Stats agent.app
+# The identity the app is signed with, such as an "Apple Development" one from `security find-identity -v -p
+# codesigning`. Ad hoc by default, which makes the signature's designated requirement the build's hash, so the
+# keychain's Always Allow for the token lasts until the next build.
+SIGNING_IDENTITY ?= -
 
-# Builds the proof of concept's app as a bundle, .build/app/release/Stats agent.app, signed ad hoc. Its Info.plist
-# records the commit it was built from. It stops without wp_com_credentials.json, the WordPress.com OAuth client the
-# app logs in with, which CredentialsPlugin compiles in.
+# Builds the proof of concept's app as a bundle, .build/app/release/Stats agent.app, signed with SIGNING_IDENTITY. Its
+# Info.plist records the commit it was built from. It stops without wp_com_credentials.json, the WordPress.com OAuth
+# client the app logs in with, which CredentialsPlugin compiles in.
 app:
 	@test -f wp_com_credentials.json || { echo "make app needs wp_com_credentials.json in $(CURDIR)."; exit 1; }
 	swift build --configuration $(CONFIGURATION) --product stats-agent-app
@@ -14,7 +18,7 @@ app:
 	cp "$$(swift build --configuration $(CONFIGURATION) --show-bin-path)/stats-agent-app" "$(APP)/Contents/MacOS/"
 	cp Sources/StatsAgentApp/Info.plist "$(APP)/Contents/"
 	plutil -insert StatsAgentCommit -string "$$(git describe --always --dirty)" "$(APP)/Contents/Info.plist"
-	codesign --force --sign - "$(APP)"
+	codesign --force --sign "$(SIGNING_IDENTITY)" "$(APP)"
 
 # Builds the app as a debug bundle, .build/app/debug/Stats agent.app, and runs it from here, with its database in data/.
 run: CONFIGURATION = debug
