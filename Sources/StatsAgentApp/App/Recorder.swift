@@ -22,19 +22,24 @@ final class Recorder {
         return directory.appending(path: "stats-agent.sqlite")
     }
 
-    init(file: URL = Recorder.file) {
+    convenience init(file: URL = Recorder.file) {
+        self.init(database: Result { try AppDatabase.open(at: file) })
+    }
+
+    /// Records into `opened`, or shows why the database couldn't be opened. `--previews` gives one in memory.
+    init(database opened: Result<AppDatabase, any Error>) {
         let bundle = Bundle.main
         let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
         let build = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String
         let commit = bundle.object(forInfoDictionaryKey: "StatsAgentCommit") as? String
         let macOS = ProcessInfo.processInfo.operatingSystemVersionString
-        do {
-            let database = try AppDatabase.open(at: file)
+        switch opened {
+        case .success(let database):
             self.database = database
             launch = Task {
                 try await database.startLaunch(at: .now, version: version, build: build, commit: commit, macOS: macOS)
             }
-        } catch {
+        case .failure(let error):
             database = nil
             launch = nil
             self.error = "Couldn't open the database: \(Answer.message(for: error))"

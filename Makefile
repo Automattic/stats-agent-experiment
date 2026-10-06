@@ -1,4 +1,4 @@
-.PHONY: app run test experiments prompt-set format lint
+.PHONY: app run previews test experiments prompt-set format lint
 
 CONFIGURATION ?= release
 APP = .build/app/$(CONFIGURATION)/Stats agent.app
@@ -20,6 +20,12 @@ app:
 run: CONFIGURATION = debug
 run: app
 	"$(APP)/Contents/MacOS/stats-agent-app" --data-directory $(CURDIR)/data
+
+# Draws the window's screens from made-up data, in light and dark, as PNGs in .build/previews/, without logging in,
+# reading the keychain, opening the database or calling the model.
+previews:
+	rm -rf $(CURDIR)/.build/previews
+	swift run stats-agent-app --previews $(CURDIR)/.build/previews
 
 test:
 	swift test

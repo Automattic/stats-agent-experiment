@@ -9,8 +9,9 @@ final class Questions {
     private(set) var answer: Answer?
     let recorder: Recorder
 
-    init(recorder: Recorder) {
+    init(recorder: Recorder, answer: Answer? = nil) {
         self.recorder = recorder
+        self.answer = answer
     }
 
     /// Whether a question can be asked now: not while an answer is being worked out.

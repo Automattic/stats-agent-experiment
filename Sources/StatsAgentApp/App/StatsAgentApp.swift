@@ -13,6 +13,8 @@ struct StatsAgentApp: App {
         Window("Stats agent", id: "main") {
             if let question = AskMode.question {
                 AskModeView(question: question)
+            } else if Previews.folder != nil {
+                Color.clear
             } else {
                 RootView(account: appDelegate.account, questions: appDelegate.questions)
             }
@@ -26,11 +28,16 @@ struct StatsAgentApp: App {
 /// quits it.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    // Made on first use, so ask mode, which uses neither, never reads the keychain or opens the database.
+    // Made on first use, so ask mode and previews, which use neither, never read the keychain or open the database.
     lazy var questions = Questions(recorder: Recorder())
     lazy var account = Account()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if let folder = Previews.folder {
+            NSApp.setActivationPolicy(.accessory)
+            Task { await Previews.run(in: folder) }
+            return
+        }
         guard AskMode.question == nil else {
             NSApp.setActivationPolicy(.accessory)
             return
@@ -39,8 +46,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate()
     }
 
-    /// Not in ask mode, which hides the window and quits when it's done.
+    /// Not in ask mode or previews, which hide the window and quit when they're done.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        AskMode.question == nil
+        AskMode.question == nil && Previews.folder == nil
     }
 }

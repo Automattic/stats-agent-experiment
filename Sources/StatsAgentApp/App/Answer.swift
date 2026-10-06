@@ -41,6 +41,13 @@ final class Answer {
         self.question = question
     }
 
+    /// An answer as `--previews` draws it: made up, not worked out.
+    init(previewing question: String, status: Status, cards: [Card]) {
+        self.question = question
+        self.status = status
+        self.cards = cards
+    }
+
     /// How the answer ended, or nil while it's working.
     var outcome: LogEntryV1.Outcome? {
         switch status {

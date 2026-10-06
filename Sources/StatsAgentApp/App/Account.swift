@@ -52,6 +52,12 @@ final class Account {
             .flatMap { try? JSONDecoder().decode(Site.self, from: $0) }
     }
 
+    /// An account as `--previews` draws it, without the keychain or the app's defaults.
+    init(previewToken token: String?, site: Site?) {
+        self.token = token
+        self.site = site
+    }
+
     /// The selected site's stats, or nil before logging in and picking a site.
     var stats: SiteStats? {
         guard let token, let site else {
