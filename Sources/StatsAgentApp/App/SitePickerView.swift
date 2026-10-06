@@ -42,8 +42,14 @@ struct SitePickerView: View {
                     .textSelection(.enabled)
                 Spacer()
             } else {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                VStack(spacing: 8) {
+                    ProgressView()
+                    Text("Loading your sites…")
+                    Text("This can take a minute on accounts with many sites.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .padding()
