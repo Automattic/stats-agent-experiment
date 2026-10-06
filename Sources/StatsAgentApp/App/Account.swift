@@ -35,8 +35,10 @@ struct Site: Codable, Hashable, Identifiable {
     }
 }
 
-/// The WordPress.com login and the site questions are about. The token is kept in the keychain and the site in the
-/// app's defaults, so both last from one launch to the next. Logging out forgets both.
+/// The WordPress.com login and the site questions are about. Release builds, such as `make app`'s, keep the token in
+/// the keychain, so it lasts from one launch to the next. Debug builds, such as `make run`'s, keep it only while they
+/// run and ask to log in at each launch, since the keychain asks again for the token whenever a build's code changes;
+/// they leave the keychain alone. The site is kept in the app's defaults. Logging out forgets both.
 @MainActor @Observable
 final class Account {
     private(set) var token: String?
@@ -49,8 +51,17 @@ final class Account {
 
     private static let siteKey = "site"
 
+    /// Whether the token is kept in the keychain: in release builds only.
+    private static var keepsToken: Bool {
+        #if DEBUG
+        false
+        #else
+        true
+        #endif
+    }
+
     init() {
-        token = Keychain.token()
+        token = Self.keepsToken ? Keychain.token() : nil
         site = UserDefaults.standard.data(forKey: Self.siteKey)
             .flatMap { try? JSONDecoder().decode(Site.self, from: $0) }
     }
@@ -73,7 +84,9 @@ final class Account {
 
     func logIn(in session: WebAuthenticationSession) async throws {
         let token = try await OAuthClient.compiledIn().token(in: session)
-        try Keychain.save(token)
+        if Self.keepsToken {
+            try Keychain.save(token)
+        }
         self.token = token
     }
 
@@ -99,7 +112,9 @@ final class Account {
     }
 
     func logOut() {
-        Keychain.deleteToken()
+        if Self.keepsToken {
+            Keychain.deleteToken()
+        }
         UserDefaults.standard.removeObject(forKey: Self.siteKey)
         token = nil
         site = nil

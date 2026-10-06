@@ -7,5 +7,10 @@ It holds the experiments, with their questions and latest results, and a macOS a
 ## Running the app
 
 1. `cp wp_com_credentials.json-example wp_com_credentials.json`, then replace its values with the WordPress.com OAuth client's ID, a number, and secret.
-2. (Optional) Once, create a code-signing certificate in Keychain Access: Certificate Assistant → Create a Certificate…, with identity type Self Signed Root and certificate type Code Signing. Without it, the keychain asks for the token again after every build.
-3. `make run SIGNING_IDENTITY="<the certificate's name>"` builds the app and runs it, with its database in `data/`. `make app`, given the same `SIGNING_IDENTITY` or with it set in your environment, builds `.build/app/release/Stats agent.app`.
+2. `make run` builds the app and runs it, with its database in `data/`. It asks you to log in each time it starts.
+
+`make app` builds `.build/app/release/Stats agent.app`, which keeps your login in the keychain.
+
+## Sending feedback
+
+Give Feedback, under each answer, saves your verdict as you go. To send it to us, choose File → Export Data…, check what to include, and send the file it saves.

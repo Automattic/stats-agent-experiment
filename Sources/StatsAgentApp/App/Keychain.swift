@@ -1,8 +1,8 @@
 import Foundation
 import Security
 
-/// The WordPress.com token, kept in the login keychain as the password of service "Stats agent", account
-/// "WordPress.com".
+/// The WordPress.com token, kept by release builds in the login keychain as the password of service "Stats agent",
+/// account "WordPress.com".
 enum Keychain {
     struct Failure: LocalizedError {
         let status: OSStatus
