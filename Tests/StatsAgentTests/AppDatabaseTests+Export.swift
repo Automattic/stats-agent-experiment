@@ -227,6 +227,19 @@ extension AppDatabaseTests {
         #expect(content.sites.map(\.id) == [Self.fieldNotes])
     }
 
+    @Test func savesTheJSONAloneOrAZipWithTheResponses() async throws {
+        let database = try await Self.exportFixture()
+        let withoutResponses = try await database.export(Self.options(including: false), at: Self.asked)
+        let json = try withoutResponses.file(named: "Export")
+        #expect(json.pathExtension == "json")
+        #expect(try ExportV1.decoded(from: json.data) == withoutResponses.content)
+
+        let zip = try await database.export(Self.options(including: true), at: Self.asked).file(named: "Export")
+        #expect(zip.pathExtension == "zip")
+        // A zip starts with a local file header's signature.
+        #expect(zip.data.starts(with: [0x50, 0x4B, 0x03, 0x04]))
+    }
+
     @Test func exportReadsBackFromItsJSON() async throws {
         let database = try await Self.exportFixture()
         let content = try await database.export(Self.options(including: true), at: Self.asked).content

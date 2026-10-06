@@ -5,10 +5,12 @@ import SwiftUI
 /// menu to switch sites or log out, which waits while an answer is being worked out. When the site changes, the answer
 /// on screen goes.
 /// Dates are worked out and shown in the site's time zone, or the Mac's when the site's isn't known. Every page has the
-/// stats screens' background, and WordPress blue as its accent.
+/// stats screens' background, and WordPress blue as its accent. File → Export Data… opens the export sheet, logged in or
+/// not, unless the database couldn't be opened.
 struct RootView: View {
     let account: Account
     let questions: Questions
+    @State private var isExporting = false
 
     var body: some View {
         Group {
@@ -39,5 +41,17 @@ struct RootView: View {
         .onChange(of: account.site) {
             questions.clear()
         }
+        .sheet(isPresented: $isExporting) {
+            ExportView(database: questions.recorder.database)
+        }
+        .focusedSceneValue(\.exportData, exportData)
+    }
+
+    /// Opens the export sheet, or nil when the database couldn't be opened.
+    private var exportData: (() -> Void)? {
+        guard questions.recorder.database != nil else {
+            return nil
+        }
+        return { isExporting = true }
     }
 }

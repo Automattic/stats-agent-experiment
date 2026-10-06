@@ -6,7 +6,8 @@ import SwiftUI
 /// `stats-agent-app --previews <folder>` draws the window's screens from made-up data, in light and dark, saves each as
 /// a PNG in the folder, prints the folder, and quits. It doesn't log in, read the keychain, open the app's database or
 /// call the model, so the screens can be looked at from the command line, and they come out the same on every run.
-/// Each picture is the whole window, title bar and toolbar included, drawn by the app itself off screen.
+/// Each picture is the whole window, title bar and toolbar included, drawn by the app itself off screen; a sheet is
+/// drawn alone, at its own size.
 @MainActor
 enum Previews {
     static let folder = LaunchArguments.value(after: "--previews")
@@ -27,7 +28,8 @@ enum Previews {
                     try await save(
                         screen.view(),
                         to: folder.appending(path: "\(screen.name)-\(suffix).png"),
-                        appearance
+                        appearance,
+                        sheetSize: screen.sheetSize
                     )
                 }
             }
@@ -42,6 +44,8 @@ enum Previews {
 
     private struct Screen {
         let name: String
+        /// The size of a sheet drawn alone, or nil for the window.
+        var sheetSize: CGSize?
         let view: @MainActor () -> AnyView
     }
 
@@ -114,6 +118,26 @@ enum Previews {
                         status: .failed("The model couldn't answer: the request timed out."),
                         cards: []
                     )
+                )
+            },
+            Screen(name: "export", sheetSize: ExportView.size) {
+                AnyView(
+                    ExportView(previewing: [
+                        ExportableSite(
+                            id: 1,
+                            name: "Field Notes",
+                            url: "https://fieldnotes.example.com",
+                            questions: 18,
+                            questionsWithFeedback: 7
+                        ),
+                        ExportableSite(
+                            id: 2,
+                            name: "Kitchen Table Recipes",
+                            url: "https://kitchentable.example.com",
+                            questions: 4,
+                            questionsWithFeedback: 2
+                        )
+                    ])
                 )
             }
         ]
@@ -221,15 +245,22 @@ enum Previews {
 
     // MARK: - Drawing
 
-    /// Draws `view` in a window off screen, title bar and toolbar included, and saves it as a PNG.
-    private static func save(_ view: AnyView, to file: URL, _ appearance: NSAppearance.Name) async throws {
+    /// Draws `view` in a window off screen, title bar and toolbar included, or alone at `sheetSize` for a sheet, and
+    /// saves it as a PNG.
+    private static func save(
+        _ view: AnyView,
+        to file: URL,
+        _ appearance: NSAppearance.Name,
+        sheetSize: CGSize?
+    ) async throws {
         let hosting = NSHostingView(rootView: view)
         hosting.sceneBridgingOptions = [.title, .toolbars]
         // A full-size content view, as SwiftUI's own windows have: the content runs under the title bar and the toolbar,
         // and keeps clear of them only through its safe area.
         let window = NSWindow(
-            contentRect: CGRect(origin: CGPoint(x: -20_000, y: -20_000), size: size),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+            contentRect: CGRect(origin: CGPoint(x: -20_000, y: -20_000), size: sheetSize ?? size),
+            styleMask: sheetSize == nil
+                ? [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView] : [.borderless],
             backing: .buffered,
             defer: false
         )

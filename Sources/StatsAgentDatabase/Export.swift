@@ -158,6 +158,51 @@ public struct ExportOptions: Sendable {
 public struct Export: Sendable {
     public var content: ExportV1
     public var responseBodies: [String: String]
+
+    /// The export as the file a person saves: the JSON alone, or, when it includes responses, a zip of a folder named
+    /// `name` holding the JSON as `export.json` and each response's body under the file name the export gives it.
+    public func file(named name: String) throws -> ExportFile {
+        let json = try content.json()
+        guard content.included.responses else {
+            return ExportFile(data: json, pathExtension: "json")
+        }
+        let temporary = FileManager.default.temporaryDirectory.appending(
+            path: UUID().uuidString,
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: temporary) }
+        let folder = temporary.appending(path: name, directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(
+            at: folder.appending(path: "responses", directoryHint: .isDirectory),
+            withIntermediateDirectories: true
+        )
+        try json.write(to: folder.appending(path: "export.json"))
+        for (file, body) in responseBodies {
+            try Data(body.utf8).write(to: folder.appending(path: file))
+        }
+        return ExportFile(data: try zipped(folder), pathExtension: "zip")
+    }
+}
+
+/// What an export is saved as.
+public struct ExportFile: Sendable {
+    public var data: Data
+    /// `json`, or `zip` for an export with responses.
+    public var pathExtension: String
+}
+
+/// `folder` as a zip, which Foundation makes when the folder is read for uploading.
+private func zipped(_ folder: URL) throws -> Data {
+    var coordinationError: NSError?
+    var zip: Result<Data, any Error> = .failure(CocoaError(.fileReadUnknown))
+    NSFileCoordinator()
+        .coordinate(readingItemAt: folder, options: .forUploading, error: &coordinationError) { url in
+            zip = Result { try Data(contentsOf: url) }
+        }
+    if let coordinationError {
+        throw coordinationError
+    }
+    return try zip.get()
 }
 
 /// A site questions were asked about, with how many, for choosing what to export.
@@ -168,6 +213,14 @@ public struct ExportableSite: Sendable, Equatable {
     public var questions: Int
     /// The questions whose feedback form, as last saved, isn't empty.
     public var questionsWithFeedback: Int
+
+    public init(id: Int64, name: String, url: String, questions: Int, questionsWithFeedback: Int) {
+        self.id = id
+        self.name = name
+        self.url = url
+        self.questions = questions
+        self.questionsWithFeedback = questionsWithFeedback
+    }
 }
 
 extension AppDatabase {

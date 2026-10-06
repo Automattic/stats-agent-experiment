@@ -11,7 +11,8 @@ import StatsAgentDatabase
 final class Recorder {
     /// Why the database couldn't be opened, or the last write that failed.
     private(set) var error: String?
-    private let database: AppDatabase?
+    /// The database, or nil when it couldn't be opened.
+    let database: AppDatabase?
     /// The ID of this launch's row, once it's written.
     private let launch: Task<Int64, any Error>?
 
