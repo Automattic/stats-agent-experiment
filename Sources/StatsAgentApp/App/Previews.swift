@@ -192,9 +192,11 @@ enum Previews {
     private static func save(_ view: AnyView, to file: URL, _ appearance: NSAppearance.Name) async throws {
         let hosting = NSHostingView(rootView: view)
         hosting.sceneBridgingOptions = [.title, .toolbars]
+        // A full-size content view, as SwiftUI's own windows have: the content runs under the title bar and the toolbar,
+        // and keeps clear of them only through its safe area.
         let window = NSWindow(
             contentRect: CGRect(origin: CGPoint(x: -20_000, y: -20_000), size: size),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
