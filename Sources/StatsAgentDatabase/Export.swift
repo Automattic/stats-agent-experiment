@@ -41,6 +41,8 @@ public struct ExportV1: Codable, Sendable, Equatable {
     }
 
     public struct Question: Codable, Sendable, Equatable {
+        /// The question's number in the export, from 1, in the order asked, which its responses' files start with.
+        public var number: Int
         public var askedAt: Date
         public var text: String
         /// The site's number in `sites`.
@@ -97,7 +99,8 @@ public struct ExportV1: Codable, Sendable, Equatable {
         public var url: String
         public var statusCode: Int
         public var receivedAt: Date
-        /// The file holding the body as WordPress.com sent it, from the export's folder, such as `responses/1.json`.
+        /// The file holding the body as WordPress.com sent it, from the export's folder: `responses/3-2.json` for the
+        /// second response to question 3.
         public var file: String
     }
 
@@ -269,6 +272,9 @@ private struct ExportBuilder {
     /// Each site's number in the export, by WordPress.com ID.
     let numbers: [Int64: Int]
     var responseBodies: [String: String] = [:]
+    /// The number of the question being made, and of its last response so far.
+    private var questionNumber = 0
+    private var responseNumber = 0
 
     init(options: ExportOptions, _ db: Database) throws {
         self.options = options
@@ -297,7 +303,9 @@ private struct ExportBuilder {
 
     mutating func export(at exportedAt: Date) -> Export {
         var exported: [ExportV1.Question] = []
-        for question in questions {
+        for (index, question) in questions.enumerated() {
+            questionNumber = index + 1
+            responseNumber = 0
             exported.append(self.question(question))
         }
         let content = ExportV1(
@@ -333,6 +341,7 @@ private struct ExportBuilder {
         }
         let saved = question.id.flatMap { feedback[$0] }
         return ExportV1.Question(
+            number: questionNumber,
             askedAt: question.askedAt,
             text: question.text,
             site: numbers[question.siteId] ?? 0,
@@ -379,14 +388,15 @@ private struct ExportBuilder {
     }
 
     /// The request, with its responses when they're included, whose bodies it adds to `responseBodies` under the file
-    /// names it gives them, numbered from 1 across the export.
+    /// names it gives them: the question's number, then the response's, from 1 among the question's responses.
     private mutating func request(_ request: RequestRecord) -> ExportV1.Request {
         guard options.included.responses else {
             return ExportV1.Request(parameters: request.parameters, seconds: request.seconds, responses: nil)
         }
         var exportedResponses: [ExportV1.Response] = []
         for response in responses where response.requestId == request.id {
-            let file = "responses/\(responseBodies.count + 1).json"
+            responseNumber += 1
+            let file = "responses/\(questionNumber)-\(responseNumber).json"
             responseBodies[file] = response.body
             exportedResponses.append(
                 ExportV1.Response(

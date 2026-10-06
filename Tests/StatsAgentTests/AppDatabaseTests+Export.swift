@@ -8,9 +8,10 @@ extension AppDatabaseTests {
     static let fieldNotes: Int64 = 42
     static let kitchenTable: Int64 = 7
 
-    /// Field Notes: "Views last week?", with a drawn card that was looked at and made one request, a dropped card, and
-    /// feedback saved twice; then, two hours in, "Top posts?" with a verdict naming its card. Kitchen Table, an hour
-    /// in: "Weather tomorrow?", which stats can't answer, with feedback saved and then cleared.
+    /// Field Notes: "Views last week?", with a drawn card that was looked at and made one request, which got two
+    /// responses, a dropped card, and feedback saved twice; then, two hours in, "Top posts?", whose card's request got
+    /// one response, with a verdict naming its card. Kitchen Table, an hour in: "Weather tomorrow?", which stats can't
+    /// answer, with feedback saved and then cleared.
     static func exportFixture() async throws -> AppDatabase {
         let database = try AppDatabase.inMemory()
         let launch = try await database.startLaunch(
@@ -65,6 +66,13 @@ extension AppDatabaseTests {
             body: #"{"data":[]}"#,
             requestID: request,
             at: asked
+        )
+        try await database.addResponse(
+            url: "https://public-api.wordpress.com/rest/v1.1/sites/42/stats/visits?page=2",
+            statusCode: 200,
+            body: #"{"data":[1]}"#,
+            requestID: request,
+            at: asked.addingTimeInterval(1)
         )
         try await database.finishRequest(request, seconds: 0.41)
         try await database.finishCard(
@@ -127,6 +135,15 @@ extension AppDatabaseTests {
             at: asked.addingTimeInterval(7200)
         )
         let topPosts = try await database.startCard(endpoint: "stats_top_posts", questionID: posts, position: 0)
+        let ranking = try await database.startRequest(parameters: ["max": "5"], cardID: topPosts, position: 0)
+        try await database.addResponse(
+            url: "https://public-api.wordpress.com/rest/v1.1/sites/42/stats/top-posts",
+            statusCode: 200,
+            body: #"{"days":{}}"#,
+            requestID: ranking,
+            at: asked.addingTimeInterval(7201)
+        )
+        try await database.finishRequest(ranking, seconds: 0.2)
         try await database.finishQuestion(posts, outcome: .cards, error: nil, at: asked.addingTimeInterval(7210))
         try await database.saveFeedback(
             choice: .answersCompletely,
@@ -157,6 +174,7 @@ extension AppDatabaseTests {
         let content = export.content
 
         #expect(content.questions.map(\.text) == ["Views last week?", "Weather tomorrow?", "Top posts?"])
+        #expect(content.questions.map(\.number) == [1, 2, 3])
         #expect(content.questions.map(\.site) == [1, 2, 1])
         #expect(content.sites.map(\.name) == ["Field Notes", "Kitchen Table"])
         #expect(content.sites.map(\.timeZone) == ["Europe/Lisbon", nil])
@@ -176,8 +194,17 @@ extension AppDatabaseTests {
         #expect(views.cards[1].viewedAt == nil)
         #expect(visits.requests.map(\.parameters) == [["quantity": "7"]])
         #expect(visits.requests[0].seconds == 0.41)
-        #expect(visits.requests[0].responses?.map(\.file) == ["responses/1.json"])
-        #expect(export.responseBodies == ["responses/1.json": #"{"data":[]}"#])
+        // Named for the question, then the response's place among the question's responses.
+        #expect(visits.requests[0].responses?.map(\.file) == ["responses/1-1.json", "responses/1-2.json"])
+        #expect(content.questions[2].cards[0].requests[0].responses?.map(\.file) == ["responses/3-1.json"])
+        #expect(
+            export.responseBodies
+                == [
+                    "responses/1-1.json": #"{"data":[]}"#,
+                    "responses/1-2.json": #"{"data":[1]}"#,
+                    "responses/3-1.json": #"{"days":{}}"#
+                ]
+        )
     }
 
     @Test func exportGivesTheFeedbackAsLastSaved() async throws {
@@ -223,6 +250,9 @@ extension AppDatabaseTests {
 
         #expect(content.since == Self.asked.addingTimeInterval(1800))
         #expect(content.questions.map(\.text) == ["Top posts?"])
+        // Numbered within the export, not as in the database.
+        #expect(content.questions.map(\.number) == [1])
+        #expect(content.questions[0].cards[0].requests[0].responses?.map(\.file) == ["responses/1-1.json"])
         #expect(content.questions.map(\.site) == [1])
         #expect(content.sites.map(\.id) == [Self.fieldNotes])
     }
