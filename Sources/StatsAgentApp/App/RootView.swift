@@ -31,7 +31,8 @@ struct RootView: View {
                 SitePickerView(account: account)
             }
         }
-        .frame(minWidth: 640, minHeight: 560)
+        // Every page fills the window, so a page with little in it, such as the login, doesn't shrink the window to fit.
+        .frame(minWidth: 640, maxWidth: .infinity, minHeight: 560, maxHeight: .infinity)
         .background(Constants.Colors.background)
         .tint(Constants.Colors.blue)
         .environment(\.context, account.site?.timeZone.map { StatsContext(timeZone: $0) } ?? .demo)
