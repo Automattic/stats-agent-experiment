@@ -2,10 +2,11 @@ import StatsAgent
 import SwiftUI
 
 /// The window's questions as one scroll, oldest first: a page for each answer, and the ask page after them while
-/// asking. Each page is at least as tall as the window, so scrolling up goes back through the questions. Asking scrolls
-/// to the new answer, Ask Another down to the ask page, and opening an answer's feedback form as little as shows all of
-/// it, smoothly or, with Reduce Motion, at once. A bar along the bottom asks another question; it hides on the ask
-/// page. A database error shows under the scroll.
+/// asking. Each page is at least as tall as the window, so scrolling up goes back through the questions. Asking brings
+/// the answer's page in from below as the ask page goes up and out, or fades one into the other with Reduce Motion. Ask
+/// Another scrolls down to the ask page, and opening an answer's feedback form as little as shows all of it, smoothly
+/// or, with Reduce Motion, at once. A bar along the bottom asks another question; it hides on the ask page. A database
+/// error shows under the scroll.
 struct QuestionView: View {
     let questions: Questions
     let account: Account
@@ -26,6 +27,7 @@ struct QuestionView: View {
                                 AnswerPage(answer: answer)
                             }
                             .id(answer.id)
+                            .transition(transition(insertion: .move(edge: .bottom), removal: .identity))
                             .onChange(of: answer.isFeedbackOpen) { _, isOpen in
                                 guard isOpen else {
                                     return
@@ -41,6 +43,7 @@ struct QuestionView: View {
                                 AskPage(site: account.site?.title, ask: ask)
                             }
                             .id(Self.askPage)
+                            .transition(transition(insertion: .identity, removal: .move(edge: .top)))
                         }
                     }
                     .scrollTargetLayout()
@@ -103,11 +106,22 @@ struct QuestionView: View {
         }
     }
 
+    /// A page's transition: `insertion` and `removal`, each fading too, or only the fade with Reduce Motion.
+    private func transition(insertion: AnyTransition, removal: AnyTransition) -> AnyTransition {
+        guard !reduceMotion else {
+            return .opacity
+        }
+        return .asymmetric(insertion: insertion.combined(with: .opacity), removal: removal.combined(with: .opacity))
+    }
+
+    /// Asks `question` in place of the ask page, whose place the answer's page takes.
     private func ask(_ question: String) {
         guard let site = account.site, let stats = account.stats else {
             return
         }
-        questions.ask(question, on: site, stats: stats, context: context)
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .smooth(duration: 0.5)) {
+            questions.ask(question, on: site, stats: stats, context: context)
+        }
         guard let answer = questions.answers.last else {
             return
         }
