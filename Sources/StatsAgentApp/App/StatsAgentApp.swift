@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 /// The proof of concept's app: logging in to WordPress.com and picking a site, then a question box, the agent's cards
-/// for each question, and the feedback form.
+/// for each question, and the feedback form, with a Go menu to move between the questions.
 ///
 ///     make run
 @main
@@ -20,6 +20,9 @@ struct StatsAgentApp: App {
             }
         }
         .defaultSize(width: Previews.size.width, height: Previews.size.height)
+        .commands {
+            QuestionCommands()
+        }
     }
 }
 

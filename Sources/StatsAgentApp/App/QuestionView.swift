@@ -4,9 +4,9 @@ import SwiftUI
 /// The window's questions as one scroll, oldest first: a page for each answer, and the ask page after them while
 /// asking. Each page is at least as tall as the window, so scrolling up goes back through the questions. Asking brings
 /// the answer's page in from below as the ask page goes up and out, or fades one into the other with Reduce Motion. Ask
-/// Another scrolls down to the ask page, and opening an answer's feedback form as little as shows all of it, smoothly
-/// or, with Reduce Motion, at once. A bar along the bottom asks another question; it hides on the ask page. A database
-/// error shows under the scroll.
+/// Another scrolls down to the ask page, the Go menu to the page before or after the one at the top of the window, and
+/// opening an answer's feedback form as little as shows all of it, smoothly or, with Reduce Motion, at once. A bar
+/// along the bottom asks another question; it hides on the ask page. A database error shows under the scroll.
 struct QuestionView: View {
     let questions: Questions
     let account: Account
@@ -63,6 +63,28 @@ struct QuestionView: View {
                     .textSelection(.enabled)
                     .padding()
             }
+        }
+        .focusedSceneValue(
+            \.questionNavigation,
+            QuestionNavigation(previous: action(toPageAt: -1), next: action(toPageAt: 1))
+        )
+    }
+
+    /// The pages in the scroll, top to bottom.
+    private var pages: [UUID] {
+        questions.answers.map(\.id) + (questions.isAsking ? [Self.askPage] : [])
+    }
+
+    /// Scrolling to the page `offset` pages from the one at the top of the window, or nil when there's none.
+    private func action(toPageAt offset: Int) -> (() -> Void)? {
+        guard let current = visiblePage.flatMap(pages.firstIndex(of:)) ?? pages.indices.last,
+            pages.indices.contains(current + offset)
+        else {
+            return nil
+        }
+        let page = pages[current + offset]
+        return {
+            move { visiblePage = page }
         }
     }
 
@@ -136,6 +158,37 @@ struct QuestionView: View {
             change()
         } else {
             withAnimation(.smooth(duration: 0.5), change)
+        }
+    }
+}
+
+/// What the Go menu does in the window's questions: scroll to the question before or after the one at the top of the
+/// window, nil when there's none.
+struct QuestionNavigation {
+    let previous: (() -> Void)?
+    let next: (() -> Void)?
+}
+
+extension FocusedValues {
+    @Entry var questionNavigation: QuestionNavigation?
+}
+
+/// The Go menu: Previous Question (⌘↑) and Next Question (⌘↓), while the window shows the questions.
+struct QuestionCommands: Commands {
+    @FocusedValue(\.questionNavigation) private var navigation
+
+    var body: some Commands {
+        CommandMenu("Go") {
+            Button("Previous Question") {
+                navigation?.previous?()
+            }
+            .keyboardShortcut(.upArrow, modifiers: .command)
+            .disabled(navigation?.previous == nil)
+            Button("Next Question") {
+                navigation?.next?()
+            }
+            .keyboardShortcut(.downArrow, modifiers: .command)
+            .disabled(navigation?.next == nil)
         }
     }
 }
