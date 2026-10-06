@@ -24,11 +24,18 @@ struct AskPage: View {
                 .font(.largeTitle.weight(.semibold))
                 .multilineTextAlignment(.center)
             questionBox
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                ForEach(Self.examples, id: \.question) { example in
-                    exampleButton(example.question, symbol: example.symbol)
+            // A plain grid rather than a lazy one, whose tiles would drop out of the page's transition.
+            Grid(horizontalSpacing: 12, verticalSpacing: 12) {
+                ForEach(Array(stride(from: 0, to: Self.examples.count, by: 2)), id: \.self) { start in
+                    GridRow {
+                        ForEach(Self.examples[start..<min(start + 2, Self.examples.count)], id: \.question) {
+                            exampleButton($0.question, symbol: $0.symbol)
+                        }
+                    }
                 }
             }
+            // Rows as tall as their tallest tile, which the other tile in the row stretches to match.
+            .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: 620)
         .padding(32)
@@ -73,7 +80,7 @@ struct AskPage: View {
                     .multilineTextAlignment(.leading)
                     .foregroundStyle(.primary)
             }
-            .frame(maxWidth: .infinity, minHeight: 72, alignment: .topLeading)
+            .frame(maxWidth: .infinity, minHeight: 72, maxHeight: .infinity, alignment: .topLeading)
             .padding(14)
             .boxStyle(shape)
             .contentShape(shape)
