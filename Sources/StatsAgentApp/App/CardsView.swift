@@ -86,10 +86,17 @@ struct CardView: View {
 
     @ViewBuilder private var content: some View {
         switch card.content {
-        case let .figure(metric, value, dateInterval):
-            StandaloneMetricView(metric: metric, value: value, dateInterval: dateInterval)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 24)
+        case let .figure(metric, value, dateInterval, chart):
+            HeroFigureView(
+                figure: Card.Figure(
+                    title: metric.localizedTitle,
+                    value: value,
+                    detail: context.formatters.dateRange.string(from: dateInterval)
+                )
+            )
+            if let chart {
+                trendChart(chart)
+            }
         case let .comparison(data):
             header(for: data, showComparison: true)
             LineChartView(data: data)
@@ -98,9 +105,13 @@ struct CardView: View {
             header(for: data, showComparison: false)
             trendChart(data)
         case let .figures(figures, chart):
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), alignment: .topLeading)], spacing: 16) {
-                ForEach(figures.indices, id: \.self) { index in
-                    FigureView(figure: figures[index])
+            if figures.count == 1 {
+                HeroFigureView(figure: figures[0])
+            } else {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), alignment: .topLeading)], spacing: 16) {
+                    ForEach(figures.indices, id: \.self) { index in
+                        FigureView(figure: figures[index])
+                    }
                 }
             }
             if let chart {
@@ -228,6 +239,28 @@ struct RankedListView: View {
             ? Color.secondary
             : difference > 0 ? Constants.Colors.positiveChangeForeground : Constants.Colors.negativeChangeForeground
         return Text(text).foregroundStyle(color)
+    }
+}
+
+/// A card's only figure, large, with what it covers under it.
+struct HeroFigureView: View {
+    let figure: Card.Figure
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(figure.title)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+            Text(StatsValueFormatter.formatNumber(figure.value, onlyLarge: true))
+                .font(Constants.Typography.largeDisplayFont)
+                .kerning(Constants.Typography.largeDisplayKerning)
+            if let detail = figure.detail {
+                Text(detail)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }
 

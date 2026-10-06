@@ -3,15 +3,15 @@ import Foundation
 /// One answer to a question: what it shows, the path that led to it, and its content.
 struct Card: Identifiable {
     enum Content {
-        /// One metric's total over `dateInterval`.
-        case figure(metric: SiteMetric, value: Int, dateInterval: DateInterval)
+        /// One metric's total over `dateInterval`, with its periods charted below it when there are several.
+        case figure(metric: SiteMetric, value: Int, dateInterval: DateInterval, chart: ChartData?)
         /// A metric over a period, against the period before.
         case comparison(ChartData)
         /// A metric over a period.
         case trend(ChartData)
         /// A metric over a period without a total, with a note saying why, and the period before when comparing.
         case series(ChartData, note: String)
-        /// Several labelled figures, with a chart below them when there is one.
+        /// Labelled figures, with a chart below them when there is one.
         case figures([Figure], chart: ChartData?)
         /// Figures against earlier ones, such as today against yesterday, with a chart below them when there is one.
         case headlines([ChartCardHeaderView.ViewModel], chart: ChartData?)
@@ -113,7 +113,12 @@ extension Card {
                 title: "\(metric.localizedTitle), \(range)",
                 path: path,
                 parameters: parameters,
-                content: .figure(metric: metric, value: total, dateInterval: interval)
+                content: .figure(
+                    metric: metric,
+                    value: total,
+                    dateInterval: interval,
+                    chart: points.count > 1 ? data : nil
+                )
             )
         case "compare_periods":
             return Card(

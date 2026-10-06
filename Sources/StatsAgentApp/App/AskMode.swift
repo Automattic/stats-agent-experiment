@@ -110,7 +110,8 @@ enum AskMode {
 
     private static func describe(_ content: Card.Content) -> String {
         switch content {
-        case .figure(let metric, let value, _): "figure: \(metric.localizedTitle) \(value)"
+        case .figure(let metric, let value, _, let chart):
+            "figure: \(metric.localizedTitle) \(value)\(chart == nil ? "" : ", with a chart")"
         case .comparison(let data):
             "comparison: \(data.currentData.count) periods, \(data.currentTotal) against \(data.previousTotal)"
         case .trend(let data): "trend: \(data.currentData.count) periods, total \(data.currentTotal)"
