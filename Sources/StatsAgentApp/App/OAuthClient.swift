@@ -3,12 +3,12 @@ import Foundation
 import SwiftUI
 import WordPressAPI
 
-/// The WordPress.com OAuth client the app logs in with: its ID and secret, from `wp_com_credentials.json` in the
-/// bundle's resources, where `make app` copies it.
-struct OAuthClient: Decodable {
+/// The WordPress.com OAuth client the app logs in with: its ID and secret, compiled in from `wp_com_credentials.json` by
+/// `CredentialsPlugin`.
+struct OAuthClient {
     struct Missing: LocalizedError {
         var errorDescription: String? {
-            "This build has no wp_com_credentials.json. Build the app with make app."
+            "This build has no WordPress.com OAuth client: it was built without wp_com_credentials.json."
         }
     }
 
@@ -20,16 +20,15 @@ struct OAuthClient: Decodable {
     private static let redirectScheme = "statsagent"
     private static let redirectURI = "\(redirectScheme)://authorized"
 
-    private enum CodingKeys: String, CodingKey {
-        case id = "client_id"
-        case secret = "client_secret"
-    }
-
-    static func fromBundle() throws -> OAuthClient {
-        guard let file = Bundle.main.url(forResource: "wp_com_credentials", withExtension: "json") else {
+    /// The client compiled into the app, with its secret's bytes put back in order.
+    static func compiledIn() throws -> OAuthClient {
+        guard let id = CompiledCredentials.clientID else {
             throw Missing()
         }
-        return try JSONDecoder().decode(OAuthClient.self, from: Data(contentsOf: file))
+        return OAuthClient(
+            id: id,
+            secret: String(decoding: CompiledCredentials.reversedSecret.reversed(), as: UTF8.self)
+        )
     }
 
     /// Opens WordPress.com's login page in `session`, and returns the token WordPress.com grants once the person logs

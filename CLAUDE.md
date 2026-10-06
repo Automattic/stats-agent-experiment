@@ -12,6 +12,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 
 - `Sources/StatsAgent/`: the model steps. `OptionSelector` picks among options in one call; `CatalogNavigator` descends a catalog, with "none of these" and backtracking; `StatsEndpoints` describes the 21 wordpress-rs stats calls, and `DataCatalog` the same data by what's counted; `CardPicker` holds the app's steps; `StatsAgent` fills in spans and figures, which `StatsPeriods` turns into dates.
 - `Sources/StatsAgentApp/`: the macOS app. `JetpackStats/` is copied from the WordPress iOS app and left out of `make format` and SwiftLint.
+- `Plugins/CredentialsPlugin/` and `Sources/generate-credentials/`: compile `wp_com_credentials.json` into the app on every build, as `CompiledCredentials`, with the secret's bytes reversed. Without the file, the app builds and can't log in.
 - `Sources/stats-agent/`: a command-line tool on the placeholder `Catalog`.
 - `Tests/StatsAgentTests/`: the experiments, each writing a file in `results/`, and tests without model calls. Labels are in `StatsQuestionCases` and `DataCatalogLabels`.
 - `prompts/raw/`: the question sets the tests read, kept as written.
@@ -22,7 +23,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 - `swift build --build-tests`. `make format` and `make lint` must pass before committing.
 - Without model calls, in seconds: `swift test --filter "LogEntryTests|CardPickerTests|StatsPeriodsTests"`.
 - Experiments call the model, take minutes each, and rewrite their file in `results/`. For example, `swift test --filter "OperationStepTests/sightedWithOperations"` runs the main setup in about 5.5 minutes. Add `--no-parallel` when running several suites, or their timings mean nothing.
-- `make app` builds the app as a bundle, `.build/app/release/Stats agent.app`, signed ad hoc, with the commit in its `Info.plist`. It needs `wp_com_credentials.json`, the WordPress.com OAuth client the app logs in with, in the package's root; git ignores it.
+- `make app` builds the app as a bundle, `.build/app/release/Stats agent.app`, signed ad hoc, with the commit in its `Info.plist`. It stops without `wp_com_credentials.json`, the WordPress.com OAuth client the app logs in with, in the package's root; git ignores it.
 - `make run` builds a debug bundle and opens it, and writes its feedback log to `logs/`. The app keeps its WordPress.com token in the keychain and the site picked in its defaults.
 - `swift run stats-agent-app --ask "question"` answers one question with the window hidden, and saves the steps, the log entry and a picture of each card under `.build/screenshots/`. It reads `WORDPRESS_APP_TOKEN`, a WordPress.com OAuth token, and `WORDPRESS_SITE_ID` from its environment.
 - `swift run stats-agent` asks questions interactively; `--catalog` lists the catalog.

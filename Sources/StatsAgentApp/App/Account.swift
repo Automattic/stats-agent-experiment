@@ -61,7 +61,7 @@ final class Account {
     }
 
     func logIn(in session: WebAuthenticationSession) async throws {
-        let token = try await OAuthClient.fromBundle().token(in: session)
+        let token = try await OAuthClient.compiledIn().token(in: session)
         try Keychain.save(token)
         self.token = token
     }

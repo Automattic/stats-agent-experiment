@@ -33,8 +33,11 @@ let package = Package(
                 .product(name: "WordPressAPI", package: "wordpress-rs")
             ],
             // The bundle's `Info.plist`, which `make app` copies.
-            exclude: ["Info.plist"]
+            exclude: ["Info.plist"],
+            plugins: ["CredentialsPlugin"]
         ),
+        .executableTarget(name: "generate-credentials"),
+        .plugin(name: "CredentialsPlugin", capability: .buildTool(), dependencies: ["generate-credentials"]),
         .testTarget(name: "StatsAgentTests", dependencies: ["StatsAgent"])
     ]
 )
