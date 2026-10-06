@@ -38,11 +38,12 @@ let package = Package(
                 .product(name: "ColorStudio", package: "color-studio"),
                 .product(name: "WordPressAPI", package: "wordpress-rs")
             ],
-            // The bundle's `Info.plist`, which `make app` copies.
-            exclude: ["Info.plist"],
+            // The bundle's `Info.plist` and icon, which `make app` copies.
+            exclude: ["Info.plist", "AppIcon.icns"],
             plugins: ["CredentialsPlugin"]
         ),
         .executableTarget(name: "generate-credentials"),
+        .executableTarget(name: "generate-icon"),
         .plugin(name: "CredentialsPlugin", capability: .buildTool(), dependencies: ["generate-credentials"]),
         .testTarget(
             name: "StatsAgentTests",

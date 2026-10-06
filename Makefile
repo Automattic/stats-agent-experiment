@@ -1,4 +1,4 @@
-.PHONY: app run previews test experiments prompt-set format lint
+.PHONY: app run previews icon test experiments prompt-set format lint
 
 CONFIGURATION ?= release
 APP = .build/app/$(CONFIGURATION)/Stats agent.app
@@ -7,16 +7,17 @@ APP = .build/app/$(CONFIGURATION)/Stats agent.app
 # keychain's Always Allow for the token lasts until the next build.
 SIGNING_IDENTITY ?= -
 
-# Builds the proof of concept's app as a bundle, .build/app/release/Stats agent.app, signed with SIGNING_IDENTITY. Its
-# Info.plist records the commit it was built from. It stops without wp_com_credentials.json, the WordPress.com OAuth
-# client the app logs in with, which CredentialsPlugin compiles in.
+# Builds the proof of concept's app as a bundle, .build/app/release/Stats agent.app, with its icon, signed with
+# SIGNING_IDENTITY. Its Info.plist records the commit it was built from. It stops without wp_com_credentials.json, the
+# WordPress.com OAuth client the app logs in with, which CredentialsPlugin compiles in.
 app:
 	@test -f wp_com_credentials.json || { echo "make app needs wp_com_credentials.json in $(CURDIR)."; exit 1; }
 	swift build --configuration $(CONFIGURATION) --product stats-agent-app
 	rm -rf "$(APP)"
-	mkdir -p "$(APP)/Contents/MacOS"
+	mkdir -p "$(APP)/Contents/MacOS" "$(APP)/Contents/Resources"
 	cp "$$(swift build --configuration $(CONFIGURATION) --show-bin-path)/stats-agent-app" "$(APP)/Contents/MacOS/"
 	cp Sources/StatsAgentApp/Info.plist "$(APP)/Contents/"
+	cp Sources/StatsAgentApp/AppIcon.icns "$(APP)/Contents/Resources/"
 	plutil -insert StatsAgentCommit -string "$$(git describe --always --dirty)" "$(APP)/Contents/Info.plist"
 	codesign --force --sign "$(SIGNING_IDENTITY)" "$(APP)"
 
@@ -30,6 +31,13 @@ run: app
 previews:
 	rm -rf $(CURDIR)/.build/previews
 	swift run stats-agent-app --previews $(CURDIR)/.build/previews
+
+# Draws the app's icon with generate-icon and makes it into Sources/StatsAgentApp/AppIcon.icns, which make app copies
+# into the bundle. The .icns is committed, so this runs only when the drawing changes.
+icon:
+	rm -rf $(CURDIR)/.build/AppIcon.iconset
+	swift run generate-icon $(CURDIR)/.build/AppIcon.iconset
+	iconutil --convert icns --output Sources/StatsAgentApp/AppIcon.icns $(CURDIR)/.build/AppIcon.iconset
 
 test:
 	swift test
@@ -51,7 +59,7 @@ prompt-set:
 # out here and in .swiftlint.yml.
 format:
 	swift format --in-place --recursive Package.swift Sources/StatsAgent Sources/stats-agent Sources/StatsAgentApp/App \
-		Sources/StatsAgentDatabase Sources/generate-credentials Plugins Tests
+		Sources/StatsAgentDatabase Sources/generate-credentials Sources/generate-icon Plugins Tests
 
 # SwiftLint runs through the BuildTools package plugin, pinned to `swiftlint_version` in .swiftlint.yml.
 lint:
