@@ -38,7 +38,7 @@ struct VisitsMetricTests {
 
     /// Writes `results/visits-metric.txt` and records an issue for every scored question whose metric is wrong.
     @Test func visitsMetric() async throws {
-        let agent = StatsAgent()
+        let agent = ParameterAgent()
         let questions = try StatsQuestionCases.load(SpanTests.visitsFile)
         var rows: [String] = []
         var scored = 0

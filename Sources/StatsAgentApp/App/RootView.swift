@@ -22,7 +22,7 @@ struct RootView: View {
             if account.token == nil {
                 LoginView(account: account)
             } else if let site = account.site, !account.isChoosingSite {
-                QuestionView(questions: questions, account: account)
+                QuestionsView(questions: questions, account: account)
                     .navigationTitle(site.title)
                     .navigationSubtitle(site.url)
                     .toolbar {

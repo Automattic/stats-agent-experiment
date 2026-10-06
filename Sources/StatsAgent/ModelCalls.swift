@@ -1,7 +1,7 @@
 import Synchronization
 
-/// The model calls a ``StatsAgent`` makes, in the order they finish, for the proof of concept's log. A call that throws
-/// isn't recorded.
+/// The model calls a ``ParameterAgent`` makes, in the order they finish, which the app records as steps. A call that
+/// throws isn't recorded.
 public final class ModelCalls: Sendable {
     /// One call: what it generated, and how long it took.
     public struct Call: Sendable, Equatable {

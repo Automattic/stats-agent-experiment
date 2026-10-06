@@ -2,7 +2,7 @@ import Foundation
 import FoundationModels
 
 /// Converts a natural-language stats question into wordpress-rs request parameters using the on-device model.
-public struct StatsAgent: Sendable {
+public struct ParameterAgent: Sendable {
     /// Caps generation so a response that loops stops in seconds instead of filling the context window.
     /// A capped response can still parse as a value, with the field being generated cut short.
     private static let maximumResponseTokens = 200

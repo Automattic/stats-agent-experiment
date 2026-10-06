@@ -1,5 +1,6 @@
 import AppKit
 import StatsAgent
+import StatsAgentDatabase
 import SwiftUI
 
 /// The window's contents in ask mode: nothing, as it hides the window and runs the question on the site that
@@ -20,22 +21,33 @@ struct AskModeView: View {
     }
 }
 
-/// `stats-agent-app --ask "question"` runs one question with the window hidden, saves what the agent did to
-/// `answer.txt`, the feedback log's entry for it to `entry.json`, and a picture of each card to a folder in
-/// `.build/screenshots/`, prints the folder, and quits. The entry isn't added to the log.
+/// `stats-agent-app --ask "question"` runs one question with the window hidden, and saves to a folder in
+/// `.build/screenshots/`: what the agent did in `answer.txt`, an export of the question with everything in it, as
+/// `export.json` and WordPress.com's responses in `responses/`, and a picture of each card. Then it prints the folder
+/// and quits. It records the question in a database in memory, so the app's own database stays as it is.
 @MainActor
 enum AskMode {
     static let question = LaunchArguments.value(after: "--ask")
 
     static func run(_ question: String, stats: Result<SiteStats, any Error>, context: StatsContext) async {
         let answer = Answer(question: question)
-        await answer.run(stats: stats, context: context)
+        let recorder = Recorder(database: Result { try AppDatabase.inMemory() })
+        var questionRecorder: QuestionRecorder?
+        if case .success(let site) = stats {
+            // The environment gives the site's ID only.
+            questionRecorder = await recorder.start(
+                answer,
+                site: Site(id: site.siteID, name: "", url: "", timeZone: nil),
+                stats: site
+            )
+        }
+        await answer.run(stats: stats, context: context, recorder: questionRecorder)
         let directory = Screenshots.directory.appending(path: Screenshots.timestamp)
         var lines = ["Question: \(question)", "Outcome: \(answer.status)", "", "Steps:"]
         lines += answer.steps.map { "  \(describe($0))" }
-        for record in answer.records {
-            lines.append("  \(Names.endpoint(record.endpoint)), \(record.status):")
-            lines += record.steps.map { "    \(describe($0))" }
+        for statsCall in answer.statsCalls {
+            lines.append("  \(DisplayNames.endpoint(statsCall.endpoint)), \(statsCall.status):")
+            lines += statsCall.steps.map { "    \(describe($0))" }
         }
         lines += ["", "Cards:"]
         let appearance = NSApp.effectiveAppearance
@@ -63,12 +75,22 @@ enum AskMode {
                 }
             }
         }
+        if let error = recorder.error {
+            lines += ["", error]
+        }
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             try (lines.joined(separator: "\n") + "\n")
                 .write(to: directory.appending(path: "answer.txt"), atomically: true, encoding: .utf8)
-            try FeedbackLog.entry(for: answer, feedback: nil)?.prettyJSON()
-                .write(to: directory.appending(path: "entry.json"))
+            if let database = recorder.database {
+                let sites = try await database.exportableSites(since: nil)
+                let everything = ExportOptions(
+                    since: nil,
+                    siteIDs: Set(sites.map(\.id)),
+                    included: ExportV1.Included(feedback: true, siteDetails: true, responses: true)
+                )
+                try await database.export(everything, at: .now).write(into: directory)
+            }
             print(directory.path(percentEncoded: false))
         } catch {
             print("Couldn't save the answer: \(error.localizedDescription)")
@@ -77,12 +99,13 @@ enum AskMode {
     }
 
     /// A model call, such as `span: span=lastMonth (1.02 s)` or `endpoint: stats_visits (of 22, 0.91 s)`.
-    private static func describe(_ step: LogEntryV1.Step) -> String {
-        let chose =
-            step.chose?.joined(separator: ", ")
-            ?? (step.values ?? [:]).sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ", ")
+    private static func describe(_ step: AgentStep) -> String {
+        let chosen =
+            step.chosen?.joined(separator: ", ")
+            ?? (step.generated ?? [:]).sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }
+            .joined(separator: ", ")
         let offered = step.offered.map { "of \($0.count), " } ?? ""
-        return "\(step.kind): \(chose) (\(offered)\(String(format: "%.2f s", step.seconds)))"
+        return "\(step.kind): \(chosen) (\(offered)\(String(format: "%.2f s", step.seconds)))"
     }
 
     private static func describe(_ content: Card.Content) -> String {

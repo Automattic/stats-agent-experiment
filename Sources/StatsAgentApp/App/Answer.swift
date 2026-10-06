@@ -4,8 +4,8 @@ import StatsAgent
 
 /// One question's answer, built a step at a time: the single pick, the list, then each card in turn, so the cards
 /// appear as they're ready. Summary, visits, subscribers and the stats calls that rank items are drawn; the others get
-/// a card saying they aren't drawn. Alongside the cards it keeps what a feedback log entry records: every model call,
-/// each stats call's requests and status, the cards the person looked at, and the feedback form. Given a
+/// a card saying they aren't drawn. Alongside the cards it keeps every model call, each stats call's requests and
+/// status, the cards the person looked at, and the feedback form. Given a
 /// `QuestionRecorder`, it writes them to the database as they happen; the feedback form is saved as it changes, filled
 /// in or not, and every save is kept.
 @MainActor @Observable
@@ -36,9 +36,9 @@ final class Answer: Identifiable {
     private(set) var finishedSteps: [String] = []
     private(set) var cards: [Card] = []
     /// The model calls before the cards, in order.
-    private(set) var steps: [LogEntryV1.Step] = []
+    private(set) var steps: [AgentStep] = []
     /// One per stats call in the list, in the list's order, dropped ones included.
-    private(set) var records: [LogEntryV1.Card] = []
+    private(set) var statsCalls: [StatsCall] = []
     /// The endpoints of the cards the person looked at, in the order first seen.
     private(set) var cardsViewed: [String] = []
     /// The feedback form as filled in, finished or not. Each change is saved: a choice, a card or the checkbox at once,
@@ -50,8 +50,6 @@ final class Answer: Identifiable {
     }
     /// The feedback form as last saved, empty when it never was.
     private(set) var savedFeedback = FeedbackForm()
-    /// The site the stats were requested from, whose token and ID the feedback log keeps out.
-    private(set) var site: SiteStats?
     private var endpoints: [Card.ID: String] = [:]
     private var recorder: QuestionRecorder?
     /// Saves the feedback form once typing in the note stops.
@@ -81,7 +79,7 @@ final class Answer: Identifiable {
     }
 
     /// How the answer ended, or nil while it's working.
-    var outcome: LogEntryV1.Outcome? {
+    var outcome: AnswerOutcome? {
         switch status {
         case .working: nil
         case .cantAnswer: .cantAnswer
@@ -99,8 +97,8 @@ final class Answer: Identifiable {
     }
 
     /// The feedback choices for this answer, or none while it's being worked out or when it isn't asked about.
-    var feedbackChoices: [LogEntryV1.Choice] {
-        outcome.map(LogEntryV1.Choice.offered) ?? []
+    var feedbackChoices: [FeedbackChoice] {
+        outcome.map(FeedbackChoice.offered) ?? []
     }
 
     /// The endpoint of the stats call `card` shows.
@@ -183,12 +181,11 @@ final class Answer: Identifiable {
 
     /// The place in the agent's list of the stats call with `endpoint`.
     private func position(of endpoint: String) -> Int? {
-        records.firstIndex { $0.endpoint == endpoint }
+        statsCalls.firstIndex { $0.endpoint == endpoint }
     }
 
     /// Works out the answer, writing each step to `recorder` as it happens, and how it ended unless it was cancelled.
     func run(stats: Result<SiteStats, any Error>, context: StatsContext, recorder: QuestionRecorder? = nil) async {
-        site = try? stats.get()
         self.recorder = recorder
         await build(stats: stats, context: context)
         if let outcome {
@@ -201,7 +198,7 @@ final class Answer: Identifiable {
         let none = CatalogNavigator.noneOfThese.id
         do {
             let single = try await picker.endpoint(for: question)
-            await add(LogEntryV1.Step(single))
+            await add(AgentStep(single))
             guard single.chosen.first != none else {
                 status = .cantAnswer
                 return
@@ -209,13 +206,13 @@ final class Answer: Identifiable {
             try Task.checkCancellation()
             status = .working("Choosing up to \(CardPicker.maximumCards) stats calls")
             let list = try await picker.endpoints(for: question)
-            await add(LogEntryV1.Step(list))
+            await add(AgentStep(list))
             for endpoint in CardPicker.cardEndpoints(single: single, list: list) {
                 try Task.checkCancellation()
-                status = .working("Choosing what to show from \(Names.endpoint(endpoint.id))")
+                status = .working("Choosing what to show from \(DisplayNames.endpoint(endpoint.id))")
                 let operationStep = try await picker.operation(for: question, endpoint: endpoint)
-                records.append(LogEntryV1.Card(endpoint: endpoint.id, operationStep: LogEntryV1.Step(operationStep)))
-                await recorder?.startCard(records[records.count - 1], position: records.count - 1)
+                statsCalls.append(StatsCall(endpoint: endpoint.id, operationStep: AgentStep(operationStep)))
+                await recorder?.startCard(statsCalls[statsCalls.count - 1], position: statsCalls.count - 1)
                 guard let operation = operationStep.chosen.first, operation != none else {
                     continue
                 }
@@ -240,39 +237,39 @@ final class Answer: Identifiable {
     }
 
     /// Adds a model call before the cards.
-    private func add(_ step: LogEntryV1.Step) async {
+    private func add(_ step: AgentStep) async {
         steps.append(step)
         await recorder?.step(step, position: steps.count - 1)
     }
 
-    /// Completes the record of the card being built with its parameter calls and status.
+    /// Completes the stats call whose card is being built with its parameter calls and status.
     private func record(_ card: Card, calls: ModelCalls) async {
-        let index = records.count - 1
-        records[index].steps += calls.all.map(LogEntryV1.Step.init)
+        let index = statsCalls.count - 1
+        statsCalls[index].steps += calls.all.map(AgentStep.init)
         switch card.content {
         case .notDrawn:
-            records[index].status = .notDrawn
+            statsCalls[index].status = .notDrawn
         case .failed(let message):
-            records[index].status = .failed
-            records[index].error = message
+            statsCalls[index].status = .failed
+            statsCalls[index].error = message
         default:
-            records[index].status = .drawn
+            statsCalls[index].status = .drawn
         }
-        await recorder?.finishCard(records[index], position: index, shown: card)
+        await recorder?.finishCard(statsCalls[index], position: index, shown: card)
     }
 
-    /// Makes one of the card's stats requests, adding `parameters` and the time it takes to the card's record.
+    /// Makes one of the card's stats requests, adding `parameters` and the time it takes to its stats call.
     private func request<Value>(
         _ parameters: [String: String],
         _ make: () async throws -> Value
     ) async throws -> Value {
-        let index = records.count - 1
-        records[index].requests.append(parameters)
+        let index = statsCalls.count - 1
+        statsCalls[index].requests.append(parameters)
         let requestID = await recorder?
             .startRequest(
                 parameters,
                 card: index,
-                position: records[index].requests.count - 1
+                position: statsCalls[index].requests.count - 1
             )
         let start = ContinuousClock.Instant.now
         do {
@@ -285,10 +282,10 @@ final class Answer: Identifiable {
         }
     }
 
-    /// Adds the time since `start` to the card's record, and to the request's row.
+    /// Adds the time since `start` to the card's stats call, and to the request's row.
     private func finishRequest(_ requestID: Int64?, card index: Int, startedAt start: ContinuousClock.Instant) async {
-        let seconds = LogEntryV1.seconds(ContinuousClock.Instant.now - start)
-        records[index].requestSeconds = (records[index].requestSeconds ?? 0) + seconds
+        let seconds = (ContinuousClock.Instant.now - start).recordedSeconds
+        statsCalls[index].requestSeconds = (statsCalls[index].requestSeconds ?? 0) + seconds
         await recorder?.finishRequest(requestID, seconds: seconds)
     }
 
@@ -299,8 +296,8 @@ final class Answer: Identifiable {
         stats: Result<SiteStats, any Error>,
         context: StatsContext
     ) async -> Card {
-        let name = Names.endpoint(endpoint.id)
-        let agent = StatsAgent(currentDate: .now, timeZone: context.timeZone, calls: calls)
+        let name = DisplayNames.endpoint(endpoint.id)
+        let agent = ParameterAgent(currentDate: .now, timeZone: context.timeZone, calls: calls)
         do {
             switch endpoint.id {
             case StatsEndpoints.summary.id:
@@ -324,7 +321,7 @@ final class Answer: Identifiable {
                 return Card(
                     id: cards.count,
                     title: StatsEndpoints.all.first { $0.id == endpoint.id }?.about ?? name,
-                    path: [name, Names.operation(operation)],
+                    path: [name, DisplayNames.operation(operation)],
                     parameters: nil,
                     content: .notDrawn
                 )
@@ -333,7 +330,7 @@ final class Answer: Identifiable {
             return Card(
                 id: cards.count,
                 title: name,
-                path: [name, Names.operation(operation)],
+                path: [name, DisplayNames.operation(operation)],
                 parameters: nil,
                 content: .failed(Self.message(for: error))
             )
@@ -345,7 +342,7 @@ final class Answer: Identifiable {
     /// short, otherwise all of it.
     private func visitsCard(
         operation: String,
-        agent: StatsAgent,
+        agent: ParameterAgent,
         stats: Result<SiteStats, any Error>,
         context: StatsContext
     ) async throws -> Card {
@@ -441,7 +438,7 @@ final class Answer: Identifiable {
     /// again for the span before: the same stretch of it when today cuts the span short, otherwise all of it.
     private func subscribersCard(
         operation: String,
-        agent: StatsAgent,
+        agent: ParameterAgent,
         stats: Result<SiteStats, any Error>,
         context: StatsContext
     ) async throws -> Card {
@@ -498,11 +495,11 @@ final class Answer: Identifiable {
     private func rankingCard(
         endpoint: String,
         operation: String,
-        agent: StatsAgent,
+        agent: ParameterAgent,
         stats: Result<SiteStats, any Error>,
         context: StatsContext
     ) async throws -> Card {
-        let name = Names.endpoint(endpoint)
+        let name = DisplayNames.endpoint(endpoint)
         status = .working("Filling in the dates for \(name.lowercased())")
         let comparing = operation == StatsOperations.comparePeriods.id
         let params = try await agent.spanParams(for: question, endpoint: name.lowercased(), comparingPeriods: comparing)

@@ -1,6 +1,6 @@
 import Foundation
 
-/// A visits request as the app makes it. It sits between the model's parameters, in `StatsAgent`, and the wordpress-rs
+/// A visits request as the app makes it. It sits between the model's parameters, in `ParameterAgent`, and the wordpress-rs
 /// request, in `SiteStats`, whose types share names.
 struct VisitsRequest: Equatable, Sendable {
     var granularity: DateRangeGranularity
@@ -17,7 +17,7 @@ struct VisitsRequest: Equatable, Sendable {
         return "\(quantity) \(unit)\(quantity == 1 ? "" : "s"), \(end)"
     }
 
-    /// The parameters as the database and feedback log entries record them.
+    /// The parameters as the database records them.
     var logged: [String: String] {
         ["granularity": "\(granularity)", "quantity": "\(quantity)", "endDate": endDate].compactMapValues(\.self)
     }

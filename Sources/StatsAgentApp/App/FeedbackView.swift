@@ -6,7 +6,7 @@ import SwiftUI
 /// useful or interesting, for the choices that ask, a note, and whether something looks broken. It shows the answer's
 /// `feedbackForm`, which the answer saves as it changes, so the form keeps what was typed when it's closed or scrolled
 /// away. It says when the form as it stands is saved, and what's missing from it: a choice, or the note or card the
-/// choice asks for. Clear empties the form and saves that. The choices and their rules come from `LogEntryV1.Choice`.
+/// choice asks for. Clear empties the form and saves that. The choices and their rules come from `FeedbackChoice`.
 struct FeedbackView: View {
     @Bindable var answer: Answer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -117,7 +117,7 @@ struct FeedbackView: View {
     }
 
     /// What the card picked for `choice` did, as the form asks it: "Which card answered it?"
-    private static func cardRole(for choice: LogEntryV1.Choice) -> String {
+    private static func cardRole(for choice: FeedbackChoice) -> String {
         switch choice {
         case .answersRelated: "was useful"
         case .somethingInteresting: "was interesting"
@@ -128,7 +128,7 @@ struct FeedbackView: View {
 
 /// The feedback form for an answer as filled in, finished or not.
 struct FeedbackForm: Equatable {
-    var choice: LogEntryV1.Choice?
+    var choice: FeedbackChoice?
     /// The endpoint of the card that answered.
     var card: String?
     var note = ""

@@ -7,7 +7,7 @@ import SwiftUI
 /// Another scrolls down to the ask page, the Go menu to the page before or after the one at the top of the window, and
 /// opening an answer's feedback form as little as shows all of it, smoothly or, with Reduce Motion, at once. A bar
 /// along the bottom asks another question; it hides on the ask page. A database error shows under the scroll.
-struct QuestionView: View {
+struct QuestionsView: View {
     let questions: Questions
     let account: Account
     @Environment(\.context) private var context

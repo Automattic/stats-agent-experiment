@@ -2,7 +2,7 @@
 .swiftpm/
 BuildTools/.build/
 BuildTools/.swiftpm/
-logs/
+exports/
 sessions/
 data/
 results/feedback-report.md

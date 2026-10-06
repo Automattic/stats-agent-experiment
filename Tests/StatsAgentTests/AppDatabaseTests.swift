@@ -8,8 +8,8 @@ import Testing
 struct AppDatabaseTests {
     static let asked = Date(timeIntervalSince1970: 1_790_000_000)
 
-    static func step(_ kind: String, _ offered: [String], _ chosen: [String]) -> LogEntryV1.Step {
-        LogEntryV1.Step(CardPicker.Step(kind: kind, offered: offered, chosen: chosen, duration: .milliseconds(912)))
+    static func step(_ kind: String, _ offered: [String], _ chosen: [String]) -> AgentStep {
+        AgentStep(CardPicker.Step(kind: kind, offered: offered, chosen: chosen, duration: .milliseconds(912)))
     }
 
     @Test func recordsAQuestionAsItHappens() async throws {
@@ -42,7 +42,7 @@ struct AppDatabaseTests {
             position: 0
         )
         try await database.addStep(
-            LogEntryV1.Step(ModelCalls.Call(kind: "span", values: ["span": "lastWeek"], duration: .seconds(1))),
+            AgentStep(ModelCalls.Call(kind: "span", values: ["span": "lastWeek"], duration: .seconds(1))),
             questionID: question,
             cardID: card,
             position: 1

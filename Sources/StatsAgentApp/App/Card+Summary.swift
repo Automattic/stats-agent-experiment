@@ -4,7 +4,7 @@ extension Card {
     /// A summary card for `operation`. The summary has no parameters: its figures are all-time, today's and
     /// yesterday's, and its series covers the last 30 days.
     static func summary(id: Int, operation: String, summary: SiteSummary, context: StatsContext) -> Card {
-        let path = [Names.endpoint("stats_summary"), Names.operation(operation)]
+        let path = [DisplayNames.endpoint("stats_summary"), DisplayNames.operation(operation)]
         let views = series(summary.dailyViews, metric: .views, calendar: context.calendar)
         let range = views.map { context.formatters.dateRange.string(from: $0.dateInterval) } ?? "the last 30 days"
         let bestDay = Figure(

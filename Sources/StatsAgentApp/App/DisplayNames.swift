@@ -1,5 +1,5 @@
-/// Plain names for the stats calls and operations, for cards and their paths.
-enum Names {
+/// The names the app shows for the stats calls and operations, for cards and their paths, by their IDs.
+enum DisplayNames {
     static func endpoint(_ id: String) -> String {
         endpoints[id] ?? id
     }

@@ -39,7 +39,7 @@ extension Card {
         context: StatsContext
     ) -> Card {
         let calendar = context.calendar
-        let path = [Names.endpoint("stats_subscribers"), Names.operation(operation)]
+        let path = [DisplayNames.endpoint("stats_subscribers"), DisplayNames.operation(operation)]
         let granularity: DateRangeGranularity = series.unit == .month ? .month : .day
         let unit = String(describing: granularity)
         let parameters =
