@@ -1,7 +1,9 @@
 import SwiftUI
 
 /// The window's contents: the login while there's no token, the site list while there's no site or another is being
-/// picked, and otherwise the questions. When the site changes, the answer on screen goes.
+/// picked, and otherwise the questions, with the site's name and URL as the window's title and subtitle, and a toolbar
+/// menu to switch sites or log out, which waits while an answer is being worked out. When the site changes, the answer
+/// on screen goes.
 /// Dates are worked out and shown in the site's time zone, or the Mac's when the site's isn't known.
 struct RootView: View {
     let account: Account
@@ -11,10 +13,21 @@ struct RootView: View {
         Group {
             if account.token == nil {
                 LoginView(account: account)
-            } else if account.site == nil || account.isChoosingSite {
-                SitePickerView(account: account)
-            } else {
+            } else if let site = account.site, !account.isChoosingSite {
                 QuestionView(questions: questions, account: account)
+                    .navigationTitle(site.title)
+                    .navigationSubtitle(site.url)
+                    .toolbar {
+                        ToolbarItem {
+                            Menu("Site", systemImage: "globe") {
+                                Button("Switch Site…") { account.isChoosingSite = true }
+                                Button("Log Out", action: account.logOut)
+                            }
+                            .disabled(!questions.canAsk)
+                        }
+                    }
+            } else {
+                SitePickerView(account: account)
             }
         }
         .frame(minWidth: 640, minHeight: 560)

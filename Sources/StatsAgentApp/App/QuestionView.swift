@@ -1,9 +1,8 @@
 import StatsAgent
 import SwiftUI
 
-/// The site questions are about with a button to switch, the question box, below it the question last asked with its
-/// feedback button and its answer, and under the answer the feedback form while it's open. The site can't be switched
-/// while an answer is being worked out.
+/// The question box, below it the question last asked with its feedback button and its answer, and under the answer
+/// the feedback form while it's open.
 struct QuestionView: View {
     let questions: Questions
     let account: Account
@@ -14,20 +13,6 @@ struct QuestionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            if let site = account.site {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(site.title)
-                            .font(.headline)
-                        Text(site.url)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button("Switch Site") { account.isChoosingSite = true }
-                        .disabled(!questions.canAsk)
-                }
-                Divider()
-            }
             HStack {
                 TextField("Ask a question about your site's stats", text: $question)
                     .textFieldStyle(.roundedBorder)
