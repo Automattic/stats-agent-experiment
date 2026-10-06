@@ -29,6 +29,8 @@ struct SiteStats: Sendable {
     /// Kept alongside the client, which is a Rust object and doesn't keep its delegate alive.
     private let delegate: WpApiClientDelegate
     let client: UniffiWpComApiClient
+    /// Every response the client receives, as WordPress.com sent it.
+    let responses = ResponseCapture()
 
     /// A WordPress.com OAuth token.
     static let tokenVariable = "WORDPRESS_APP_TOKEN"
@@ -40,7 +42,7 @@ struct SiteStats: Sendable {
         delegate = WpApiClientDelegate(
             authProvider: .staticWithAuth(auth: .bearer(token: token)),
             requestExecutor: WpRequestExecutor(urlSession: .shared),
-            middlewarePipeline: .default,
+            middlewarePipeline: MiddlewarePipeline(middlewares: [responses]),
             appNotifier: IgnoredAppNotifier()
         )
         client = UniffiWpComApiClient(delegate: delegate)

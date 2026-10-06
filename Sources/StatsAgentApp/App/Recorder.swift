@@ -62,7 +62,12 @@ final class Recorder {
                 siteID: siteID,
                 at: answer.askedAt
             )
-            return QuestionRecorder(database: database, questionID: questionID, token: stats.token) { [weak self] in
+            return QuestionRecorder(
+                database: database,
+                questionID: questionID,
+                token: stats.token,
+                responses: stats.responses
+            ) { [weak self] in
                 self?.failed($0)
             }
         } catch {
@@ -77,21 +82,30 @@ final class Recorder {
 }
 
 /// Writes one question's answer to the database as it's worked out: each model call, each stats call from the agent's
-/// list with the requests its card makes, and how the answer ended. Cards are known by their place in the list.
-/// Errors are scrubbed of the token, since an error message could quote a request.
+/// list with the requests its card makes and WordPress.com's responses to them, and how the answer ended. Cards are
+/// known by their place in the list. Errors are scrubbed of the token, since an error message could quote a request.
 @MainActor
 final class QuestionRecorder {
     private let database: AppDatabase
     private let questionID: Int64
     private let token: String
+    /// The responses of the site the question is about, taken as each request finishes.
+    private let responses: ResponseCapture
     private let failed: @MainActor (any Error) -> Void
     /// The database IDs of the stats calls in the agent's list, by their place in it.
     private var cardIDs: [Int: Int64] = [:]
 
-    init(database: AppDatabase, questionID: Int64, token: String, failed: @escaping @MainActor (any Error) -> Void) {
+    init(
+        database: AppDatabase,
+        questionID: Int64,
+        token: String,
+        responses: ResponseCapture,
+        failed: @escaping @MainActor (any Error) -> Void
+    ) {
         self.database = database
         self.questionID = questionID
         self.token = token
+        self.responses = responses
         self.failed = failed
     }
 
@@ -143,6 +157,7 @@ final class QuestionRecorder {
 
     /// Records a request the card at `card` makes, at `position` among its requests, and returns its ID.
     func startRequest(_ parameters: [String: String], card: Int, position: Int) async -> Int64? {
+        _ = responses.take()
         guard let cardID = cardIDs[card] else {
             return nil
         }
@@ -154,12 +169,23 @@ final class QuestionRecorder {
         }
     }
 
+    /// Records how long the request with `id` took, and the responses received since it started.
     func finishRequest(_ id: Int64?, seconds: Double) async {
+        let received = responses.take()
         guard let id else {
             return
         }
         do {
             try await database.finishRequest(id, seconds: seconds)
+            for response in received {
+                try await database.addResponse(
+                    url: response.url,
+                    statusCode: response.statusCode,
+                    body: response.body,
+                    requestID: id,
+                    at: response.receivedAt
+                )
+            }
         } catch {
             failed(error)
         }
