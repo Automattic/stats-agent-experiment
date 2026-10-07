@@ -1,0 +1,113 @@
+Answer text: the on-device model answers each question from the stats fetched for it. Each question is
+asked twice with the same instructions: with WordPress.com's responses, in the shape the app receives
+them ("responses"), and with the facts the app's cards show from them ("facts"). The stats are made up,
+for a site in Lisbon on October 4, 2026, in AnswerTextCases. Greedy sampling, at most 200 tokens. A
+figure counts as given when the answer contains it, as any of the ways it can be written. "Not in the
+stats" counts the answers with a figure above 10 that the stats, the question and the instructions don't
+have: one the model worked out, rightly or not, or made up.
+Version 27.0.1 (Build 26A434)
+
+Instructions:
+  You answer a question about a WordPress.com site's stats for the site's owner, in two or three short sentences. Use only the stats given after the question, and give the figures that answer it. Don't guess at reasons the stats don't show. If the stats don't answer the question, say what they show instead.
+  Today's date is 2026-10-04.
+
+variant    figures given  wrong figures  not in the stats  failed     time
+responses          21/26              0                  2       0   17.8 s
+facts              23/26              0                  0       0   11.7 s
+
+[today] "How does today's traffic compare to yesterday's?"
+  responses (1374 characters, 2.0 s): 284 ✓  322 ✓  131 ✓  117 ✓
+    Today's visitors (131) are higher than yesterday's (117). The number of views today (284) is lower than yesterday's (322).
+  facts (274 characters, 1.2 s): 284 ✓  322 ✓  131 ✓  117 ✓
+    Today's views are 284, down from yesterday's 322, a change of -38 or -11.8%. Today had 131 visitors, up from 117 yesterday, a change of +14 or +12%.
+  facts given:
+    - Views today so far: 284. Yesterday: 322. Change: -38 (-11.8%).
+    - Visitors today so far: 131. Yesterday: 117. Change: +14 (+12%).
+    - Views by day, Sep 5 – Oct 4: 268 a day on average, the most 398 on Sep 26.
+
+[views-drop] "Why did my views drop today?"
+  responses (1354 characters, 1.7 s): 284 ✓  322 ✓
+    The site had 284 views today, down from 322 views yesterday. The views for today are part of a daily trend showing 284 views on 2026-10-04.
+  facts (254 characters, 0.8 s): 284 ✓  322 ✓
+    The views dropped because there were 284 views today, down from 322 yesterday, a change of -38 or -11.8%.
+  facts given:
+    - Views today so far: 284. Yesterday: 322. Change: -38 (-11.8%).
+    - Visitors today so far: 131. Yesterday: 117. Change: +14 (+12%).
+    - Views by day, Sep 5 – Oct 4: 268 a day on average, the most 398 on Sep 26.
+
+[week] "How did this week go compared with last week?"
+  responses (1799 characters, 1.7 s): 2,228 ✓  1,947 ✗  14.4 ✗
+    This week had 251 visits and 118 visitors, compared to last week's 229 visits and 104 visitors. The total post views for the week are 2228.
+  facts (448 characters, 1.5 s): 2,228 ✓  1,947 ✓  14.4 ✓
+    This week had more views than last week, with 2,228 views compared to 1,947 last week, an increase of 281 or +14.4%. The most views in a day were 398 on Oct 1. There were 88 likes this week.
+  facts given:
+    - Views, Sep 28 – Oct 4: 2,228. Sep 21 – 27: 1,947. Change: +281 (+14.4%). The most in a day: 398 on Oct 1.
+    - Top posts by views, Sep 28 – Oct 4: A Weekend in the Douro Valley 482, What I Pack for a Week of Hiking 355, Notes on Learning Portuguese 291, The Best Bakeries in Lisbon 214, About 97. All posts and pages: 2,228.
+    - Likes, Sep 28 – Oct 4: 88. The most in a day: 21 on Oct 1.
+
+[top-posts] "Rank my top five posts by views this month."
+  responses (963 characters, 1.8 s): douro ✓  312 ✓  hiking ✓  portuguese ✓  bakeries ✓
+    The top five posts by views this month include:  
+    1. "A Weekend in the Douro Valley" with 312 views,  
+    2. "What I Pack for a Week of Hiking" with 241 views,  
+    3. "Notes on Learning Portuguese" with 198 views,  
+    4. "The Best Bakeries in Lisbon" with 143 views,  
+    5. "About" with 61 views.
+  facts (311 characters, 1.5 s): douro ✓  312 ✓  hiking ✓  portuguese ✓  bakeries ✓
+    The top five posts by views this month are: 1. A Weekend in the Douro Valley with 312 views, 2. What I Pack for a Week of Hiking with 241 views, 3. Notes on Learning Portuguese with 198 views, 4. The Best Bakeries in Lisbon with 143 views, and 5. About with 61 views.
+  facts given:
+    - Top posts by views, Oct 1 – 4, this month so far: 1. A Weekend in the Douro Valley, 312. 2. What I Pack for a Week of Hiking, 241. 3. Notes on Learning Portuguese, 198. 4. The Best Bakeries in Lisbon, 143. 5. About, 61. All posts and pages: 1,288.
+
+[subscribers] "Is my subscriber count growing or shrinking lately?"
+  responses (1614 characters, 1.7 s): 870 ✓  29 ✗
+    The subscriber count increased from 841 on 2026-09-04 to 870 on 2026-10-04. Each day shows a higher number than the previous day.
+  facts (209 characters, 1.0 s): 870 ✓  29 ✗
+    Your subscriber count is growing. It increased from 826 to 841 over the 30 days before, and from 841 to 870 on Oct 4.
+  facts given:
+    - Subscribers on Oct 4: 870, up 29 from 841 on Sep 4, over Sep 5 – Oct 4.
+    - Over the 30 days before, Aug 6 – Sep 4: up 15, from 826 to 841.
+
+[likes] "How many likes did I get this week?"
+  responses (469 characters, 1.5 s): 88 ✗  not in the stats: 75
+    You received a total of 75 likes this week. The stats show 12, 9, 15, 21, 18, 7, and 6 likes for the days ending in 2026-09-28 through 2026-10-04.
+  facts (114 characters, 0.6 s): 88 ✓
+    You got 88 likes this week. The most in a day was 21 on Oct 1.
+  facts given:
+    - Likes, Sep 28 – Oct 4: 88. The most in a day: 21 on Oct 1.
+
+[best-day] "What was my best day ever?"
+  responses (1352 characters, 1.6 s): 2,940 ✓  march 14 ✓
+    The best day for views was 2025-03-14, with a total of 2940 views. Today, 2026-10-04, had 131 visitors and 284 views.
+  facts (175 characters, 1.1 s): 2,940 ✓  march 14 ✓
+    Your best day ever was March 14, 2025, with 2,940 views. The average views per day from September 5 to October 4 were 268, with the most on September 26 at 398.
+  facts given:
+    - Best day for views: Mar 14, 2025, with 2,940 views.
+    - Views by day, Sep 5 – Oct 4: 268 a day on average, the most 398 on Sep 26.
+
+[overview] "Give me an overview of my site."
+  responses (1357 characters, 2.6 s): 184,312 ✓  142 ✓  873 ✓
+    Your site had 131 visitors today, 117 yesterday, and a total of 61,870 visitors over the period. The site recorded 284 views today, 322 yesterday, and a total of 184,312 views. You have 1,208 comments, 142 posts, 873 followers, and 2,210 spam comments.
+  facts (274 characters, 1.3 s): 184,312 ✓  142 ✗  873 ✗
+    Your site had 284 views today from 131 visitors. Over all time, it has had 184,312 views and 61,870 monthly visitors. The best day for views was March 14, 2025, with 2,940 views.
+  facts given:
+    - Views today: 284. Visitors today: 131.
+    - Views, all time: 184,312. Visitors, all time, counted monthly: 61,870.
+    - Best day: Mar 14, 2025, with 2,940 views.
+    - Posts, all time: 142. Comments, all time: 1,208. Followers: 873.
+
+[countries] "Which countries did my visitors come from this month?"
+  responses (997 characters, 1.5 s): portugal ✓  united states ✓  512 ✓
+    Your visitors came from Portugal, United States, United Kingdom, Spain, and Brazil this month. Portugal had 512 views, United States had 301, United Kingdom had 188, Spain had 142, and Brazil had 104 views. There were also 41 other views.
+  facts (236 characters, 1.3 s): portugal ✓  united states ✓  512 ✓
+    The countries from which visitors came this month are Portugal (512), United States (301), United Kingdom (188), Spain (142), and Brazil (104). There were also 41 views from other countries. The total number of views this month so far is 1,288.
+  facts given:
+    - Views by country, Oct 1 – 4, this month so far: Portugal 512, United States 301, United Kingdom 188, Spain 142, Brazil 104. Other countries: 41. All views: 1,288.
+
+[visitors-30-days] "How many visitors did I have in the last 30 days?"
+  responses (1189 characters, 1.6 s): 122 ✗  not in the stats: 1,026
+    The site had 1,026 visitors in the last 30 days. This total is calculated from the daily visitor counts provided for each day from September 5 to October 4.
+  facts (387 characters, 1.4 s): 122 ✓
+    The site had an average of 122 visitors per day from Sep 5 to Oct 4. The lowest daily count was 86 on Sep 7, and the highest was 183 on Sep 26. The stats do not provide a total for the entire 30-day period.
+  facts given:
+    - Visitors by day, Sep 5 – Oct 4: 122 a day on average, the fewest 86 on Sep 7, the most 183 on Sep 26.
+    - The stats count each visitor once only within a day, a calendar week or a calendar month, so there is no count of different visitors for these 30 days: someone who visited on several days counts once for each day.
