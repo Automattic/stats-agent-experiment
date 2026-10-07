@@ -3,18 +3,18 @@ import Foundation
 /// One answer to a question: what it shows, the path that led to it, and its content.
 struct Card: Identifiable {
     enum Content {
-        /// One metric's total over `dateInterval`.
-        case figure(metric: SiteMetric, value: Int, dateInterval: DateInterval)
+        /// One metric's total over `dateInterval`, with its periods charted below it when there are several.
+        case figure(metric: SiteMetric, value: Int, dateInterval: DateInterval, chart: ChartData?)
         /// A metric over a period, against the period before.
         case comparison(ChartData)
         /// A metric over a period.
         case trend(ChartData)
         /// A metric over a period without a total, with a note saying why, and the period before when comparing.
         case series(ChartData, note: String)
-        /// Several labelled figures, with a chart below them when there is one.
+        /// Labelled figures, with a chart below them when there is one.
         case figures([Figure], chart: ChartData?)
         /// Figures against earlier ones, such as today against yesterday, with a chart below them when there is one.
-        case headlines([ChartCardHeaderView.ViewModel], chart: ChartData?)
+        case headlines([Headline], chart: ChartData?)
         /// Items ranked by a figure, with each item's figure for the span before when comparing periods.
         case ranking(RankedList, previous: [String: Int]?)
         /// A stats call the app doesn't draw yet.
@@ -28,6 +28,24 @@ struct Card: Identifiable {
         let value: Int
         /// What the figure covers, such as "All time", when the title doesn't say.
         var detail: String?
+        /// Whether the figure is a change, shown with its sign.
+        var isChange = false
+
+        /// The value as shown: with its sign for a change, such as "+29", otherwise shortened from 10,000, such as
+        /// "184K".
+        var formattedValue: String {
+            isChange ? Card.signed(value) : StatsValueFormatter.formatNumber(value, onlyLarge: true)
+        }
+    }
+
+    /// A figure against an earlier one, such as today's views against yesterday's.
+    struct Headline {
+        let title: String
+        let trend: TrendViewModel
+        /// What the earlier figure covers, such as "Yesterday".
+        let earlier: String
+        /// Whether the figures are changes, shown with their signs.
+        var isChange = false
     }
 
     let id: Int
@@ -41,6 +59,16 @@ struct Card: Identifiable {
 }
 
 extension Card {
+    /// `value` with its sign, such as "+29" or "-3", and "0" without one.
+    static func signed(_ value: Int) -> String {
+        value.formatted(.number.sign(strategy: .always(includingZero: false)))
+    }
+
+    /// A day such as "Oct 4, 2026", in the site's time zone, where the stats' days start at midnight.
+    static func day(in context: StatsContext) -> Date.FormatStyle {
+        Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: context.timeZone)
+    }
+
     /// A visits card for `operation` from `points`, oldest first, fetched for `request`. `asked` is the span the model
     /// named, in plain words. When comparing periods, `previous` is the same call for the span before.
     ///
@@ -113,7 +141,12 @@ extension Card {
                 title: "\(metric.localizedTitle), \(range)",
                 path: path,
                 parameters: parameters,
-                content: .figure(metric: metric, value: total, dateInterval: interval)
+                content: .figure(
+                    metric: metric,
+                    value: total,
+                    dateInterval: interval,
+                    chart: points.count > 1 ? data : nil
+                )
             )
         case "compare_periods":
             return Card(

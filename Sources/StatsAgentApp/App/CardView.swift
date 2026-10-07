@@ -1,62 +1,5 @@
 import SwiftUI
 
-/// Cards side by side, one at a time: a two-finger swipe on a trackpad pages between them, and the arrow buttons do
-/// the same with a mouse. `viewed` is called with each card shown, the first one included.
-struct CardsView: View {
-    let cards: [Card]
-    var viewed: @MainActor (Card.ID) -> Void = { _ in }
-    @State private var position: Int?
-
-    var body: some View {
-        VStack(spacing: 12) {
-            ScrollView(.horizontal) {
-                LazyHStack(spacing: 0) {
-                    ForEach(cards) { card in
-                        CardView(card: card)
-                            .padding(.horizontal, 4)
-                            .containerRelativeFrame(.horizontal)
-                    }
-                }
-                .scrollTargetLayout()
-            }
-            .scrollTargetBehavior(.paging)
-            .scrollPosition(id: $position)
-            .scrollIndicators(.never)
-            HStack(spacing: 16) {
-                Button("Previous card", systemImage: "chevron.left") { move(by: -1) }
-                    .disabled(index == 0)
-                Text("\(index + 1) of \(cards.count)")
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                Button("Next card", systemImage: "chevron.right") { move(by: 1) }
-                    .disabled(index == cards.count - 1)
-            }
-            .labelStyle(.iconOnly)
-        }
-        .onAppear {
-            position = cards.first?.id
-            position.map(viewed)
-        }
-        .onChange(of: position) { _, position in
-            position.map(viewed)
-        }
-    }
-
-    private var index: Int {
-        cards.firstIndex { $0.id == position } ?? 0
-    }
-
-    private func move(by offset: Int) {
-        let target = index + offset
-        guard cards.indices.contains(target) else {
-            return
-        }
-        withAnimation {
-            position = cards[target].id
-        }
-    }
-}
-
 /// One card: what it shows, its path and dates, and its chart.
 struct CardView: View {
     let card: Card
@@ -86,10 +29,17 @@ struct CardView: View {
 
     @ViewBuilder private var content: some View {
         switch card.content {
-        case let .figure(metric, value, dateInterval):
-            StandaloneMetricView(metric: metric, value: value, dateInterval: dateInterval)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 24)
+        case let .figure(metric, value, dateInterval, chart):
+            HeroFigureView(
+                figure: Card.Figure(
+                    title: metric.localizedTitle,
+                    value: value,
+                    detail: context.formatters.dateRange.string(from: dateInterval)
+                )
+            )
+            if let chart {
+                trendChart(chart)
+            }
         case let .comparison(data):
             header(for: data, showComparison: true)
             LineChartView(data: data)
@@ -98,19 +48,32 @@ struct CardView: View {
             header(for: data, showComparison: false)
             trendChart(data)
         case let .figures(figures, chart):
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), alignment: .topLeading)], spacing: 16) {
-                ForEach(figures.indices, id: \.self) { index in
-                    FigureView(figure: figures[index])
+            if figures.count == 1 {
+                HeroFigureView(figure: figures[0])
+            } else {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), alignment: .topLeading)], spacing: 16) {
+                    ForEach(figures.indices, id: \.self) { index in
+                        FigureView(figure: figures[index])
+                    }
                 }
             }
             if let chart {
                 trendChart(chart)
             }
         case let .headlines(headlines, chart):
-            ForEach(headlines.indices, id: \.self) { index in
-                ChartCardHeaderView(viewModel: headlines[index])
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible())], spacing: 12) {
+                ForEach(headlines.indices, id: \.self) { index in
+                    HeadlineView(headline: headlines[index])
+                }
             }
             if let chart {
+                Text(
+                    "\(chart.metric.localizedTitle) by \(chart.granularity), "
+                        + context.formatters.dateRange.string(from: chart.dateInterval)
+                )
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.top, 8)
                 trendChart(chart)
             }
         case let .series(data, note):
@@ -155,7 +118,7 @@ struct CardView: View {
 }
 
 extension EnvironmentValues {
-    /// Whether the view is rendered off screen into a picture, where a scroll view's contents aren't drawn.
+    /// Whether the view is rendered off screen into a picture of a fixed size, which cuts a long ranking short.
     @Entry var isRenderingPicture = false
 }
 
@@ -178,9 +141,7 @@ struct RankedListView: View {
                 .frame(maxHeight: .infinity, alignment: .top)
                 .clipped()
         } else {
-            ScrollView {
-                rows
-            }
+            rows
         }
     }
 
@@ -231,6 +192,57 @@ struct RankedListView: View {
     }
 }
 
+/// A card's only figure, large, with what it covers under it.
+struct HeroFigureView: View {
+    let figure: Card.Figure
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(figure.title)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+            Text(figure.formattedValue)
+                .font(Constants.Typography.largeDisplayFont)
+                .kerning(Constants.Typography.largeDisplayKerning)
+            if let detail = figure.detail {
+                Text(detail)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+/// A figure against an earlier one, in a tile: the figure, its change, and the earlier figure.
+struct HeadlineView: View {
+    let headline: Card.Headline
+
+    var body: some View {
+        let trend = headline.trend
+        VStack(alignment: .leading, spacing: 4) {
+            Text(headline.title)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+            Text(headline.isChange ? Card.signed(trend.currentValue) : trend.formattedCurrentValue)
+                .font(Constants.Typography.mediumDisplayFont)
+            Text(verbatim: "\(trend.formattedChange)  \(trend.iconSign) \(trend.formattedPercentage)")
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(trend.sentiment.foregroundColor)
+            Text(
+                "\(headline.earlier): "
+                    + (headline.isChange ? Card.signed(trend.previousValue) : trend.formattedPreviousValue)
+            )
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
 /// One labelled figure, in the type of the copied `StandaloneMetricView`.
 struct FigureView: View {
     let figure: Card.Figure
@@ -241,7 +253,7 @@ struct FigureView: View {
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
-            Text(StatsValueFormatter.formatNumber(figure.value, onlyLarge: true))
+            Text(figure.formattedValue)
                 .font(Constants.Typography.smallDisplayFont)
             if let detail = figure.detail {
                 Text(detail)

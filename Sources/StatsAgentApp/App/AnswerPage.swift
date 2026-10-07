@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// An answer's page in the window's scroll: the question as its title, what the agent is doing or its cards, and under
-/// them, once the answer is one feedback is asked about, the feedback.
+/// An answer's page in the window's scroll: the question as its title, with arrows beside it to move between the cards
+/// when there's more than one, what the agent is doing or the card shown, and under it, once the answer is one feedback
+/// is asked about, the feedback.
 struct AnswerPage: View {
     let answer: Answer
 
@@ -12,9 +13,17 @@ struct AnswerPage: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(answer.question)
-                .font(.title2.weight(.semibold))
-                .textSelection(.enabled)
+            // The arrows sit beside the question rather than by the card, so they stay put as cards arrive and as
+            // cards of different heights replace each other.
+            HStack(alignment: .firstTextBaseline, spacing: 16) {
+                Text(answer.question)
+                    .font(.title2.weight(.semibold))
+                    .textSelection(.enabled)
+                Spacer(minLength: 0)
+                if answer.cards.count > 1 {
+                    CardPager(answer: answer)
+                }
+            }
             AnswerView(answer: answer)
             if !answer.feedbackChoices.isEmpty {
                 FeedbackView(answer: answer)
@@ -27,8 +36,9 @@ struct AnswerPage: View {
     }
 }
 
-/// An answer's cards as they arrive, with the step the agent is on for the next card under them. Until the first card,
-/// the middle of the window shows the agent's steps so far, or why there are no cards.
+/// The card shown of an answer's cards as they arrive, as tall as its content, with the step the agent is on for the
+/// next card under it. Until the first card, the middle of the window shows the agent's steps so far, or why there are
+/// no cards.
 struct AnswerView: View {
     let answer: Answer
 
@@ -39,10 +49,15 @@ struct AnswerView: View {
                 // Most of the window's height, so the steps or the message sit around its middle.
                 .containerRelativeFrame(.vertical) { height, _ in height * 0.7 }
         } else {
+            let card = answer.cards[min(answer.shownCard, answer.cards.count - 1)]
             VStack(alignment: .leading, spacing: 12) {
-                CardsView(cards: answer.cards, viewed: answer.viewed)
-                    // Tall enough for a chart or a ranking, whatever the window's height.
-                    .frame(height: 480)
+                CardView(card: card)
+                    .fixedSize(horizontal: false, vertical: true)
+                    // A view of its own for each card, so each one shown is noted as looked at.
+                    .id(card.id)
+                    .onAppear {
+                        answer.viewed(card.id)
+                    }
                 if case .working(let step) = answer.status {
                     HStack(spacing: 8) {
                         ProgressView()
@@ -81,6 +96,25 @@ struct AnswerView: View {
                     .textSelection(.enabled)
             }
         }
+    }
+}
+
+/// The arrows that move between an answer's cards, with which card of how many is shown.
+struct CardPager: View {
+    let answer: Answer
+
+    var body: some View {
+        let index = answer.shownCard
+        HStack(spacing: 16) {
+            Button("Previous card", systemImage: "chevron.left") { answer.showCard(at: index - 1) }
+                .disabled(index == 0)
+            Text("\(index + 1) of \(answer.cards.count)")
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+            Button("Next card", systemImage: "chevron.right") { answer.showCard(at: index + 1) }
+                .disabled(index == answer.cards.count - 1)
+        }
+        .labelStyle(.iconOnly)
     }
 }
 

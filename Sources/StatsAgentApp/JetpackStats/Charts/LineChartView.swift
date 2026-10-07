@@ -54,9 +54,11 @@ struct LineChartView: View {
     private var currentPeriodMarks: some ChartContent {
         // Solid line and area for complete data points
         ForEach(completeDataPoints) { point in
+            // From the bottom of the axis, which is above zero for a total such as subscribers.
             AreaMark(
                 x: .value("Date", point.date, unit: data.granularity.component, calendar: context.calendar),
-                y: .value("Value", point.value),
+                yStart: .value("Base", yAxisDomain.lowerBound),
+                yEnd: .value("Value", point.value),
                 series: .value("Period", "Current")
             )
             .foregroundStyle(
@@ -257,6 +259,9 @@ struct LineChartView: View {
     }
 
     private var yAxisDomain: ClosedRange<Int> {
+        if data.metric.aggregationStrategy == .last, let totalsDomain {
+            return totalsDomain
+        }
         // If all values are zero, show a reasonable range
         if data.maxValue == 0 {
             return 0...100
@@ -267,6 +272,18 @@ struct LineChartView: View {
         // Add some padding above the max value
         let padding = max(Int(Double(data.maxValue) * 0.33), 1)
         return 0...(data.maxValue + padding)
+    }
+
+    /// For a total at the end of each period, such as subscribers, a range around the values drawn rather than one
+    /// from zero, where a change of a few dozen in hundreds draws flat. At least 2% of the highest value either side,
+    /// so a steady total draws flat too. Nil when there are no values.
+    private var totalsDomain: ClosedRange<Int>? {
+        let values = data.currentData.map(\.value) + (showComparison ? data.mappedPreviousData.map(\.value) : [])
+        guard let low = values.min(), let high = values.max() else {
+            return nil
+        }
+        let padding = max(Int(Double(high - low) * 0.33), Int(Double(high) * 0.02), 1)
+        return max(low - padding, 0)...(high + padding)
     }
 
     // MARK: - Helper Views

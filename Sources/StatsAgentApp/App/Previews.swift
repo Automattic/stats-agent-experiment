@@ -77,6 +77,58 @@ enum Previews {
                 )
             },
             Screen(name: "answer") { window(Answer(previewing: question, status: .done, cards: cards)) },
+            Screen(name: "answer-second-card") {
+                let answer = Answer(previewing: question, status: .done, cards: cards)
+                answer.showCard(at: 1)
+                return window(answer)
+            },
+            Screen(name: "card-today") {
+                window(
+                    Answer(
+                        previewing: "How does today's traffic compare to yesterday's?",
+                        status: .done,
+                        cards: [summaryCard("compare_periods")]
+                    )
+                )
+            },
+            Screen(name: "card-summary") {
+                window(
+                    Answer(previewing: "Give me an overview of my site.", status: .done, cards: [summaryCard("value")])
+                )
+            },
+            Screen(name: "card-best-day") {
+                window(
+                    Answer(
+                        previewing: "What was my best day ever?",
+                        status: .done,
+                        cards: [summaryCard("highest_or_lowest_period")]
+                    )
+                )
+            },
+            Screen(name: "card-ranking") {
+                window(Answer(previewing: "What were my top posts this month?", status: .done, cards: [cards[1]]))
+            },
+            Screen(name: "card-likes") {
+                window(Answer(previewing: "How many likes did I get this week?", status: .done, cards: [cards[2]]))
+            },
+            Screen(name: "card-subscribers") {
+                window(
+                    Answer(
+                        previewing: "How many subscribers do I have?",
+                        status: .done,
+                        cards: [subscribersCard("value")]
+                    )
+                )
+            },
+            Screen(name: "card-subscribers-compare") {
+                window(
+                    Answer(
+                        previewing: "Is my subscriber count growing or shrinking lately?",
+                        status: .done,
+                        cards: [subscribersCard("compare_periods")]
+                    )
+                )
+            },
             Screen(name: "feedback") {
                 window(
                     Answer(
@@ -228,6 +280,52 @@ enum Previews {
                 context: context
             )
         ]
+    }
+
+    /// A summary card for `operation`, from made-up figures.
+    private static func summaryCard(_ operation: String) -> Card {
+        let context = StatsContext(timeZone: site.timeZone ?? .current)
+        let views = [
+            198, 214, 187, 240, 263, 251, 230, 205, 219, 244, 276, 301, 288, 262, 239,
+            228, 252, 270, 312, 287, 341, 398, 365, 274, 251, 266, 290, 305, 322, 284
+        ]
+        let summary = SiteSummary(
+            views: 184_312,
+            visitors: 61_870,
+            posts: 142,
+            comments: 1_208,
+            followers: 873,
+            viewsToday: 284,
+            viewsYesterday: 322,
+            visitorsToday: 131,
+            visitorsYesterday: 117,
+            bestDay: context.calendar.date(from: DateComponents(year: 2025, month: 3, day: 14)),
+            bestDayViews: 2_940,
+            dailyViews: days(endingOn: october4, in: context, views),
+            dailyVisitors: []
+        )
+        return Card.summary(id: 0, operation: operation, summary: summary, context: context)
+    }
+
+    /// A subscribers card for `operation` over the 30 days to October 4, from made-up totals.
+    private static func subscribersCard(_ operation: String) -> Card {
+        let context = StatsContext(timeZone: site.timeZone ?? .current)
+        guard let lastDay = context.calendar.date(from: october4) else {
+            return cards[0]
+        }
+        let totals = (0...30).map { 840 + $0 + ($0 % 4 == 0 ? 1 : 0) }
+        let before = (0...30).map { 822 + $0 / 2 }
+        let previousLastDay = context.calendar.date(byAdding: .day, value: -30, to: lastDay) ?? lastDay
+        let previousEnd = context.calendar.dateComponents([.year, .month, .day], from: previousLastDay)
+        return Card.subscribers(
+            id: 0,
+            operation: operation,
+            series: StatsPeriods(unit: .day, lastDay: lastDay, count: 30),
+            asked: "the last 30 days",
+            points: days(endingOn: october4, in: context, totals),
+            previous: operation == "compare_periods" ? days(endingOn: previousEnd, in: context, before) : nil,
+            context: context
+        )
     }
 
     /// `values` for the days up to and including `last`, oldest first.
