@@ -25,6 +25,8 @@ final class Answer: Identifiable {
     let askedAt = Date.now
     /// Whether its page shows the feedback form, under the Give Feedback header.
     var isFeedbackOpen = false
+    /// The card its page shows, by its place among the cards: the first, until the person moves to another.
+    private(set) var shownCard = 0
     private(set) var status = Status.working("Choosing a stats call") {
         didSet {
             if case .working(let step) = oldValue, status != oldValue {
@@ -104,6 +106,14 @@ final class Answer: Identifiable {
     /// The endpoint of the stats call `card` shows.
     func endpoint(of card: Card) -> String? {
         endpoints[card.id]
+    }
+
+    /// Shows the card at `index` among the cards, when there's one there.
+    func showCard(at index: Int) {
+        guard cards.indices.contains(index) else {
+            return
+        }
+        shownCard = index
     }
 
     /// Notes that the person looked at the card with `id`.

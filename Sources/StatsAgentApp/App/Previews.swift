@@ -77,6 +77,11 @@ enum Previews {
                 )
             },
             Screen(name: "answer") { window(Answer(previewing: question, status: .done, cards: cards)) },
+            Screen(name: "answer-second-card") {
+                let answer = Answer(previewing: question, status: .done, cards: cards)
+                answer.showCard(at: 1)
+                return window(answer)
+            },
             Screen(name: "card-today") {
                 window(
                     Answer(
