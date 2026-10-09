@@ -1,0 +1,68 @@
+# frozen_string_literal: true
+
+require 'fileutils'
+
+PROJECT_ROOT = File.expand_path('..', __dir__)
+APPLE_TEAM_ID = 'PZYM8XX95Q'
+APP_PATH = File.join(PROJECT_ROOT, '.build/app/release/Stats agent.app')
+
+desc 'Build a signed, notarized arm64 app for a matching version tag'
+lane :release do
+  # Keep this guard here too: calling the lane directly must not bypass release checks.
+  tag = ENV.fetch('BUILDKITE_TAG', '')
+  UI.user_error!('Release requires a vMAJOR.MINOR.PATCH tag.') unless tag.match?(/\Av[0-9]+\.[0-9]+\.[0-9]+\z/)
+  version = get_info_plist_value(
+    path: File.join(PROJECT_ROOT, 'Sources/StatsAgentApp/Info.plist'),
+    key: 'CFBundleShortVersionString'
+  )
+  UI.user_error!('Release tag must match CFBundleShortVersionString.') unless tag == "v#{version}"
+
+  %w[
+    WP_COM_CLIENT_ID WP_COM_CLIENT_SECRET
+    MATCH_S3_ACCESS_KEY MATCH_S3_SECRET_ACCESS_KEY MATCH_PASSWORD
+    APP_STORE_CONNECT_API_KEY_KEY_ID APP_STORE_CONNECT_API_KEY_ISSUER_ID APP_STORE_CONNECT_API_KEY_KEY
+  ].each do |key|
+    UI.user_error!("Required environment variable #{key} is missing or empty.") if ENV.fetch(key, '').empty?
+  end
+
+  setup_ci
+  sync_code_signing(
+    type: 'developer_id',
+    platform: 'macos',
+    team_id: APPLE_TEAM_ID,
+    app_identifier: [],
+    skip_provisioning_profiles: true,
+    readonly: true,
+    storage_mode: 's3',
+    s3_bucket: 'a8c-fastlane-match',
+    s3_region: 'us-east-2'
+  )
+
+  # Select only a valid Developer ID identity from the CI keychain and the intended team.
+  keychain = FastlaneCore::Helper.keychain_path(ENV.fetch('MATCH_KEYCHAIN_NAME'))
+  identities = sh('security', 'find-identity', '-v', '-p', 'codesigning', keychain, log: false)
+  fingerprints = identities.scan(/\b([0-9A-F]{40}) "Developer ID Application: [^"]+ \(#{APPLE_TEAM_ID}\)"/).flatten.uniq
+  UI.user_error!('Expected one Automattic Developer ID Application identity in the CI keychain.') unless fingerprints.length == 1
+
+  Dir.chdir(PROJECT_ROOT) do
+    sh('make', 'app', 'CONFIGURATION=release', 'ARCH=arm64',
+       "SIGNING_IDENTITY=#{fingerprints.first}", 'SIGNING_FLAGS=--options runtime --timestamp')
+  end
+
+  api_key = app_store_connect_api_key(
+    key_id: ENV.fetch('APP_STORE_CONNECT_API_KEY_KEY_ID'),
+    issuer_id: ENV.fetch('APP_STORE_CONNECT_API_KEY_ISSUER_ID'),
+    key_content: ENV.fetch('APP_STORE_CONNECT_API_KEY_KEY'),
+    is_key_content_base64: false
+  )
+  notarize(package: APP_PATH, api_key: api_key, skip_stapling: false, print_log: true)
+
+  sh('codesign', '--verify', '--deep', '--strict', '--verbose=2', APP_PATH)
+  sh('xcrun', 'stapler', 'validate', APP_PATH)
+  sh('spctl', '--assess', '--type', 'execute', '--verbose=2', APP_PATH)
+
+  artifact = File.join(PROJECT_ROOT, ".build/artifacts/Stats-agent-#{version}-arm64.zip")
+  FileUtils.mkdir_p(File.dirname(artifact))
+  FileUtils.rm_f(artifact)
+  sh('ditto', '-c', '-k', '--sequesterRsrc', '--keepParent', APP_PATH, artifact)
+end

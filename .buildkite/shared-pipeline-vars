@@ -1,0 +1,4 @@
+#!/bin/sh
+# Sourced by the standard pipeline upload step before YAML variable interpolation.
+export IMAGE_ID="xcode-$(cat .xcode-version)"
+export CI_TOOLKIT_PLUGIN='automattic/a8c-ci-toolkit#6.3.0'
