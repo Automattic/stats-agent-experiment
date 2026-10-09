@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/buildkite/pipeline-schema/main/schema.json
+---
+env:
+  IMAGE_ID: $IMAGE_ID
+
+steps:
+  - label: ":lint-roller: Format and lint"
+    key: lint
+    command: .buildkite/commands/lint.sh
+    agents:
+      queue: mac
+    plugins: [$CI_TOOLKIT_PLUGIN]
+    timeout_in_minutes: 20
+    notify:
+      - github_commit_status:
+          context: Format and lint
+
+  - label: ":swift: Build and deterministic tests"
+    key: build-and-test
+    command: .buildkite/commands/build-and-test.sh
+    agents:
+      queue: mac
+    plugins: [$CI_TOOLKIT_PLUGIN]
+    timeout_in_minutes: 30
+    notify:
+      - github_commit_status:
+          context: Build and deterministic tests
+
+  - label: ":apple: Signed macOS app"
+    key: release
+    command: .buildkite/commands/release.sh
+    if: build.tag =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+    depends_on: [lint, build-and-test]
+    agents:
+      queue: mac
+    plugins: [$CI_TOOLKIT_PLUGIN]
+    timeout_in_minutes: 60
+    notify:
+      - github_commit_status:
+          context: Signed macOS app

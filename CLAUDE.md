@@ -6,6 +6,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 
 - macOS 26 or later, with Apple Intelligence enabled.
 - Xcode's toolchain: the `@Generable` and `@Guide` macros aren't in the Command Line Tools. `xcode-select -p` should point inside `Xcode.app`.
+- CI uses Xcode 27.0 and Ruby 3.4.9, pinned in `.xcode-version` and `.ruby-version`. Xcode 27 is needed to compile all tests; the app's minimum runtime remains macOS 26.
 - SwiftPM can't run inside a sandbox, since its own `sandbox-exec` can't nest. Run `swift` and `make` with the sandbox off.
 
 ## Map
@@ -23,10 +24,12 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 
 ## Commands
 
-- `swift build --build-tests`. `make format` and `make lint` must pass before committing.
-- Without model calls, in seconds: `swift test --filter "CardPickerTests|StatsPeriodsTests|AppDatabaseTests|FeedbackReportTests"`.
+- `swift build --build-tests`. `make format` and `make lint` must pass before committing. CI uses `make format-check` to check formatting without changing files.
+- Without model calls, in seconds: `make test-deterministic`, equivalent to `swift test --filter "CardPickerTests|StatsPeriodsTests|AppDatabaseTests|FeedbackReportTests"`.
 - Experiments call the model, take minutes each, and rewrite their file in `results/`. For example, `swift test --filter "OperationStepTests/sightedWithOperations"` runs the main setup in about 5.5 minutes. Add `--no-parallel` when running several suites, or their timings mean nothing.
 - `make app` builds the app as a bundle, `.build/app/release/Stats agent.app`, signed with `SIGNING_IDENTITY` or ad hoc without it, with the commit in its `Info.plist`. Its version and build number are `CFBundleShortVersionString` and `CFBundleVersion` in `Sources/StatsAgentApp/Info.plist`. It stops without `wp_com_credentials.json`, the WordPress.com OAuth client the app logs in with, in the package's root; git ignores it, and `wp_com_credentials.json-example` shows its format.
+- App packaging includes SwiftPM resource bundles. `ARCH=arm64` selects the release architecture; `SIGNING_FLAGS='--options runtime --timestamp'` enables distribution signing with a Developer ID identity. Local defaults remain ad hoc.
+- `.buildkite/commands/release.sh` accepts only `vMAJOR.MINOR.PATCH` tags matching the app version, signs and notarizes through fastlane, then uploads a verified ZIP. Credentials are staged only for the release subprocess and removed when it exits. Setup and secret variable names are in `.buildkite/README.md`.
 - `make run` builds a debug bundle and opens it, with its database in `data/`. It asks to log in at each launch.
 - `make icon` redraws the app's icon into `Sources/StatsAgentApp/AppIcon.icns`, which is committed and which `make app` copies into the bundle.
 - `make previews` draws the window's screens from made-up data, title bar and toolbar included, in light and dark, as PNGs in `.build/previews/`. It doesn't log in, read the keychain, open the database or call the model, so it's the way to look at a UI change from the command line. The screens and their data are in `Previews`. The app keeps its WordPress.com token in the keychain and the site picked in its defaults.
