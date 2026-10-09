@@ -58,6 +58,14 @@
 
 All ten implementation/validation tasks are complete. Prepare draft pull requests for the app and companion infrastructure change after validation; no release tag, Apple signing request, secret provisioning, or Terraform apply is part of this handoff. This follows the companion pipeline skill's reviewed deployment process.
 
+### Remote validation and draft PRs
+
+- App implementation: https://github.com/Automattic/stats-agent-experiment/pull/1
+- Pipeline registration: https://github.com/Automattic/buildkite-ci/pull/1011
+- Infrastructure CI https://buildkite.com/automattic/buildkite-ci/builds/8063 passed for commit `1bf1da4cd40585b0147024b82b1ed8b05fbea41a`, including the real Terraform/Checkov checks. The generated plan has exactly **3 additions, 0 changes, 0 deletions**: the pipeline and two team bindings.
+- The companion checkout was based on upstream trunk before committing, excluding unrelated local reference-checkout commits.
+- Deployment is waiting at Buildkite's human confirmation gate, as required by the companion pipeline skill. This supersedes the earlier local-only Terraform validation limitation. The app pipeline's actual signing/notarization/login checks still require provisioning and credentials.
+
 ## Final Summary
 
 ### Key Decisions
