@@ -3,9 +3,10 @@ import Observation
 import StatsAgent
 
 /// One question's answer, built a step at a time: the single pick, the list, then each card in turn, so the cards
-/// appear as they're ready. Summary, visits, subscribers and the stats calls that rank items are drawn; the others get
-/// a card saying they aren't drawn. Alongside the cards it keeps every model call, each stats call's requests and
-/// status, the cards the person looked at, and the feedback form. Given a
+/// appear as they're ready, then the answer in words, written from the cards' facts. Summary, visits, subscribers and
+/// the stats calls that rank items are drawn; the others get a card saying they aren't drawn. Alongside the cards it
+/// keeps every model call, each stats call's requests and status, the cards the person looked at, and the feedback
+/// form. Given a
 /// `QuestionRecorder`, it writes them to the database as they happen; the feedback form is saved as it changes, filled
 /// in or not, and every save is kept.
 @MainActor @Observable
@@ -37,7 +38,13 @@ final class Answer: Identifiable {
     /// What the agent has done so far, in the words `status` gave each step while it was working on it.
     private(set) var finishedSteps: [String] = []
     private(set) var cards: [Card] = []
-    /// The model calls before the cards, in order.
+    /// The answer in words, once the model has written it from the cards' facts.
+    private(set) var written: String?
+    /// Whether the model is writing `written`.
+    private(set) var isWriting = false
+    /// Why the model couldn't write the answer in words, when it couldn't.
+    private(set) var writingError: String?
+    /// The question's own model calls, in order: the picks before the cards, and the answer after them.
     private(set) var steps: [AgentStep] = []
     /// One per stats call in the list, in the list's order, dropped ones included.
     private(set) var statsCalls: [StatsCall] = []
@@ -67,6 +74,8 @@ final class Answer: Identifiable {
         previewing question: String,
         status: Status,
         cards: [Card],
+        written: String? = nil,
+        isWriting: Bool = false,
         endpoints: [String] = [],
         finishedSteps: [String] = [],
         feedback: FeedbackForm = FeedbackForm()
@@ -74,6 +83,8 @@ final class Answer: Identifiable {
         self.question = question
         self.status = status
         self.cards = cards
+        self.written = written
+        self.isWriting = isWriting
         self.endpoints = Dictionary(uniqueKeysWithValues: zip(cards.map(\.id), endpoints))
         self.finishedSteps = finishedSteps
         self.feedbackForm = feedback
@@ -238,6 +249,11 @@ final class Answer: Identifiable {
                 endpoints[card.id] = endpoint.id
                 cards.append(card)
             }
+            if cards.contains(where: { !$0.facts.isEmpty }) {
+                try Task.checkCancellation()
+                status = .working("Writing an answer")
+                await write(context: context)
+            }
             status = cards.isEmpty ? .noCards : .done
         } catch is CancellationError {
             return
@@ -246,7 +262,25 @@ final class Answer: Identifiable {
         }
     }
 
-    /// Adds a model call before the cards.
+    /// Writes the answer in words from the facts of the cards that have them, and records the call after the picks
+    /// before the cards. When the model can't write it, the answer keeps its cards and says why there are no words.
+    private func write(context: StatsContext) async {
+        isWriting = true
+        defer { isWriting = false }
+        let calls = ModelCalls()
+        let writer = AnswerWriter(currentDate: .now, timeZone: context.timeZone, calls: calls)
+        let stats = StatsFacts.text(cards.filter { !$0.facts.isEmpty }.map { ($0.title, $0.facts) })
+        do {
+            written = try await writer.answer(question, stats: stats)
+        } catch {
+            writingError = Self.message(for: error)
+        }
+        for call in calls.all {
+            await add(AgentStep(call))
+        }
+    }
+
+    /// Adds one of the question's own model calls, after those before it.
     private func add(_ step: AgentStep) async {
         steps.append(step)
         await recorder?.step(step, position: steps.count - 1)

@@ -1,4 +1,5 @@
 import Foundation
+import StatsAgent
 
 /// One answer to a question: what it shows, the path that led to it, and its content.
 struct Card: Identifiable {
@@ -56,6 +57,9 @@ struct Card: Identifiable {
     /// The parameters the model filled in, in plain words, when the card has any.
     let parameters: String?
     let content: Content
+    /// What the card shows, in short sentences written with `StatsFacts`, which the answer is written from: none for
+    /// a card without stats, such as one that failed.
+    var facts: [String] = []
 }
 
 extension Card {
@@ -119,8 +123,25 @@ extension Card {
             } ?? []
         )
         let byUnit = "\(metric.localizedTitle) by \(request.granularity)"
+        let unit = "\(request.granularity)"
+        let series = seriesFact(
+            "\(byUnit), \(range)",
+            points,
+            metric: metric,
+            granularity: request.granularity,
+            context: context
+        )
         guard let total, !comparing || beforeTotal != nil else {
             let against = comparing ? " against \(beforeRange ?? "the span before")" : ""
+            let beforeSeries = beforeRange.map {
+                seriesFact(
+                    "\(byUnit), \($0)",
+                    before,
+                    metric: metric,
+                    granularity: request.granularity,
+                    context: context
+                )
+            }
             return Card(
                 id: id,
                 title: "\(byUnit), \(range)\(against)",
@@ -131,9 +152,12 @@ extension Card {
                     note:
                         "The site's stats count each visitor once only over a day, a calendar week or a calendar month,"
                         + " so this shows the visitors of each \(request.granularity), without a total."
-                )
+                ),
+                facts: [series] + [beforeSeries].compactMap(\.self)
+                    + (isVisitors ? [StatsFacts.visitorsNotAddedUp(over: range, unit: unit)] : [])
             )
         }
+        let peak = peakFacts(points, granularity: request.granularity, context: context)
         switch operation {
         case "value":
             return Card(
@@ -146,15 +170,26 @@ extension Card {
                     value: total,
                     dateInterval: interval,
                     chart: points.count > 1 ? data : nil
-                )
+                ),
+                facts: [StatsFacts.total("\(metric.localizedTitle), \(range)", total)] + peak
             )
         case "compare_periods":
+            let earlier = beforeRange ?? "The span before"
             return Card(
                 id: id,
                 title: "\(metric.localizedTitle), \(range) against \(beforeRange ?? "the span before")",
                 path: path,
                 parameters: "\(parameters), against the span before",
-                content: .comparison(data)
+                content: .comparison(data),
+                facts: [
+                    StatsFacts.comparison(
+                        "\(metric.localizedTitle), \(range)",
+                        total,
+                        earlier: earlier,
+                        beforeTotal ?? 0
+                    )
+                ]
+                    + peak
             )
         case "highest_or_lowest_period":
             return Card(
@@ -162,7 +197,8 @@ extension Card {
                 title: "\(byUnit), \(range), with the highest and lowest marked",
                 path: path,
                 parameters: parameters,
-                content: .trend(data)
+                content: .trend(data),
+                facts: [series]
             )
         default:
             return Card(
@@ -170,7 +206,8 @@ extension Card {
                 title: "\(byUnit), \(range)",
                 path: path,
                 parameters: parameters,
-                content: .trend(data)
+                content: .trend(data),
+                facts: [series]
             )
         }
     }

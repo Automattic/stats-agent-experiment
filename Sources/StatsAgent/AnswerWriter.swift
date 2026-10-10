@@ -8,13 +8,16 @@ public struct AnswerWriter: Sendable {
 
     private let currentDate: Date
     private let timeZone: TimeZone
+    private let calls: ModelCalls?
 
     /// - Parameters:
     ///   - currentDate: The date the model treats as today.
     ///   - timeZone: The time zone `currentDate` is expressed in.
-    public init(currentDate: Date = .now, timeZone: TimeZone = .current) {
+    ///   - calls: Where each answer is recorded, as a call of the kind `answer` with the text as `text`, if anywhere.
+    public init(currentDate: Date = .now, timeZone: TimeZone = .current, calls: ModelCalls? = nil) {
         self.currentDate = currentDate
         self.timeZone = timeZone
+        self.calls = calls
     }
 
     /// The instructions every answer is written with.
@@ -42,11 +45,14 @@ public struct AnswerWriter: Sendable {
     /// on-device model can't be used.
     public func answer(_ question: String, stats: String) async throws -> String {
         try AgentError.checkModelAvailability()
+        let clock = ContinuousClock()
+        let start = clock.now
         let session = LanguageModelSession(model: .default, instructions: instructions)
         let response = try await session.respond(
             to: Self.prompt(for: question, stats: stats),
             options: GenerationOptions(samplingMode: .greedy, maximumResponseTokens: Self.maximumResponseTokens)
         )
+        calls?.append(ModelCalls.Call(kind: "answer", values: ["text": response.content], duration: clock.now - start))
         return response.content
     }
 }

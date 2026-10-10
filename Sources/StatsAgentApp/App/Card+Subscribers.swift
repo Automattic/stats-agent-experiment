@@ -74,6 +74,13 @@ extension Card {
                 )
             } ?? []
         )
+        let series = seriesFact(
+            "Subscribers by \(unit), \(range)",
+            current.points,
+            metric: .subscribers,
+            granularity: granularity,
+            context: context
+        )
         switch operation {
         case "value":
             let lastDay = current.points.last?.date.formatted(day(in: context))
@@ -86,7 +93,8 @@ extension Card {
                 title: "Subscribers, \(range)",
                 path: path,
                 parameters: parameters,
-                content: .figures(figures, chart: data)
+                content: .figures(figures, chart: data),
+                facts: figures.map(fact) + [series]
             )
         case "compare_periods":
             guard let before else {
@@ -95,7 +103,8 @@ extension Card {
                     title: "Subscribers, \(range)",
                     path: path,
                     parameters: parameters,
-                    content: .trend(data)
+                    content: .trend(data),
+                    facts: [series]
                 )
             }
             let beforeRange = context.formatters.dateRange.string(from: before.interval)
@@ -129,7 +138,8 @@ extension Card {
                 title: "Subscribers, \(range) against \(beforeRange)",
                 path: path,
                 parameters: "\(parameters), against the span before",
-                content: .headlines(headlines, chart: data)
+                content: .headlines(headlines, chart: data),
+                facts: headlines.map(fact) + [series]
             )
         case "highest_or_lowest_period":
             return Card(
@@ -137,7 +147,8 @@ extension Card {
                 title: "Subscribers by \(unit), \(range), with the highest and lowest marked",
                 path: path,
                 parameters: parameters,
-                content: .trend(data)
+                content: .trend(data),
+                facts: [series]
             )
         default:
             return Card(
@@ -145,7 +156,8 @@ extension Card {
                 title: "Subscribers by \(unit), \(range)",
                 path: path,
                 parameters: parameters,
-                content: .trend(data)
+                content: .trend(data),
+                facts: [series]
             )
         }
     }

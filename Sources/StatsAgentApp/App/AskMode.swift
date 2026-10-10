@@ -43,7 +43,8 @@ enum AskMode {
         }
         await answer.run(stats: stats, context: context, recorder: questionRecorder)
         let directory = Screenshots.directory.appending(path: Screenshots.timestamp)
-        var lines = ["Question: \(question)", "Outcome: \(answer.status)", "", "Steps:"]
+        let written = answer.written ?? answer.writingError.map { "none: \($0)" } ?? "none"
+        var lines = ["Question: \(question)", "Outcome: \(answer.status)", "Answer: \(written)", "", "Steps:"]
         lines += answer.steps.map { "  \(describe($0))" }
         for statsCall in answer.statsCalls {
             lines.append("  \(DisplayNames.endpoint(statsCall.endpoint)), \(statsCall.status):")
@@ -58,6 +59,7 @@ enum AskMode {
                 "     \(([card.path.joined(separator: " › ")] + [card.parameters].compactMap(\.self)).joined(separator: " · "))"
             )
             lines.append("     \(describe(card.content))")
+            lines += card.facts.map { "     - \($0)" }
             let view = CardView(card: card)
                 .environment(\.context, context)
                 .environment(\.colorScheme, isDark ? .dark : .light)

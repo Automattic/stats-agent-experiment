@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// An answer's page in the window's scroll: the question as its title, with arrows beside it to move between the cards
-/// when there's more than one, what the agent is doing or the card shown, and under it, once the answer is one feedback
-/// is asked about, the feedback.
+/// when there's more than one, the answer in words once it's written, what the agent is doing or the card shown, and
+/// under it, once the answer is one feedback is asked about, the feedback.
 struct AnswerPage: View {
     let answer: Answer
 
@@ -24,6 +24,7 @@ struct AnswerPage: View {
                     CardPager(answer: answer)
                 }
             }
+            WrittenAnswerView(answer: answer)
             AnswerView(answer: answer)
             if !answer.feedbackChoices.isEmpty {
                 FeedbackView(answer: answer)
@@ -58,7 +59,7 @@ struct AnswerView: View {
                     .onAppear {
                         answer.viewed(card.id)
                     }
-                if case .working(let step) = answer.status {
+                if case .working(let step) = answer.status, !answer.isWriting {
                     HStack(spacing: 8) {
                         ProgressView()
                             .controlSize(.small)
@@ -95,6 +96,32 @@ struct AnswerView: View {
                 Text(message)
                     .textSelection(.enabled)
             }
+        }
+    }
+}
+
+/// The answer in words, written from the cards' facts after the last card: a line saying the model is writing it, then
+/// the words, or why there are none.
+struct WrittenAnswerView: View {
+    let answer: Answer
+
+    var body: some View {
+        if let written = answer.written {
+            Text(written)
+                .font(.title3)
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+        } else if answer.isWriting {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Writing an answer…")
+                    .foregroundStyle(.secondary)
+            }
+        } else if let writingError = answer.writingError {
+            Text("The model couldn't write an answer: \(writingError)")
+                .foregroundStyle(.secondary)
+                .textSelection(.enabled)
         }
     }
 }

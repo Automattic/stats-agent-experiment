@@ -1,4 +1,5 @@
 import Foundation
+import StatsAgent
 
 extension Card {
     /// A card for `endpoint`, a stats call that ranks items, from `list` as fetched for `request`. `asked` is the span
@@ -24,7 +25,8 @@ extension Card {
                 title: "\(name), \(range)",
                 path: path,
                 parameters: parameters,
-                content: .ranking(list, previous: nil)
+                content: .ranking(list, previous: nil),
+                facts: [rankingFact(name, range, list, earlier: nil)]
             )
         }
         let values = Dictionary(previous.list.rows.map { ($0.name, $0.value) }, uniquingKeysWith: +)
@@ -33,7 +35,31 @@ extension Card {
             title: "\(name), \(range) against \(describe(previous.request, context: context))",
             path: path,
             parameters: "\(parameters), against the span before",
-            content: .ranking(list, previous: values)
+            content: .ranking(list, previous: values),
+            facts: [rankingFact(name, range, list, earlier: values)]
+        )
+    }
+
+    /// "Top posts by views, Oct 1 – 4: 1. A Weekend in the Douro Valley, 312. All views, listed or not: 1,288.", with
+    /// each item's change from `earlier`, the figures of the span before, when comparing spans.
+    private static func rankingFact(
+        _ name: String,
+        _ range: String,
+        _ list: RankedList,
+        earlier: [String: Int]?
+    ) -> String {
+        let metric = list.metricTitle.lowercased()
+        let items = list.rows.map { row in
+            let change: StatsFacts.Item.Earlier =
+                earlier.map { values in values[row.name].map { .value($0) } ?? .notListed } ?? .notCompared
+            return StatsFacts.Item(row.name, row.value, earlier: change)
+        }
+        return StatsFacts.ranking(
+            "\(name) by \(metric), \(range)",
+            items,
+            total: list.total,
+            metric: metric,
+            isPercentage: list.isPercentage
         )
     }
 

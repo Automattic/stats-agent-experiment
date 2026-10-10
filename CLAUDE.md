@@ -10,7 +10,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 
 ## Map
 
-- `Sources/StatsAgent/`: the model steps. `OptionSelector` picks among options in one call; `CatalogNavigator` descends a catalog, with "none of these" and backtracking; `StatsEndpoints` describes the 21 wordpress-rs stats calls, and `DataCatalog` the same data by what's counted; `CardPicker` holds the app's steps; `ParameterAgent` fills in spans and figures, which `StatsPeriods` turns into dates; `AnswerWriter` writes a short answer from the stats fetched, which the app doesn't call yet.
+- `Sources/StatsAgent/`: the model steps. `OptionSelector` picks among options in one call; `CatalogNavigator` descends a catalog, with "none of these" and backtracking; `StatsEndpoints` describes the 21 wordpress-rs stats calls, and `DataCatalog` the same data by what's counted; `CardPicker` holds the app's steps; `ParameterAgent` fills in spans and figures, which `StatsPeriods` turns into dates; `AnswerWriter` writes a short answer after the cards, from the facts `StatsFacts` writes for each of them, which `AnswerTextTests` measures too.
 - `Sources/StatsAgentApp/`: the macOS app. `JetpackStats/` is copied from the WordPress iOS app and left out of `make format` and SwiftLint.
 - `Sources/StatsAgentDatabase/`: the app's SQLite database, through GRDB. `AppDatabase` holds the migrations and the writes; `Records` has a type per table; `Export` reads questions into `ExportV1`, the JSON people share. The schema changes only through a new migration.
 - `Plugins/CredentialsPlugin/` and `Sources/generate-credentials/`: compile `wp_com_credentials.json` into the app on every build, as `CompiledCredentials`, with the secret's bytes reversed. Without the file, the app builds and can't log in.
@@ -19,7 +19,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 - `Tests/StatsAgentTests/`: the experiments, each writing a file in `results/`, and tests without model calls. Labels are in `StatsQuestionCases` and `DataCatalogLabels`, and the made-up stats `AnswerTextTests` answers from in `AnswerTextCases`.
 - `prompts/raw/`: the question sets the tests read, kept as written.
 - `exports/`: exports people sent from the app, as `.json` files or zips unzipped into folders, which `FeedbackReportTests` reads, ignored. `sessions/`: output of the command-line tool, ignored.
-- `data/`: the database `make run` uses, ignored. The app's own is `Stats agent/stats-agent.sqlite` in Application Support. It holds every question, the agent's decisions, the cards, the stats requests and WordPress.com's responses, the cards looked at and every save of the feedback.
+- `data/`: the database `make run` uses, ignored. The app's own is `Stats agent/stats-agent.sqlite` in Application Support. It holds every question, the agent's decisions, the cards, the stats requests and WordPress.com's responses, the answer in words as a step of the kind `answer`, the cards looked at and every save of the feedback.
 
 ## Commands
 

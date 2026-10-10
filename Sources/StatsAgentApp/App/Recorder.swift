@@ -123,7 +123,8 @@ final class QuestionRecorder {
         self.failed = failed
     }
 
-    /// Records a model call before the cards, at `position` among them.
+    /// Records one of the question's own model calls, the picks before the cards or the answer after them, at
+    /// `position` among them.
     func step(_ step: AgentStep, position: Int) async {
         do {
             try await database.addStep(step, questionID: questionID, cardID: nil, position: position)

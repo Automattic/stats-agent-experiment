@@ -7,6 +7,18 @@ extension Card {
         let path = [DisplayNames.endpoint("stats_summary"), DisplayNames.operation(operation)]
         let views = series(summary.dailyViews, metric: .views, calendar: context.calendar)
         let range = views.map { context.formatters.dateRange.string(from: $0.dateInterval) } ?? "the last 30 days"
+        let viewsFacts =
+            views.map {
+                [
+                    seriesFact(
+                        "Views by day, \(range)",
+                        $0.currentData,
+                        metric: .views,
+                        granularity: .day,
+                        context: context
+                    )
+                ]
+            } ?? []
         let bestDay = Figure(
             title: "Best day",
             value: summary.bestDayViews,
@@ -30,7 +42,8 @@ extension Card {
                 title: "Views and visitors today, against yesterday",
                 path: path,
                 parameters: nil,
-                content: .headlines(headlines, chart: views)
+                content: .headlines(headlines, chart: views),
+                facts: headlines.map(fact) + viewsFacts
             )
         case "trend":
             guard let views else {
@@ -41,7 +54,8 @@ extension Card {
                 title: "Views by day, \(range)",
                 path: path,
                 parameters: nil,
-                content: .trend(views)
+                content: .trend(views),
+                facts: viewsFacts
             )
         case "highest_or_lowest_period":
             return Card(
@@ -49,7 +63,8 @@ extension Card {
                 title: "The best day ever, and views by day over \(range)",
                 path: path,
                 parameters: nil,
-                content: .figures([bestDay], chart: views)
+                content: .figures([bestDay], chart: views),
+                facts: [fact(bestDay)] + viewsFacts
             )
         default:
             let figures = [
@@ -67,7 +82,8 @@ extension Card {
                 title: "The site's totals, today's figures and its best day",
                 path: path,
                 parameters: nil,
-                content: .figures(figures, chart: nil)
+                content: .figures(figures, chart: nil),
+                facts: figures.map(fact)
             )
         }
     }

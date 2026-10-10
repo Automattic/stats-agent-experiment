@@ -51,6 +51,14 @@ enum Previews {
 
     private static let question = "How did this week go compared with last week?"
 
+    /// The answers in words, as the model wrote them in `results/answer-text.txt` from the same figures.
+    private static let weekAnswer =
+        "This week had more views than last week, with 2,228 views compared to 1,947. The increase is 281 views, or"
+        + " 14.4%. There were 88 likes this week."
+    private static let todayAnswer =
+        "Today had 284 views and 131 visitors, compared to yesterday's 322 views and 117 visitors. Views decreased by"
+        + " 11.8% and visitors increased by 12%."
+
     private static var screens: [Screen] {
         [
             Screen(name: "login") {
@@ -76,9 +84,16 @@ enum Previews {
                     )
                 )
             },
-            Screen(name: "answer") { window(Answer(previewing: question, status: .done, cards: cards)) },
+            Screen(name: "answer-writing") {
+                window(
+                    Answer(previewing: question, status: .working("Writing an answer"), cards: cards, isWriting: true)
+                )
+            },
+            Screen(name: "answer") {
+                window(Answer(previewing: question, status: .done, cards: cards, written: weekAnswer))
+            },
             Screen(name: "answer-second-card") {
-                let answer = Answer(previewing: question, status: .done, cards: cards)
+                let answer = Answer(previewing: question, status: .done, cards: cards, written: weekAnswer)
                 answer.showCard(at: 1)
                 return window(answer)
             },
@@ -87,7 +102,8 @@ enum Previews {
                     Answer(
                         previewing: "How does today's traffic compare to yesterday's?",
                         status: .done,
-                        cards: [summaryCard("compare_periods")]
+                        cards: [summaryCard("compare_periods")],
+                        written: todayAnswer
                     )
                 )
             },
@@ -135,6 +151,7 @@ enum Previews {
                         previewing: question,
                         status: .done,
                         cards: cards,
+                        written: weekAnswer,
                         endpoints: ["stats_visits", "stats_top_posts", "stats_visits"],
                         feedback: FeedbackForm(
                             choice: .answersCompletely,
@@ -151,6 +168,7 @@ enum Previews {
                         previewing: question,
                         status: .done,
                         cards: cards,
+                        written: weekAnswer,
                         endpoints: ["stats_visits", "stats_top_posts", "stats_visits"],
                         feedback: FeedbackForm(
                             choice: .answersRelated,

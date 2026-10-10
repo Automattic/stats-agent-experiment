@@ -66,7 +66,8 @@ public struct CardRecord: Codable, Sendable, Equatable, FetchableRecord, Persist
 }
 
 /// One model call: a decision among options, with `offered` and `chosen`, or typed values it generated, with
-/// `generated`. The calls before the cards have no card.
+/// `generated`, such as the answer in words, `answer`, with its `text`. The question's own calls, the picks before the
+/// cards and the answer after them, have no card.
 public struct StepRecord: Codable, Sendable, Equatable, FetchableRecord, PersistableRecord {
     public static let databaseTableName = "step"
 
