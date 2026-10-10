@@ -148,7 +148,7 @@ struct AnswerTextTests {
                 lines += outcome.text.split(separator: "\n", omittingEmptySubsequences: false).map { "    \($0)" }
             }
             lines.append("  facts given:")
-            lines += answerCase.facts.map { "    - \($0)" }
+            lines += answerCase.factsText.split(separator: "\n", omittingEmptySubsequences: false).map { "    \($0)" }
             return lines.joined(separator: "\n")
         }
         return """
