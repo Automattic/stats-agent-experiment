@@ -1,0 +1,30 @@
+Pyramid selection: one model call per level picks a node, from the 12 top-level branches down to a leaf.
+31 prompts, 89 catalog leaves, largest branch 18 children, 3 orderings, greedy sampling.
+Version 27.0 (Build 26A428)
+
+"first level" counts prompts whose chosen branch holds a correct leaf. "end to end" counts prompts that reached a correct leaf.
+
+order  first level  end to end
+    0        27/31       25/31
+    1        26/31       25/31
+    2        29/31       28/31
+
+End to end, prompts right in all orderings: 22, in some: 7, in none: 2
+Total time: 72 seconds for 93 prompts
+
+Misses
+order 0: "How many likes did my posts get on January 13?" → stats › comments_on_day (expected likes_on_day)
+order 0: "How many people visited my site yesterday?" → stats › views_on_day (expected visitors_on_day)
+order 0: "What are people saying on my latest post?" → stats › comments_on_day (expected post_comments)
+order 0: "Follow the site cooking.blog" → site_settings › add_domain (expected follow_site)
+order 0: "Show me the posts I liked" → posts › post_likes (expected liked_posts)
+order 0: "How do I add a contact form to my site?" → media › search_media (expected search_help_articles)
+order 1: "How many likes did my posts get on January 13?" → stats › post_likes (expected likes_on_day)
+order 1: "Are there any comments waiting for me to approve?" → stats › comments_on_day (expected list_pending_comments)
+order 1: "Show me new posts from blogs I follow" → posts › posts_by_tag (expected following_feed)
+order 1: "Show me the posts I liked" → posts › post_likes (expected liked_posts)
+order 1: "Switch my site to a darker theme" → site_settings › change_site_language (expected change_theme)
+order 1: "How do I add a contact form to my site?" → stats › file_downloads (expected search_help_articles)
+order 2: "How many likes did my posts get on January 13?" → stats › views_on_day (expected likes_on_day)
+order 2: "Show me new posts from blogs I follow" → posts › posts_by_tag (expected following_feed)
+order 2: "Show me the posts I liked" → posts › post_likes (expected liked_posts)

@@ -1,0 +1,53 @@
+Pyramid selection: one model call per level picks a node, from the 12 top-level branches down to a leaf.
+62 prompts from prompts/raw/paraphrases-round-1.md, 89 catalog leaves, largest branch 18 children, 3 orderings, greedy sampling.
+Version 27.0 (Build 26A428)
+
+"first level" counts prompts whose chosen branch holds a correct leaf. "end to end" counts prompts that reached a correct leaf.
+
+order  first level  end to end
+    0        53/62       50/62
+    1        51/62       49/62
+    2        53/62       49/62
+
+End to end, prompts right in all orderings: 38, in some: 20, in none: 4
+Total time: 143 seconds for 186 prompts
+
+Misses
+order 0: [1A] "On January 13, how many likes did my posts receive?" → stats › comments_on_day (expected likes_on_day)
+order 0: [1B] "Can you tell me the total number of likes my posts got on January 13?" → stats › post_likes (expected likes_on_day)
+order 0: [14B] "Is there anything in my comment queue that needs approving?" → stats › views_over_period (expected list_pending_comments)
+order 0: [18A] "Can you show me recent posts from the blogs I follow?" → reader › list_followed_sites (expected following_feed)
+order 0: [19B] "I'd like to start following the site cooking.blog." → site_settings › list_domains (expected follow_site)
+order 0: [20A] "Can you pull up the posts I've liked?" → posts › post_likes (expected liked_posts)
+order 0: [20B] "I'd like to see the posts I gave a like to." → posts › post_likes (expected liked_posts)
+order 0: [25B] "I'd like to switch to a darker-looking theme for my site." → site_settings › change_site_language (expected change_theme)
+order 0: [28B] "Can you help me change my password since I forgot it?" → support › search_help_articles (expected change_password)
+order 0: [29B] "I'd like to set the app language to Turkish." → site_settings › change_site_language (expected change_interface_language)
+order 0: [31A] "What's the process for adding a contact form to my site?" → media › upload_media (expected search_help_articles)
+order 0: [31B] "Can you walk me through adding a contact form to my site?" → site_settings › change_site_language (expected search_help_articles)
+order 1: [2A] "How many visitors did my site have yesterday?" → stats › views_on_day (expected visitors_on_day)
+order 1: [13A] "Can you locate my post about sourdough bread?" → posts › posts_by_tag (expected search_posts)
+order 1: [14B] "Is there anything in my comment queue that needs approving?" → posts › post_comments (expected list_pending_comments)
+order 1: [17B] "Can you tell me my current storage usage?" → reader › search_reader (expected storage_usage)
+order 1: [19B] "I'd like to start following the site cooking.blog." → notifications › unread_notifications (expected follow_site)
+order 1: [20A] "Can you pull up the posts I've liked?" → posts › post_likes (expected liked_posts)
+order 1: [20B] "I'd like to see the posts I gave a like to." → posts › post_likes (expected liked_posts)
+order 1: [21A] "Are there any new notifications for me?" → site_settings › list_domains (expected unread_notifications or list_notifications)
+order 1: [25A] "Can you change my site to a darker theme?" → site_settings › change_site_language (expected change_theme)
+order 1: [27B] "Can you tell me how many people are subscribed to me?" → site_settings › storage_usage (expected subscriber_count)
+order 1: [29A] "Can you switch the app's language to Turkish?" → site_settings › change_site_language (expected change_interface_language)
+order 1: [30A] "I need to speak with support regarding a billing issue." → media › list_media (expected contact_support)
+order 1: [31B] "Can you walk me through adding a contact form to my site?" → pages › create_page (expected search_help_articles)
+order 2: [1A] "On January 13, how many likes did my posts receive?" → stats › views_on_day (expected likes_on_day)
+order 2: [1B] "Can you tell me the total number of likes my posts got on January 13?" → posts › post_likes (expected likes_on_day)
+order 2: [4B] "Last month, which posts of mine got the most attention?" → stats › post_views (expected top_posts)
+order 2: [13A] "Can you locate my post about sourdough bread?" → posts › posts_by_tag (expected search_posts)
+order 2: [14B] "Is there anything in my comment queue that needs approving?" → stats › post_likes (expected list_pending_comments)
+order 2: [20A] "Can you pull up the posts I've liked?" → posts › post_likes (expected liked_posts)
+order 2: [20B] "I'd like to see the posts I gave a like to." → posts › post_likes (expected liked_posts)
+order 2: [25A] "Can you change my site to a darker theme?" → site_settings › change_site_language (expected change_theme)
+order 2: [26B] "I'd like to add my friend as a writer on my blog." → posts › create_post (expected invite_user)
+order 2: [27A] "What's my current subscriber count?" → account › list_purchases (expected subscriber_count)
+order 2: [28A] "I've forgotten my password and need to reset it." → account › list_purchases (expected change_password)
+order 2: [31A] "What's the process for adding a contact form to my site?" → stats › top_posts (expected search_help_articles)
+order 2: [31B] "Can you walk me through adding a contact form to my site?" → posts › create_post (expected search_help_articles)

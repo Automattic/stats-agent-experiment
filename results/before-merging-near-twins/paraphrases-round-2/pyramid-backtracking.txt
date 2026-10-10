@@ -1,0 +1,61 @@
+Pyramid with backtracking: branch, then leaf or "none of these"; "none of these" drops the branch and starts
+again from the top, at most 1 time. "none of these" is always the last leaf option.
+62 prompts from prompts/raw/paraphrases-round-2.md, 89 catalog leaves, 3 orderings, greedy sampling.
+Version 27.0 (Build 26A428)
+
+Counts are of attempts (one branch choice and one leaf choice) unless noted.
+"right→none": the branch held a correct leaf but the model chose "none of these".
+"wrong→none": the branch held no correct leaf and the model chose "none of these".
+"wrong→leaf": the branch held no correct leaf and the model chose a leaf anyway.
+"recovered": prompts that ended on a correct leaf after backing up.
+"gave up": prompts that chose "none of these" on every attempt.
+
+order  end to end  right→none  wrong→none  wrong→leaf  recovered  gave up  calls
+    0       49/62           5           9           6          2        5    142
+    1       49/62           3          11           6          2        6    140
+    2       48/62           4          12           5          5        4    148
+
+End to end, prompts right in all orderings: 40, in some: 15, in none: 7
+Total time: 165 seconds for 186 prompts
+
+Misses, with each attempt separated by ⟲
+order 0: [1A] "What's the total hearts count on my posts for January 13?" → stats › none_of_these ⟲ posts › none_of_these (expected likes_on_day)
+order 0: [1B] "Break down how many likes my posts pulled in on January 13." → stats › post_likes (expected likes_on_day)
+order 0: [3B] "How many reads am I up to today?" → stats › none_of_these ⟲ posts › none_of_these (expected views_on_day)
+order 0: [5A] "What are my traffic sources?" → stats › none_of_these ⟲ pages › none_of_these (expected top_referrers or views_by_country)
+order 0: [14B] "Check my comment queue for anything that needs approving." → stats › none_of_these ⟲ comments › approve_comment (expected list_pending_comments)
+order 0: [18A] "What's new from the blogs I follow?" → stats › top_posts (expected following_feed)
+order 0: [18B] "Pull up the latest posts from sites I'm subscribed to." → posts › latest_post (expected following_feed)
+order 0: [20A] "Pull up the posts I've hearted." → posts › post_likes (expected liked_posts)
+order 0: [20B] "What posts have I liked?" → posts › post_likes (expected liked_posts)
+order 0: [27B] "Tell me how many followers I've got." → stats › none_of_these ⟲ people › none_of_these (expected subscriber_count)
+order 0: [28B] "Help me set a new password since I've forgotten mine." → support › contact_support (expected change_password)
+order 0: [31A] "What's the process for adding a contact form to my site?" → media › none_of_these ⟲ plugins_and_themes › current_theme (expected search_help_articles)
+order 0: [31B] "Walk me through adding a contact form to my site." → site_settings › none_of_these ⟲ posts › none_of_these (expected search_help_articles)
+order 1: [1A] "What's the total hearts count on my posts for January 13?" → stats › none_of_these ⟲ posts › none_of_these (expected likes_on_day)
+order 1: [2A] "Yesterday's visitor count for my site?" → stats › views_on_day (expected visitors_on_day)
+order 1: [3B] "How many reads am I up to today?" → stats › none_of_these ⟲ posts › none_of_these (expected views_on_day)
+order 1: [6B] "Show me the queries visitors typed to land on my blog." → stats › none_of_these ⟲ posts › none_of_these (expected search_terms)
+order 1: [14B] "Check my comment queue for anything that needs approving." → posts › post_comments (expected list_pending_comments)
+order 1: [18B] "Pull up the latest posts from sites I'm subscribed to." → posts › latest_post (expected following_feed)
+order 1: [20A] "Pull up the posts I've hearted." → posts › post_likes (expected liked_posts)
+order 1: [20B] "What posts have I liked?" → posts › post_likes (expected liked_posts)
+order 1: [26A] "Add my friend as a contributor to my blog." → site_settings › none_of_these ⟲ media › none_of_these (expected invite_user)
+order 1: [26B] "Send my friend an invite to post on my blog." → posts › create_post (expected invite_user)
+order 1: [27B] "Tell me how many followers I've got." → reader › none_of_these ⟲ account › none_of_these (expected subscriber_count)
+order 1: [29A] "Switch the app's language to Turkish." → site_settings › change_site_language (expected change_interface_language)
+order 1: [31B] "Walk me through adding a contact form to my site." → pages › none_of_these ⟲ site_settings › none_of_these (expected search_help_articles)
+order 2: [1A] "What's the total hearts count on my posts for January 13?" → stats › none_of_these ⟲ posts › none_of_these (expected likes_on_day)
+order 2: [1B] "Break down how many likes my posts pulled in on January 13." → posts › none_of_these ⟲ stats › views_on_day (expected likes_on_day)
+order 2: [3B] "How many reads am I up to today?" → stats › none_of_these ⟲ notifications › unread_notifications (expected views_on_day)
+order 2: [6B] "Show me the queries visitors typed to land on my blog." → stats › none_of_these ⟲ media › none_of_these (expected search_terms)
+order 2: [11A] "Start a new post about my trip." → pages › create_page (expected create_post)
+order 2: [13A] "Pull up the post I wrote about sourdough bread." → posts › posts_by_tag (expected search_posts)
+order 2: [14B] "Check my comment queue for anything that needs approving." → stats › none_of_these ⟲ comments › approve_comment (expected list_pending_comments)
+order 2: [18B] "Pull up the latest posts from sites I'm subscribed to." → posts › latest_post (expected following_feed)
+order 2: [20A] "Pull up the posts I've hearted." → posts › post_likes (expected liked_posts)
+order 2: [20B] "What posts have I liked?" → posts › post_likes (expected liked_posts)
+order 2: [28A] "Reset my password — I can't remember it." → account › list_purchases (expected change_password)
+order 2: [30B] "There's a billing problem I need to discuss with someone on the support team." → support › report_app_problem (expected contact_support)
+order 2: [31A] "What's the process for adding a contact form to my site?" → stats › none_of_these ⟲ pages › none_of_these (expected search_help_articles)
+order 2: [31B] "Walk me through adding a contact form to my site." → posts › none_of_these ⟲ site_settings › none_of_these (expected search_help_articles)

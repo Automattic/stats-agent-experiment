@@ -1,0 +1,29 @@
+Pyramid with backtracking: branch, then leaf or "none of these"; "none of these" drops the branch and starts
+again from the top, at most 1 time. "none of these" is always the last leaf option.
+31 prompts, 89 catalog leaves, 3 orderings, greedy sampling.
+Version 27.0 (Build 26A428)
+
+Counts are of attempts (one branch choice and one leaf choice) unless noted.
+"right→none": the branch held a correct leaf but the model chose "none of these".
+"wrong→none": the branch held no correct leaf and the model chose "none of these".
+"wrong→leaf": the branch held no correct leaf and the model chose a leaf anyway.
+"recovered": prompts that ended on a correct leaf after backing up.
+"gave up": prompts that chose "none of these" on every attempt.
+
+order  end to end  right→none  wrong→none  wrong→leaf  recovered  gave up  calls
+    0       27/31           0           3           2          2        0     68
+    1       29/31           0           5           1          3        1     70
+    2       29/31           0           1           1          1        0     64
+
+End to end, prompts right in all orderings: 27, in some: 3, in none: 1
+Total time: 78 seconds for 93 prompts
+
+Misses, with each attempt separated by ⟲
+order 0: "How many likes did my posts get on January 13?" → stats › comments_on_day (expected likes_on_day)
+order 0: "How many people visited my site yesterday?" → stats › views_on_day (expected visitors_on_day)
+order 0: "Show me the posts I liked" → posts › post_likes (expected liked_posts)
+order 0: "How do I add a contact form to my site?" → media › none_of_these ⟲ plugins_and_themes › install_plugin (expected search_help_articles)
+order 1: "Show me the posts I liked" → posts › post_likes (expected liked_posts)
+order 1: "How do I add a contact form to my site?" → stats › none_of_these ⟲ posts › none_of_these (expected search_help_articles)
+order 2: "How many likes did my posts get on January 13?" → stats › views_on_day (expected likes_on_day)
+order 2: "Show me the posts I liked" → posts › post_likes (expected liked_posts)
