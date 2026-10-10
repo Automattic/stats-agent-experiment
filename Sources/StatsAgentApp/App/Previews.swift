@@ -15,8 +15,7 @@ enum Previews {
             URL(filePath: $0, directoryHint: .isDirectory)
         }
 
-    /// The window's content size in the pictures, and the size the app opens at, wide enough for the cards and the
-    /// feedback inspector side by side.
+    /// The window's content size in the pictures, and the size the app opens at.
     static let size = CGSize(width: 1080, height: 760)
 
     static func run(in folder: URL) async {
