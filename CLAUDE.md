@@ -16,7 +16,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 - `Plugins/CredentialsPlugin/` and `Sources/generate-credentials/`: compile `wp_com_credentials.json` into the app on every build, as `CompiledCredentials`, with the secret's bytes reversed. Without the file, the app builds and can't log in.
 - `Sources/generate-icon/`: draws the app's icon, which `make icon` makes into `Sources/StatsAgentApp/AppIcon.icns`.
 - `Sources/stats-agent/`: a command-line tool on the placeholder `Catalog`.
-- `Tests/StatsAgentTests/`: the experiments, each writing a file in `results/`, and tests without model calls. Labels are in `StatsQuestionCases` and `DataCatalogLabels`, and the made-up stats `AnswerTextTests` answers from in `AnswerTextCases`.
+- `Tests/StatsAgentTests/`: the experiments, each writing a file in `results/`, and tests without model calls. `results/README.md` lists each experiment's files and the question sets; a new or renamed results file goes in it. Labels are in `StatsQuestionCases` and `DataCatalogLabels`, and the made-up stats `AnswerTextTests` answers from in `AnswerTextCases`.
 - `prompts/raw/`: the question sets the tests read, kept as written.
 - `exports/`: exports people sent from the app, as `.json` files or zips unzipped into folders, which `FeedbackReportTests` reads, ignored. `sessions/`: output of the command-line tool, ignored.
 - `data/`: the database `make run` uses, ignored. The app's own is `Stats agent/stats-agent.sqlite` in Application Support. It holds every question, the agent's decisions, the cards, the stats requests and WordPress.com's responses, the answer in words as a step of the kind `answer`, the cards looked at and every save of the feedback.
