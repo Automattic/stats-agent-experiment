@@ -13,7 +13,7 @@ Instructions:
 
 variant    figures given  wrong figures  not in the stats  failed     time
 responses          21/26              0                  2       0   17.9 s
-facts              23/26              0                  0       0   12.3 s
+facts              23/26              0                  0       0   12.1 s
 
 [today] "How does today's traffic compare to yesterday's?"
   responses (1374 characters, 2.0 s): 284 ✓  322 ✓  131 ✓  117 ✓
@@ -71,7 +71,7 @@ facts              23/26              0                  0       0   12.3 s
 [subscribers] "Is my subscriber count growing or shrinking lately?"
   responses (1614 characters, 1.8 s): 870 ✓  29 ✗
     The subscriber count increased from 841 on 2026-09-04 to 870 on 2026-10-04. Each day shows a higher number than the previous day.
-  facts (310 characters, 1.1 s): 870 ✓  29 ✓
+  facts (310 characters, 1.0 s): 870 ✓  29 ✓
     Your subscriber count is growing. It increased by 29, or 3.4%, from 841 on Aug 6 – Sep 4 to 870 on Sep 5 – Oct 4.
   facts given:
     Subscribers, Sep 5 – Oct 4 against Aug 6 – Sep 4
@@ -127,9 +127,9 @@ facts              23/26              0                  0       0   12.3 s
 [visitors-30-days] "How many visitors did I have in the last 30 days?"
   responses (1189 characters, 1.6 s): 122 ✗  not in the stats: 1,026
     The site had 1,026 visitors in the last 30 days. This total is calculated from the daily visitor counts provided for each day from September 5 to October 4.
-  facts (410 characters, 1.4 s): 122 ✓
-    The site had an average of 122 visitors per day in the last 30 days. The highest single-day total was 183 visitors on Sep 26, and the lowest was 86 on Sep 7. These figures represent unique visitors counted once per day, week, or month.
+  facts (444 characters, 1.3 s): 122 ✓
+    The stats show an average of 122 visitors per day from Sep 5 to Oct 4. There is no total number of visitors for the entire 30-day period because the count is daily and does not include repeat visitors over multiple days.
   facts given:
     Visitors by day, Sep 5 – Oct 4
     - Visitors by day, Sep 5 – Oct 4: 122 a day on average, the most 183 on Sep 26, the fewest 86 on Sep 7.
-    - The stats count each visitor once only within a day, a calendar week or a calendar month, so there is no count of different visitors for this span: someone who visited on several days counts once for each.
+    - There is no total of visitors for Sep 5 – Oct 4: the stats count each visitor once only within a day, a calendar week or a calendar month, so adding up the visitors of each day would count someone who visited on several days once for each.

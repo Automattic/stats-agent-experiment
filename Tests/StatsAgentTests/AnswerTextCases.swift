@@ -241,7 +241,7 @@ extension AnswerTextCase {
                         most: StatsFacts.Point(183, on: "Sep 26"),
                         fewest: StatsFacts.Point(86, on: "Sep 7")
                     ),
-                    StatsFacts.visitorsNotAddedUp
+                    StatsFacts.visitorsNotAddedUp(over: "Sep 5 – Oct 4", unit: "day")
                 ]
             )
         ],

@@ -40,10 +40,12 @@ public enum StatsFacts {
             .joined(separator: "\n\n")
     }
 
-    /// Why visitors over a span aren't added up.
-    public static let visitorsNotAddedUp =
-        "The stats count each visitor once only within a day, a calendar week or a calendar month, so there is no"
-        + " count of different visitors for this span: someone who visited on several days counts once for each."
+    /// Why visitors over `span`, such as "Sep 5 – Oct 4", aren't added up from those of each `unit`, such as "day".
+    public static func visitorsNotAddedUp(over span: String, unit: String) -> String {
+        "There is no total of visitors for \(span): the stats count each visitor once only within a day, a calendar"
+            + " week or a calendar month, so adding up the visitors of each \(unit) would count someone who visited"
+            + " on several \(unit)s once for each."
+    }
 
     /// "Likes, Sep 28 – Oct 4: 88."
     public static func total(_ title: String, _ value: Int) -> String {
