@@ -98,12 +98,14 @@ public enum StatsFacts {
         return "\(title): \(parts.joined(separator: ", "))."
     }
 
-    /// "Top posts by views, Oct 1 – 4: 1. A Weekend in the Douro Valley, 312. 2. About, 61. All views: 1,288." When
-    /// comparing spans, each item says how it changed from the span before, or that it wasn't listed then.
+    /// "Top posts by views, Oct 1 – 4: 1. A Weekend in the Douro Valley, 312. 2. About, 61. All views, listed or not:
+    /// 1,288." `metric` names the figure in the total, such as "views". When comparing spans, each item says how it
+    /// changed from the span before, or that it wasn't listed then.
     public static func ranking(
         _ title: String,
         _ items: [Item],
-        total: (title: String, value: Int)? = nil,
+        total: Int? = nil,
+        metric: String = "views",
         isPercentage: Bool = false
     ) -> String {
         guard !items.isEmpty else {
@@ -120,7 +122,8 @@ public enum StatsFacts {
                     }
                 return "\(index + 1). \(item.name), \(value)\(change)."
             }
-        let all = total.map { " \($0.title): \(number($0.value))." } ?? ""
+        // "Listed or not", so the model doesn't take the total for the listed items' own.
+        let all = total.map { " All \(metric), listed or not: \(number($0))." } ?? ""
         return "\(title): \(listed.joined(separator: " "))\(all)"
     }
 

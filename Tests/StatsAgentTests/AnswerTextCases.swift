@@ -193,7 +193,7 @@ extension AnswerTextCase {
                     StatsFacts.ranking(
                         "Top posts by views, Sep 28 – Oct 4",
                         posts(views: [482, 355, 291, 214, 97]),
-                        total: (title: "Total views", value: 2228)
+                        total: 2228
                     )
                 ]
             ),
@@ -267,7 +267,7 @@ extension AnswerTextCase {
                     StatsFacts.ranking(
                         "Top posts by views, Oct 1 – 4",
                         posts(views: [312, 241, 198, 143, 61]),
-                        total: (title: "Total views", value: 1288)
+                        total: 1288
                     )
                 ]
             )
@@ -312,7 +312,7 @@ extension AnswerTextCase {
                             StatsFacts.Item("Spain", 142),
                             StatsFacts.Item("Brazil", 104)
                         ],
-                        total: (title: "Total views", value: 1288)
+                        total: 1288
                     )
                 ]
             )

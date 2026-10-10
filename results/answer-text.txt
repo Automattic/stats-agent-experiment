@@ -13,10 +13,10 @@ Instructions:
 
 variant    figures given  wrong figures  not in the stats  failed     time
 responses          21/26              0                  2       0   17.9 s
-facts              23/26              0                  0       0   12.6 s
+facts              23/26              0                  0       0   12.3 s
 
 [today] "How does today's traffic compare to yesterday's?"
-  responses (1374 characters, 2.1 s): 284 ✓  322 ✓  131 ✓  117 ✓
+  responses (1374 characters, 2.0 s): 284 ✓  322 ✓  131 ✓  117 ✓
     Today's visitors (131) are higher than yesterday's (117). The number of views today (284) is lower than yesterday's (322).
   facts (343 characters, 1.1 s): 284 ✓  322 ✓  131 ✓  117 ✓
     Today had 284 views and 131 visitors, compared to yesterday's 322 views and 117 visitors. Views decreased by 11.8% and visitors increased by 12%.
@@ -40,15 +40,15 @@ facts              23/26              0                  0       0   12.6 s
 [week] "How did this week go compared with last week?"
   responses (1799 characters, 1.7 s): 2,228 ✓  1,947 ✗  14.4 ✗
     This week had 251 visits and 118 visitors, compared to last week's 229 visits and 104 visitors. The total post views for the week are 2228.
-  facts (556 characters, 1.3 s): 2,228 ✓  1,947 ✓  14.4 ✗
-    This week had more views than last week, with 2,228 views compared to 1,947. The number of likes also increased slightly, showing 88 likes for the week of Sep 28 – Oct 4.
+  facts (569 characters, 1.2 s): 2,228 ✓  1,947 ✓  14.4 ✓
+    This week had more views than last week, with 2,228 views compared to 1,947. The increase is 281 views, or 14.4%. There were 88 likes this week.
   facts given:
     Views, Sep 28 – Oct 4 against Sep 21 – 27
     - Views, Sep 28 – Oct 4: 2,228. Sep 21 – 27: 1,947. Change: +281 (+14.4%).
     - The most in a day: 398 on Oct 1.
     
     Top posts, Sep 28 – Oct 4
-    - Top posts by views, Sep 28 – Oct 4: 1. A Weekend in the Douro Valley, 482. 2. What I Pack for a Week of Hiking, 355. 3. Notes on Learning Portuguese, 291. 4. The Best Bakeries in Lisbon, 214. 5. About, 97. Total views: 2,228.
+    - Top posts by views, Sep 28 – Oct 4: 1. A Weekend in the Douro Valley, 482. 2. What I Pack for a Week of Hiking, 355. 3. Notes on Learning Portuguese, 291. 4. The Best Bakeries in Lisbon, 214. 5. About, 97. All views, listed or not: 2,228.
     
     Likes, Sep 28 – Oct 4
     - Likes, Sep 28 – Oct 4: 88.
@@ -62,11 +62,11 @@ facts              23/26              0                  0       0   12.6 s
     3. "Notes on Learning Portuguese" with 198 views,  
     4. "The Best Bakeries in Lisbon" with 143 views,  
     5. "About" with 61 views.
-  facts (305 characters, 1.7 s): douro ✓  312 ✓  hiking ✓  portuguese ✓  bakeries ✓
-    The top five posts by views this month are: 1. A Weekend in the Douro Valley with 312 views, 2. What I Pack for a Week of Hiking with 241 views, 3. Notes on Learning Portuguese with 198 views, 4. The Best Bakeries in Lisbon with 143 views, and 5. About with 61 views. The total views for these posts is 1,288.
+  facts (318 characters, 1.8 s): douro ✓  312 ✓  hiking ✓  portuguese ✓  bakeries ✓
+    The top five posts by views this month are: 1. A Weekend in the Douro Valley with 312 views, 2. What I Pack for a Week of Hiking with 241 views, 3. Notes on Learning Portuguese with 198 views, 4. The Best Bakeries in Lisbon with 143 views, and 5. About with 61 views. The total views for all posts, listed or not, is 1,288.
   facts given:
     Top posts, Oct 1 – 4
-    - Top posts by views, Oct 1 – 4: 1. A Weekend in the Douro Valley, 312. 2. What I Pack for a Week of Hiking, 241. 3. Notes on Learning Portuguese, 198. 4. The Best Bakeries in Lisbon, 143. 5. About, 61. Total views: 1,288.
+    - Top posts by views, Oct 1 – 4: 1. A Weekend in the Douro Valley, 312. 2. What I Pack for a Week of Hiking, 241. 3. Notes on Learning Portuguese, 198. 4. The Best Bakeries in Lisbon, 143. 5. About, 61. All views, listed or not: 1,288.
 
 [subscribers] "Is my subscriber count growing or shrinking lately?"
   responses (1614 characters, 1.8 s): 870 ✓  29 ✗
@@ -82,7 +82,7 @@ facts              23/26              0                  0       0   12.6 s
 [likes] "How many likes did I get this week?"
   responses (469 characters, 1.5 s): 88 ✗  not in the stats: 75
     You received a total of 75 likes this week. The stats show 12, 9, 15, 21, 18, 7, and 6 likes for the days ending in 2026-09-28 through 2026-10-04.
-  facts (138 characters, 0.7 s): 88 ✓
+  facts (138 characters, 0.6 s): 88 ✓
     You got 88 likes this week. The most in a day was 21 on Oct 1.
   facts given:
     Likes, Sep 28 – Oct 4
@@ -118,11 +118,11 @@ facts              23/26              0                  0       0   12.6 s
 [countries] "Which countries did my visitors come from this month?"
   responses (997 characters, 1.5 s): portugal ✓  united states ✓  512 ✓
     Your visitors came from Portugal, United States, United Kingdom, Spain, and Brazil this month. Portugal had 512 views, United States had 301, United Kingdom had 188, Spain had 142, and Brazil had 104 views. There were also 41 other views.
-  facts (241 characters, 1.4 s): portugal ✓  united states ✓  512 ✓
-    The countries visitors came from this month are Portugal, United States, United Kingdom, Spain, and Brazil. Portugal had 512 views, United States had 301, United Kingdom had 188, Spain had 142, and Brazil had 104. The total views for the period were 1,288.
+  facts (254 characters, 1.0 s): portugal ✓  united states ✓  512 ✗
+    The countries from which visitors came this month are Portugal, United States, United Kingdom, Spain, and Brazil. The total number of views from all countries, listed or not, is 1,288.
   facts given:
     Countries, Oct 1 – 4
-    - Countries by views, Oct 1 – 4: 1. Portugal, 512. 2. United States, 301. 3. United Kingdom, 188. 4. Spain, 142. 5. Brazil, 104. Total views: 1,288.
+    - Countries by views, Oct 1 – 4: 1. Portugal, 512. 2. United States, 301. 3. United Kingdom, 188. 4. Spain, 142. 5. Brazil, 104. All views, listed or not: 1,288.
 
 [visitors-30-days] "How many visitors did I have in the last 30 days?"
   responses (1189 characters, 1.6 s): 122 ✗  not in the stats: 1,026
