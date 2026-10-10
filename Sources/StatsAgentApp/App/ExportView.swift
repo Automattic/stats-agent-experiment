@@ -307,21 +307,21 @@ struct ExportDocument: FileDocument {
 }
 
 extension FocusedValues {
-    /// Opens the Export Data sheet, while the window can export.
-    @Entry var exportData: (() -> Void)?
+    /// Whether the Export Data sheet is open, while the window can export.
+    @Entry var isExporting: Binding<Bool>?
 }
 
 /// File → Export Data… (⇧⌘E), in place of the File menu's import and export items, while the window can export.
 struct ExportCommands: Commands {
-    @FocusedValue(\.exportData) private var exportData
+    @FocusedBinding(\.isExporting) private var isExporting
 
     var body: some Commands {
         CommandGroup(replacing: .importExport) {
             Button("Export Data…") {
-                exportData?()
+                isExporting = true
             }
             .keyboardShortcut("e", modifiers: [.command, .shift])
-            .disabled(exportData == nil)
+            .disabled(isExporting == nil)
         }
     }
 }

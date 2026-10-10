@@ -49,7 +49,7 @@ struct RootView: View {
         .sheet(isPresented: $isExporting) {
             ExportView(database: questions.recorder.database)
         }
-        .focusedSceneValue(\.exportData, exportData)
+        .focusedSceneValue(\.isExporting, questions.recorder.database == nil ? nil : $isExporting)
         .confirmationDialog("Log out of WordPress.com?", isPresented: $isLoggingOut) {
             Button("Log Out", action: account.logOut)
                 .keyboardShortcut(.defaultAction)
@@ -80,13 +80,5 @@ struct RootView: View {
                 deleteError = Answer.message(for: error)
             }
         }
-    }
-
-    /// Opens the export sheet, or nil when the database couldn't be opened.
-    private var exportData: (() -> Void)? {
-        guard questions.recorder.database != nil else {
-            return nil
-        }
-        return { isExporting = true }
     }
 }
