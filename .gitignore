@@ -10,3 +10,7 @@ wp_com_credentials.json
 .DS_Store
 xcuserdata/
 DerivedData/
+.bundle/
+vendor/bundle/
+fastlane/report.xml
+fastlane/README.md
