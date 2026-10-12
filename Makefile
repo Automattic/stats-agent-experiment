@@ -1,4 +1,4 @@
-.PHONY: app run previews icon test experiments prompt-set format lint
+.PHONY: app run previews icon test test-deterministic experiments prompt-set format format-check lint
 
 CONFIGURATION ?= release
 APP = .build/app/$(CONFIGURATION)/Stats agent.app
@@ -6,6 +6,9 @@ APP = .build/app/$(CONFIGURATION)/Stats agent.app
 # codesigning`. Ad hoc by default, which makes the signature's designated requirement the build's hash, so the
 # keychain's Always Allow for the token lasts until the next build.
 SIGNING_IDENTITY ?= -
+
+FORMAT_SOURCES = Package.swift Sources/StatsAgent Sources/stats-agent Sources/StatsAgentApp/App \
+	Sources/StatsAgentDatabase Sources/generate-credentials Sources/generate-icon Plugins Tests
 
 # Builds the proof of concept's app as a bundle, .build/app/release/Stats agent.app, with its icon, signed with
 # SIGNING_IDENTITY. Its Info.plist records the commit it was built from. It stops without wp_com_credentials.json, the
@@ -42,6 +45,10 @@ icon:
 test:
 	swift test
 
+# No model calls or experiment output.
+test-deterministic:
+	swift test --filter 'CardPickerTests|StatsPeriodsTests|AppDatabaseTests|FeedbackReportTests'
+
 # Runs the selection experiments on the original prompts one suite at a time. `swift test` runs suites in parallel,
 # which makes the timings in the results files meaningless. Every miss is a test issue, so each run exits non-zero;
 # the leading `-` keeps make going to the next one.
@@ -58,8 +65,10 @@ prompt-set:
 # Sources/StatsAgentApp/JetpackStats is copied from the WordPress iOS app and keeps its own formatting, so it's left
 # out here and in .swiftlint.yml.
 format:
-	swift format --in-place --recursive Package.swift Sources/StatsAgent Sources/stats-agent Sources/StatsAgentApp/App \
-		Sources/StatsAgentDatabase Sources/generate-credentials Sources/generate-icon Plugins Tests
+	swift format --in-place --recursive $(FORMAT_SOURCES)
+
+format-check:
+	swift format lint --strict --recursive $(FORMAT_SOURCES)
 
 # SwiftLint runs through the BuildTools package plugin, pinned to `swiftlint_version` in .swiftlint.yml.
 lint:

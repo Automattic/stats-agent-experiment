@@ -1,0 +1,4 @@
+#!/bin/sh
+# Sourced before pipeline upload.
+export IMAGE_ID="xcode-$(cat .xcode-version)"
+export CI_TOOLKIT_PLUGIN='automattic/a8c-ci-toolkit#6.3.0'
