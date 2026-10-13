@@ -10,7 +10,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 
 ## Map
 
-- `.buildkite/`: CI checks and tag releases. `fastlane/`: signing and notarization.
+- `.buildkite/`: CI checks and release launcher. `fastlane/`: signing, notarization, and draft GitHub releases.
 - `Sources/StatsAgent/`: the model steps. `OptionSelector` picks among options in one call; `CatalogNavigator` descends a catalog, with "none of these" and backtracking; `StatsEndpoints` describes the 21 wordpress-rs stats calls, and `DataCatalog` the same data by what's counted; `CardPicker` holds the app's steps; `ParameterAgent` fills in spans and figures, which `StatsPeriods` turns into dates; `AnswerWriter` writes a short answer after the cards, from the facts `StatsFacts` writes for each of them, which `AnswerTextTests` measures too.
 - `Sources/StatsAgentApp/`: the macOS app. `JetpackStats/` is copied from the WordPress iOS app and left out of `make format` and SwiftLint.
 - `Sources/StatsAgentDatabase/`: the app's SQLite database, through GRDB. `AppDatabase` holds the migrations and the writes; `Records` has a type per table; `Export` reads questions into `ExportV1`, the JSON people share. The schema changes only through a new migration.

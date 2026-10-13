@@ -2,12 +2,14 @@
 
 require 'fileutils'
 require 'json'
+require 'octokit'
 
 PROJECT_ROOT = File.expand_path('..', __dir__)
 APPLE_TEAM_ID = 'PZYM8XX95Q'
 APP_PATH = File.join(PROJECT_ROOT, '.build/app/release/Stats agent.app')
+GITHUB_REPOSITORY = 'Automattic/stats-agent-experiment'
 
-# Builds a signed, notarized arm64 app for a matching version tag.
+# Prepares a signed, notarized app in a draft GitHub release for a matching version tag.
 lane :release do
   tag = ENV.fetch('BUILDKITE_TAG', '')
   UI.user_error!('Release requires a vMAJOR.MINOR.PATCH tag.') unless tag.match?(/\Av[0-9]+\.[0-9]+\.[0-9]+\z/)
@@ -17,6 +19,24 @@ lane :release do
   )
   UI.user_error!('Release tag must match CFBundleShortVersionString.') unless tag == "v#{version}"
 
+  artifact = ".build/releases/Stats-agent-#{version}-arm64.zip"
+  github = Octokit::Client.new(access_token: ENV.fetch('GITHUB_TOKEN'), auto_paginate: true)
+  release = find_github_release(github: github, tag: tag, asset: File.basename(artifact))
+  if release && !release[:draft]
+    UI.success("Release #{tag} is already published.")
+    next
+  end
+
+  build_signed_app(artifact: File.join(PROJECT_ROOT, artifact))
+  Dir.chdir(PROJECT_ROOT) do
+    sh('buildkite-agent', 'artifact', 'upload', artifact)
+    upload_release_draft(github: github, tag: tag, version: version, artifact: artifact, release: release)
+  end
+end
+
+# Builds and verifies the app before packaging it.
+# @option options [String] :artifact Absolute path of the release ZIP.
+private_lane :build_signed_app do |options|
   %w[
     WP_COM_CLIENT_SECRET
     MATCH_S3_ACCESS_KEY MATCH_S3_SECRET_ACCESS_KEY MATCH_PASSWORD
@@ -70,8 +90,51 @@ lane :release do
   sh('xcrun', 'stapler', 'validate', APP_PATH)
   sh('spctl', '--assess', '--type', 'execute', '--verbose=2', APP_PATH)
 
-  artifact = File.join(PROJECT_ROOT, ".build/releases/Stats-agent-#{version}-arm64.zip")
+  artifact = options.fetch(:artifact)
   FileUtils.mkdir_p(File.dirname(artifact))
   FileUtils.rm_f(artifact)
   sh('ditto', '-c', '-k', '--sequesterRsrc', '--keepParent', APP_PATH, artifact)
+end
+
+# Finds the tag's release, rejecting ambiguous releases or unexpected assets.
+# @return [Sawyer::Resource, nil] An existing draft or complete published release, if present.
+def find_github_release(github:, tag:, asset:)
+  releases = github.releases(GITHUB_REPOSITORY, per_page: 100)
+  UI.user_error!('GitHub release listing is incomplete; retry after the rate limit resets.') if github.last_response.rels[:next]
+  matches = releases.select { |release| release[:tag_name] == tag }
+  UI.user_error!("Multiple releases found for #{tag}; refusing to modify them.") if matches.length > 1
+  release = matches.first
+  return unless release
+
+  assets = release[:assets]
+  if release[:draft]
+    unless assets.all? { |entry| entry[:name] == asset }
+      UI.user_error!("Draft release #{tag} has unexpected assets; refusing to modify it.")
+    end
+  else
+    uploaded = assets.any? do |entry|
+      entry[:name] == asset && entry[:state] == 'uploaded' && entry[:size] > 0
+    end
+    UI.user_error!("Published release #{tag} is missing #{asset}; refusing to modify it.") unless uploaded
+  end
+  release
+end
+
+# Creates or resumes a draft, leaving publication to a maintainer.
+# @param release [Sawyer::Resource, nil] The release found before building.
+def upload_release_draft(github:, tag:, version:, artifact:, release:)
+  unless release
+    github.ref(GITHUB_REPOSITORY, "tags/#{tag}")
+    release = github.create_release(GITHUB_REPOSITORY, tag,
+                                    name: "Stats agent #{version}", draft: true, generate_release_notes: true)
+  end
+  release = github.release(release[:url])
+  unless release[:draft] == true
+    UI.user_error!("Release #{tag} was published during this build; refusing to modify it.")
+  end
+  github.release_assets(release[:url]).select { |entry| entry[:name] == File.basename(artifact) }.each do |entry|
+    github.delete_release_asset(entry[:url])
+  end
+  github.upload_asset(release[:url], artifact, content_type: 'application/zip')
+  UI.success("Release #{tag} is ready as a draft. Review it and publish it from GitHub Releases.")
 end
