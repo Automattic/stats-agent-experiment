@@ -10,6 +10,7 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 
 ## Map
 
+- `.buildkite/`: CI checks and tag releases. `fastlane/`: signing and notarization.
 - `Sources/StatsAgent/`: the model steps. `OptionSelector` picks among options in one call; `CatalogNavigator` descends a catalog, with "none of these" and backtracking; `StatsEndpoints` describes the 21 wordpress-rs stats calls, and `DataCatalog` the same data by what's counted; `CardPicker` holds the app's steps; `ParameterAgent` fills in spans and figures, which `StatsPeriods` turns into dates; `AnswerWriter` writes a short answer after the cards, from the facts `StatsFacts` writes for each of them, which `AnswerTextTests` measures too.
 - `Sources/StatsAgentApp/`: the macOS app. `JetpackStats/` is copied from the WordPress iOS app and left out of `make format` and SwiftLint.
 - `Sources/StatsAgentDatabase/`: the app's SQLite database, through GRDB. `AppDatabase` holds the migrations and the writes; `Records` has a type per table; `Export` reads questions into `ExportV1`, the JSON people share. The schema changes only through a new migration.
@@ -44,4 +45,4 @@ Turns natural-language questions about a WordPress.com site's stats into stats c
 - swift-format moves a brace onto its own line when a signature is too long, which SwiftLint's `opening_brace` rejects. Put the parameters one per line.
 - `ParameterAgent` and `ParameterFiller` cap generation at 200 tokens, because greedy sampling can loop.
 - The model can refuse a harmless question with a `LanguageModelError`. Catching it needs `#available(macOS 27.0, *)`.
-- The keychain asks again for the token whenever a build's code changes: an ad hoc signature's designated requirement is the build's hash, and with a self-signed certificate in `SIGNING_IDENTITY` it still asked after code changes. So only release builds keep the token there; debug builds keep it while they run and leave the keychain alone.
+- Release builds store the token in the keychain. Ad hoc signatures change with each build, so they prompt again; Developer ID signatures keep a stable requirement tied to the signing team and app identifier, allowing access across releases. Switching from an ad hoc build may prompt once more. Debug builds keep the token in memory.

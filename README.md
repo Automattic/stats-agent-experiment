@@ -6,9 +6,18 @@ It holds the experiments, with their questions and latest results, and a macOS a
 
 ## Downloading the app
 
-Download `Stats-agent-VERSION-arm64.zip` from the **Signed macOS app** job in [Buildkite](https://buildkite.com/automattic/stats-agent-experiment). Unzip it and move **Stats agent.app** to Applications.
+Download `Stats-agent-VERSION-arm64.zip` from [GitHub Releases](https://github.com/Automattic/stats-agent-experiment/releases/latest). Unzip it and move **Stats agent.app** to Applications.
 
-Releases use `vMAJOR.MINOR.PATCH` tags matching `CFBundleShortVersionString` in [Info.plist](Sources/StatsAgentApp/Info.plist).
+## Releasing
+
+Use a dedicated WordPress.com OAuth client restricted to the `statsagent://authorized` redirect; its client secret is embedded in the public download.
+
+1. Update `CFBundleShortVersionString` and increment `CFBundleVersion` in [Info.plist](Sources/StatsAgentApp/Info.plist), then merge to `trunk`.
+2. Tag that commit with the matching version and push it: `git tag v0.1.0 <commit>` then `git push origin v0.1.0` (replace the version).
+3. Buildkite checks, signs, and notarizes the app, then uploads the ZIP to a draft on [GitHub Releases](https://github.com/Automattic/stats-agent-experiment/releases).
+4. Download the draft's ZIP and check that the app opens, logs in, and loads stats. Publish the release from GitHub when it's ready; downloads then become public.
+
+Failed uploads leave a draft that a Buildkite retry can resume. Published releases are immutable; fixes need a new version.
 
 ## Running the app
 

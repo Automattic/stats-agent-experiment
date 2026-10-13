@@ -27,8 +27,11 @@ steps:
   - label: ":apple: Signed macOS app"
     key: release
     command: .buildkite/commands/release.sh
+    timeout_in_minutes: 60
     if: build.tag =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
     depends_on: [lint, build-and-test]
+    concurrency: 1
+    concurrency_group: stats-agent-experiment/releases
     agents:
       queue: mac
     plugins: [$CI_TOOLKIT_PLUGIN]

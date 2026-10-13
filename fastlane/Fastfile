@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'fileutils'
+require 'json'
 
 PROJECT_ROOT = File.expand_path('..', __dir__)
 APPLE_TEAM_ID = 'PZYM8XX95Q'
@@ -8,7 +9,6 @@ APP_PATH = File.join(PROJECT_ROOT, '.build/app/release/Stats agent.app')
 
 # Builds a signed, notarized arm64 app for a matching version tag.
 lane :release do
-  # Also validate direct lane invocations.
   tag = ENV.fetch('BUILDKITE_TAG', '')
   UI.user_error!('Release requires a vMAJOR.MINOR.PATCH tag.') unless tag.match?(/\Av[0-9]+\.[0-9]+\.[0-9]+\z/)
   version = get_info_plist_value(
@@ -18,11 +18,15 @@ lane :release do
   UI.user_error!('Release tag must match CFBundleShortVersionString.') unless tag == "v#{version}"
 
   %w[
-    WP_COM_CLIENT_ID WP_COM_CLIENT_SECRET
+    WP_COM_CLIENT_SECRET
     MATCH_S3_ACCESS_KEY MATCH_S3_SECRET_ACCESS_KEY MATCH_PASSWORD
     APP_STORE_CONNECT_API_KEY_KEY_ID APP_STORE_CONNECT_API_KEY_ISSUER_ID APP_STORE_CONNECT_API_KEY_KEY
   ].each do |key|
     UI.user_error!("Required environment variable #{key} is missing or empty.") if ENV.fetch(key, '').empty?
+  end
+  client_id = ENV.fetch('WP_COM_CLIENT_ID', '')
+  unless client_id.match?(/\A[1-9][0-9]*\z/) && client_id.to_i <= (2**64 - 1)
+    UI.user_error!('WP_COM_CLIENT_ID must be a positive UInt64 integer.')
   end
 
   setup_ci
@@ -44,24 +48,29 @@ lane :release do
   fingerprints = identities.scan(/\b([0-9A-F]{40}) "Developer ID Application: [^"]+ \(#{APPLE_TEAM_ID}\)"/).flatten.uniq
   UI.user_error!('Expected one Automattic Developer ID Application identity in the CI keychain.') unless fingerprints.length == 1
 
-  Dir.chdir(PROJECT_ROOT) do
-    sh('make', 'app', 'CONFIGURATION=release', 'ARCH=arm64',
-       "SIGNING_IDENTITY=#{fingerprints.first}", 'SIGNING_FLAGS=--options runtime --timestamp')
+  credentials = File.join(PROJECT_ROOT, 'wp_com_credentials.json')
+  # EXCL preserves existing files and symlinks; cleanup only runs after we create the file.
+  File.open(credentials, File::WRONLY | File::CREAT | File::EXCL, 0o600) do |file|
+    begin
+      file.write(JSON.generate(client_id: client_id.to_i, client_secret: ENV.fetch('WP_COM_CLIENT_SECRET')))
+      file.close
+      Dir.chdir(PROJECT_ROOT) do
+        sh('make', 'app', 'CONFIGURATION=release', 'ARCH=arm64',
+           "SIGNING_IDENTITY=#{fingerprints.first}", 'SIGNING_FLAGS=--options runtime --timestamp')
+      end
+    ensure
+      FileUtils.rm_f(credentials)
+    end
   end
 
-  api_key = app_store_connect_api_key(
-    key_id: ENV.fetch('APP_STORE_CONNECT_API_KEY_KEY_ID'),
-    issuer_id: ENV.fetch('APP_STORE_CONNECT_API_KEY_ISSUER_ID'),
-    key_content: ENV.fetch('APP_STORE_CONNECT_API_KEY_KEY'),
-    is_key_content_base64: false
-  )
-  notarize(package: APP_PATH, api_key: api_key, skip_stapling: false, print_log: true)
+  api_key = app_store_connect_api_key
+  notarize(package: APP_PATH, api_key: api_key, print_log: true)
 
   sh('codesign', '--verify', '--deep', '--strict', '--verbose=2', APP_PATH)
   sh('xcrun', 'stapler', 'validate', APP_PATH)
   sh('spctl', '--assess', '--type', 'execute', '--verbose=2', APP_PATH)
 
-  artifact = File.join(PROJECT_ROOT, ".build/artifacts/Stats-agent-#{version}-arm64.zip")
+  artifact = File.join(PROJECT_ROOT, ".build/releases/Stats-agent-#{version}-arm64.zip")
   FileUtils.mkdir_p(File.dirname(artifact))
   FileUtils.rm_f(artifact)
   sh('ditto', '-c', '-k', '--sequesterRsrc', '--keepParent', APP_PATH, artifact)

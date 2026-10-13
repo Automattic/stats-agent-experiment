@@ -6,8 +6,10 @@ APP = .build/app/$(CONFIGURATION)/Stats agent.app
 # codesigning`. Ad hoc by default, which makes the signature's designated requirement the build's hash, so the
 # keychain's Always Allow for the token lasts until the next build.
 SIGNING_IDENTITY ?= -
+# Optional target architecture; SwiftPM uses the host architecture by default.
 ARCH ?=
 SWIFT_ARCH_FLAGS = $(if $(ARCH),--arch $(ARCH))
+# Extra codesign options, such as hardened runtime and timestamping for releases.
 SIGNING_FLAGS ?=
 
 FORMAT_SOURCES = Package.swift Sources/StatsAgent Sources/stats-agent Sources/StatsAgentApp/App \
@@ -21,8 +23,9 @@ app:
 	swift build --configuration $(CONFIGURATION) $(SWIFT_ARCH_FLAGS) --product stats-agent-app
 	rm -rf "$(APP)"
 	mkdir -p "$(APP)/Contents/MacOS" "$(APP)/Contents/Resources"
-	cp "$$(swift build --configuration $(CONFIGURATION) $(SWIFT_ARCH_FLAGS) --show-bin-path)/stats-agent-app" "$(APP)/Contents/MacOS/"
-	@for bundle in "$$(swift build --configuration $(CONFIGURATION) $(SWIFT_ARCH_FLAGS) --show-bin-path)"/*.bundle; do \
+	bin_path=$$(swift build --configuration $(CONFIGURATION) $(SWIFT_ARCH_FLAGS) --show-bin-path) && \
+	cp "$$bin_path/stats-agent-app" "$(APP)/Contents/MacOS/" && \
+	for bundle in "$$bin_path"/*.bundle; do \
 		[ ! -d "$$bundle" ] || cp -R "$$bundle" "$(APP)/Contents/Resources/" || exit 1; \
 	done
 	cp Sources/StatsAgentApp/Info.plist "$(APP)/Contents/"
