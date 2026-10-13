@@ -2,5 +2,4 @@
 
 source 'https://rubygems.org'
 
-gem 'fastlane', '2.240.0'
-gem 'octokit', '~> 10.0'
+gem 'fastlane-plugin-wpmreleasetoolkit', '~> 15.1'
