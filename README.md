@@ -23,7 +23,7 @@ Retry failed builds in Buildkite. If a fix needs a new commit, start another rel
 
 ## Running the app
 
-Building requires full Xcode 27, selected with `xcode-select`.
+Building from source requires Xcode 27.
 
 1. `cp wp_com_credentials.json-example wp_com_credentials.json`, then replace its values with the WordPress.com OAuth client's ID, a number, and secret.
 2. `make run` builds the app and runs it, with its database in `data/`. It asks you to log in each time it starts.
