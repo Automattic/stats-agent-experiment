@@ -1,5 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/buildkite/pipeline-schema/main/schema.json
 ---
+agents:
+  queue: mac
 env:
   IMAGE_ID: $IMAGE_ID
 
@@ -7,8 +9,6 @@ steps:
   - label: ":lint-roller: Format and lint"
     key: lint
     command: .buildkite/commands/lint.sh
-    agents:
-      queue: mac
     plugins: [$CI_TOOLKIT_PLUGIN]
     notify:
       - github_commit_status:
@@ -17,8 +17,6 @@ steps:
   - label: ":swift: Build and deterministic tests"
     key: build-and-test
     command: .buildkite/commands/build-and-test.sh
-    agents:
-      queue: mac
     plugins: [$CI_TOOLKIT_PLUGIN]
     notify:
       - github_commit_status:
@@ -31,8 +29,6 @@ steps:
     depends_on: [lint, build-and-test]
     concurrency: 1
     concurrency_group: stats-agent-experiment/releases
-    agents:
-      queue: mac
     plugins: [$CI_TOOLKIT_PLUGIN]
     notify:
       - github_commit_status:
