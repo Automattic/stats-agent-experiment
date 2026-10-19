@@ -1,0 +1,167 @@
+# frozen_string_literal: true
+
+require 'fileutils'
+require 'json'
+require 'octokit'
+
+PROJECT_ROOT = File.expand_path('..', __dir__)
+APPLE_TEAM_ID = 'PZYM8XX95Q'
+APP_PATH = File.join(PROJECT_ROOT, '.build/app/release/Stats agent.app')
+GITHUB_REPOSITORY = 'Automattic/stats-agent-experiment'
+
+# Starts a release build on Buildkite and prints its URL.
+# @option options [String] :branch Remote branch to build (defaults to trunk).
+# @option options [String] :commit Commit SHA to build (defaults to the branch's HEAD).
+lane :trigger_new_release do |options|
+  buildkite_trigger_build(
+    buildkite_organization: 'automattic',
+    buildkite_pipeline: 'stats-agent-experiment',
+    branch: options[:branch] || 'trunk',
+    commit: options[:commit] || 'HEAD',
+    pipeline_file: 'release.yml',
+    message: 'Prepare release draft'
+  )
+end
+
+# Prepares a signed, notarized app in a draft GitHub release for the current commit.
+lane :release do
+  version = get_info_plist_value(
+    path: File.join(PROJECT_ROOT, 'Sources/StatsAgentApp/Info.plist'),
+    key: 'CFBundleShortVersionString'
+  )
+  UI.user_error!('App version must be MAJOR.MINOR.PATCH.') unless version.to_s.match?(/\A[0-9]+\.[0-9]+\.[0-9]+\z/)
+  tag = "v#{version}"
+  commit = last_git_commit[:commit_hash]
+
+  artifact = ".build/releases/Stats-agent-#{version}-arm64.zip"
+  github = Octokit::Client.new(access_token: ENV.fetch('GITHUB_TOKEN'), auto_paginate: true)
+  release = find_github_release(github: github, tag: tag, asset: File.basename(artifact))
+  if release && !release[:draft]
+    UI.success("Release #{tag} is already published.")
+    next
+  end
+  verify_release_tag_available(github: github, tag: tag)
+
+  build_signed_app(artifact: File.join(PROJECT_ROOT, artifact))
+  Dir.chdir(PROJECT_ROOT) do
+    sh('buildkite-agent', 'artifact', 'upload', artifact)
+    upload_release_draft(github: github, tag: tag, version: version, commit: commit, artifact: artifact, release: release)
+  end
+end
+
+# Builds and verifies the app before packaging it.
+# @option options [String] :artifact Absolute path of the release ZIP.
+private_lane :build_signed_app do |options|
+  %w[
+    WP_COM_CLIENT_SECRET
+    MATCH_S3_ACCESS_KEY MATCH_S3_SECRET_ACCESS_KEY MATCH_PASSWORD
+    APP_STORE_CONNECT_API_KEY_KEY_ID APP_STORE_CONNECT_API_KEY_ISSUER_ID APP_STORE_CONNECT_API_KEY_KEY
+  ].each do |key|
+    UI.user_error!("Required environment variable #{key} is missing or empty.") if ENV.fetch(key, '').empty?
+  end
+  client_id = ENV.fetch('WP_COM_CLIENT_ID', '')
+  unless client_id.match?(/\A[1-9][0-9]*\z/) && client_id.to_i <= (2**64 - 1)
+    UI.user_error!('WP_COM_CLIENT_ID must be a positive UInt64 integer.')
+  end
+
+  setup_ci
+  sync_code_signing(
+    type: 'developer_id',
+    platform: 'macos',
+    team_id: APPLE_TEAM_ID,
+    app_identifier: [],
+    skip_provisioning_profiles: true,
+    readonly: true,
+    storage_mode: 's3',
+    s3_bucket: 'a8c-fastlane-match',
+    s3_region: 'us-east-2'
+  )
+
+  # Use this team's Developer ID from the CI keychain.
+  keychain = FastlaneCore::Helper.keychain_path(ENV.fetch('MATCH_KEYCHAIN_NAME'))
+  identities = sh('security', 'find-identity', '-v', '-p', 'codesigning', keychain, log: false)
+  fingerprints = identities.scan(/\b([0-9A-F]{40}) "Developer ID Application: [^"]+ \(#{APPLE_TEAM_ID}\)"/).flatten.uniq
+  UI.user_error!('Expected one Automattic Developer ID Application identity in the CI keychain.') unless fingerprints.length == 1
+
+  credentials = File.join(PROJECT_ROOT, 'wp_com_credentials.json')
+  # EXCL preserves existing files and symlinks; cleanup only runs after we create the file.
+  File.open(credentials, File::WRONLY | File::CREAT | File::EXCL, 0o600) do |file|
+    begin
+      file.write(JSON.generate(client_id: client_id.to_i, client_secret: ENV.fetch('WP_COM_CLIENT_SECRET')))
+      file.close
+      Dir.chdir(PROJECT_ROOT) do
+        sh('make', 'app', 'CONFIGURATION=release', 'ARCH=arm64',
+           "SIGNING_IDENTITY=#{fingerprints.first}", 'SIGNING_FLAGS=--options runtime --timestamp')
+      end
+    ensure
+      FileUtils.rm_f(credentials)
+    end
+  end
+
+  api_key = app_store_connect_api_key
+  notarize(package: APP_PATH, api_key: api_key, print_log: true)
+
+  macos_verify_code_signing(artifact_path: [APP_PATH])
+
+  artifact = options.fetch(:artifact)
+  FileUtils.mkdir_p(File.dirname(artifact))
+  FileUtils.rm_f(artifact)
+  sh('ditto', '-c', '-k', '--sequesterRsrc', '--keepParent', APP_PATH, artifact)
+end
+
+# Finds the tag's release, rejecting ambiguous releases or unexpected assets.
+# @return [Sawyer::Resource, nil] An existing draft or complete published release, if present.
+def find_github_release(github:, tag:, asset:)
+  releases = github.releases(GITHUB_REPOSITORY, per_page: 100)
+  UI.user_error!('GitHub release listing is incomplete; retry after the rate limit resets.') if github.last_response.rels[:next]
+  matches = releases.select { |release| release[:tag_name] == tag }
+  UI.user_error!("Multiple releases found for #{tag}; refusing to modify them.") if matches.length > 1
+  release = matches.first
+  return unless release
+
+  assets = release[:assets]
+  if release[:draft]
+    unless assets.all? { |entry| entry[:name] == asset }
+      UI.user_error!("Draft release #{tag} has unexpected assets; refusing to modify it.")
+    end
+  else
+    uploaded = assets.any? do |entry|
+      entry[:name] == asset && entry[:state] == 'uploaded' && entry[:size] > 0
+    end
+    UI.user_error!("Published release #{tag} is missing #{asset}; refusing to modify it.") unless uploaded
+  end
+  release
+end
+
+# Leaves tag creation to GitHub when the draft is published.
+def verify_release_tag_available(github:, tag:)
+  github.get("repos/#{GITHUB_REPOSITORY}/git/ref/tags/#{tag}")
+  UI.user_error!("Tag #{tag} already exists; choose a new app version.")
+rescue Octokit::NotFound
+  nil
+end
+
+# Creates or resumes a draft, leaving publication to a maintainer.
+# @param release [Sawyer::Resource, nil] The release found before building.
+def upload_release_draft(github:, tag:, version:, commit:, artifact:, release:)
+  verify_release_tag_available(github: github, tag: tag)
+  unless release
+    release = github.create_release(GITHUB_REPOSITORY, tag,
+                                    name: "Stats agent #{version}", target_commitish: commit,
+                                    draft: true, generate_release_notes: true)
+  end
+  release = github.release(release[:url])
+  unless release[:draft] == true
+    UI.user_error!("Release #{tag} was published during this build; refusing to modify it.")
+  end
+  github.release_assets(release[:url]).select { |entry| entry[:name] == File.basename(artifact) }.each do |entry|
+    github.delete_release_asset(entry[:url])
+  end
+  # Remove the old binary before retargeting a draft to a replacement build.
+  if release[:target_commitish] != commit
+    notes = github.post("repos/#{GITHUB_REPOSITORY}/releases/generate-notes", tag_name: tag, target_commitish: commit)
+    github.update_release(release[:url], target_commitish: commit, body: notes[:body])
+  end
+  github.upload_asset(release[:url], artifact, content_type: 'application/zip')
+  UI.success("Release #{tag} is ready as a draft. Review it and publish it from GitHub Releases.")
+end

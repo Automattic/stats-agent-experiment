@@ -6,6 +6,11 @@ APP = .build/app/$(CONFIGURATION)/Stats agent.app
 # codesigning`. Ad hoc by default, which makes the signature's designated requirement the build's hash, so the
 # keychain's Always Allow for the token lasts until the next build.
 SIGNING_IDENTITY ?= -
+# Optional target architecture; SwiftPM uses the host architecture by default.
+ARCH ?=
+SWIFT_ARCH_FLAGS = $(if $(ARCH),--arch $(ARCH))
+# Extra codesign options, such as hardened runtime and timestamping for releases.
+SIGNING_FLAGS ?=
 
 FORMAT_SOURCES = Package.swift Sources/StatsAgent Sources/stats-agent Sources/StatsAgentApp/App \
 	Sources/StatsAgentDatabase Sources/generate-credentials Sources/generate-icon Plugins Tests
@@ -15,14 +20,18 @@ FORMAT_SOURCES = Package.swift Sources/StatsAgent Sources/stats-agent Sources/St
 # WordPress.com OAuth client the app logs in with, which CredentialsPlugin compiles in.
 app:
 	@test -f wp_com_credentials.json || { echo "make app needs wp_com_credentials.json in $(CURDIR)."; exit 1; }
-	swift build --configuration $(CONFIGURATION) --product stats-agent-app
+	swift build --configuration $(CONFIGURATION) $(SWIFT_ARCH_FLAGS) --product stats-agent-app
 	rm -rf "$(APP)"
 	mkdir -p "$(APP)/Contents/MacOS" "$(APP)/Contents/Resources"
-	cp "$$(swift build --configuration $(CONFIGURATION) --show-bin-path)/stats-agent-app" "$(APP)/Contents/MacOS/"
+	bin_path=$$(swift build --configuration $(CONFIGURATION) $(SWIFT_ARCH_FLAGS) --show-bin-path) && \
+	cp "$$bin_path/stats-agent-app" "$(APP)/Contents/MacOS/" && \
+	for bundle in "$$bin_path"/*.bundle; do \
+		[ ! -d "$$bundle" ] || cp -R "$$bundle" "$(APP)/Contents/Resources/" || exit 1; \
+	done
 	cp Sources/StatsAgentApp/Info.plist "$(APP)/Contents/"
 	cp Sources/StatsAgentApp/AppIcon.icns "$(APP)/Contents/Resources/"
 	plutil -insert StatsAgentCommit -string "$$(git describe --always --dirty)" "$(APP)/Contents/Info.plist"
-	codesign --force --sign "$(SIGNING_IDENTITY)" "$(APP)"
+	codesign --force --sign "$(SIGNING_IDENTITY)" $(SIGNING_FLAGS) "$(APP)"
 
 # Builds the app as a debug bundle, .build/app/debug/Stats agent.app, and runs it from here, with its database in data/.
 run: CONFIGURATION = debug
