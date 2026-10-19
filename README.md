@@ -12,10 +12,11 @@ Download `Stats-agent-VERSION-arm64.zip` from [GitHub Releases](https://github.c
 
 Use a dedicated WordPress.com OAuth client restricted to the `statsagent://authorized` redirect; its client secret is embedded in the public download.
 
-Run `bundle install` and export `BUILDKITE_API_TOKEN` with `write_builds` access to the pipeline.
-
 1. Update `CFBundleShortVersionString` and increment `CFBundleVersion` in [Info.plist](Sources/StatsAgentApp/Info.plist), then merge to `trunk`.
-2. Run `bundle exec fastlane trigger_new_release` to build the latest `trunk`. Append `commit:<sha>` to choose a commit, or `branch:<name>` to test a branch. The command prints the Buildkite link.
+2. Run `bundle install` if needed, and make sure `BUILDKITE_API_TOKEN` is set in your environment with `write_builds` access to the pipeline. Then run `bundle exec fastlane trigger_new_release` to build the latest `trunk`. Append `commit:<sha>` to choose a commit, or `branch:<name>` to test a branch. The command prints the Buildkite link.
+
+   - Alternatively, open the [Buildkite pipeline](https://buildkite.com/automattic/stats-agent-experiment) and click **New Build**. Set **Branch** to `trunk` and **Commit** to `HEAD` (or choose a different branch or commit). Under **Options → Environment Variables**, enter `PIPELINE=release.yml`, then click **Create Build**. This requires no local Fastlane setup or API token.
+
 3. Buildkite checks, signs, and notarizes the app, then uploads the ZIP to a draft on [GitHub Releases](https://github.com/Automattic/stats-agent-experiment/releases).
 4. Download the draft's ZIP and check that the app opens, logs in, and loads stats. Publish the release from GitHub when it's ready; this creates the version tag at the built commit and makes downloads public.
 
