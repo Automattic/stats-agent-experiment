@@ -3,7 +3,7 @@ import SwiftUI
 
 /// The proof of concept's app: logging in to WordPress.com and picking a site, then a question box, the agent's cards
 /// for each question, and the feedback form, with a Go menu to move between the questions and File → Export Data… to
-/// share what the database holds.
+/// share what the database holds. Debug builds add File → Take Screenshots….
 ///
 ///     make run
 @main
@@ -24,6 +24,9 @@ struct StatsAgentApp: App {
         .commands {
             QuestionCommands()
             ExportCommands()
+            #if DEBUG
+            ScreenshotCommands { appDelegate.account }
+            #endif
         }
     }
 }

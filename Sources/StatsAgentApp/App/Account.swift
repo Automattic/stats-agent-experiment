@@ -66,8 +66,8 @@ final class Account {
             .flatMap { try? JSONDecoder().decode(Site.self, from: $0) }
     }
 
-    /// An account as `--previews` draws it, without the keychain, the app's defaults or WordPress.com: `sites` is
-    /// what `sites()` returns.
+    /// An account as `--previews` and Take Screenshots draw it, without the keychain, the app's defaults or
+    /// WordPress.com: `sites` is what `sites()` returns.
     init(previewToken token: String?, site: Site?, sites: [Site] = []) {
         self.token = token
         self.site = site
