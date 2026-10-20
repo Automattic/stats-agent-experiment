@@ -24,11 +24,12 @@ enum Previews {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             for screen in screens {
                 for (suffix, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
-                    try await save(
+                    try await Screenshots.saveWindow(
                         screen.view(),
-                        to: folder.appending(path: "\(screen.name)-\(suffix).png"),
-                        appearance,
-                        sheetSize: screen.sheetSize
+                        size: screen.sheetSize ?? size,
+                        isSheet: screen.sheetSize != nil,
+                        appearance: appearance,
+                        to: folder.appending(path: "\(screen.name)-\(suffix).png")
                     )
                 }
             }
@@ -356,44 +357,5 @@ enum Previews {
                 calendar.date(byAdding: .day, value: index - (values.count - 1), to: end)
                     .map { DataPoint(date: $0, value: value) }
             }
-    }
-
-    // MARK: - Drawing
-
-    /// Draws `view` in a window off screen, title bar and toolbar included, or alone at `sheetSize` for a sheet, and
-    /// saves it as a PNG.
-    private static func save(
-        _ view: AnyView,
-        to file: URL,
-        _ appearance: NSAppearance.Name,
-        sheetSize: CGSize?
-    ) async throws {
-        let hosting = NSHostingView(rootView: view)
-        hosting.sceneBridgingOptions = [.title, .toolbars]
-        // A full-size content view, as SwiftUI's own windows have: the content runs under the title bar and the toolbar,
-        // and keeps clear of them only through its safe area.
-        let window = NSWindow(
-            contentRect: CGRect(origin: CGPoint(x: -20_000, y: -20_000), size: sheetSize ?? size),
-            styleMask: sheetSize == nil
-                ? [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView] : [.borderless],
-            backing: .buffered,
-            defer: false
-        )
-        window.isReleasedWhenClosed = false
-        window.appearance = NSAppearance(named: appearance)
-        window.contentView = hosting
-        window.orderFront(nil)
-        defer { window.close() }
-        // Lets SwiftUI lay out, run the views' tasks and settle their animations.
-        try await Task.sleep(for: .seconds(1))
-        let frame = hosting.superview ?? hosting
-        guard let bitmap = frame.bitmapImageRepForCachingDisplay(in: frame.bounds) else {
-            throw Screenshots.Failure(errorDescription: "The window couldn't be drawn.")
-        }
-        frame.cacheDisplay(in: frame.bounds, to: bitmap)
-        guard let png = bitmap.representation(using: .png, properties: [:]) else {
-            throw Screenshots.Failure(errorDescription: "The picture couldn't be made into a PNG.")
-        }
-        try png.write(to: file)
     }
 }
