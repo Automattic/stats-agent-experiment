@@ -101,7 +101,7 @@ final class Account {
         let response = try await WPComApiClient(authentication: .bearer(token: token)).sites
             .get(params: SitesListParams())
         return response.data.sites
-            .map { Site(id: $0.id, name: $0.name, url: $0.url, timeZone: Site.timeZone(from: $0.options)) }
+            .map { Site(id: $0.id, name: $0.name, url: $0.url, timeZone: $0.options.flatMap(Site.timeZone(from:))) }
             .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
     }
 
