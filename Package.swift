@@ -19,8 +19,7 @@ let package = Package(
             url: "https://github.com/Automattic/color-studio",
             revision: "bf141adc75e2769eb469a3e095bdc93dc30be8de"
         ),
-        // The version the WordPress iOS app pins.
-        .package(url: "https://github.com/automattic/wordpress-rs", exact: "0.9.1"),
+        .package(url: "https://github.com/automattic/wordpress-rs", exact: "0.10.0"),
         .package(url: "https://github.com/groue/GRDB.swift", exact: "7.11.1")
     ],
     targets: [
