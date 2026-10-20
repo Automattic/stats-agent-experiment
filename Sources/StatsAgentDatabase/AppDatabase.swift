@@ -106,7 +106,7 @@ public struct AppDatabase: Sendable {
         )
     }
 
-    /// Records a stats call from the agent's list at `position`, as dropped until `finishCard` says otherwise, and
+    /// Records the stats call tried at `position`, as dropped until `finishCard` says otherwise, and
     /// returns its ID.
     public func startCard(endpoint: String, questionID: Int64, position: Int) async throws -> Int64 {
         try await insert(

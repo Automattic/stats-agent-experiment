@@ -45,13 +45,14 @@ public struct QuestionRecord: Codable, Sendable, Equatable, FetchableRecord, Per
     public var finishedAt: Date?
 }
 
-/// One stats call from the agent's list, whether or not its card was shown.
+/// One stats call the agent tried, from its list or picked in place of a dropped one, whether or not its card was
+/// shown.
 public struct CardRecord: Codable, Sendable, Equatable, FetchableRecord, PersistableRecord {
     public static let databaseTableName = "card"
 
     public var id: Int64?
     public var questionId: Int64
-    /// Its place in the list, from 0.
+    /// Its place among the stats calls tried, from 0.
     public var position: Int
     public var endpoint: String
     /// A `StatsCall.Status`.

@@ -3,8 +3,9 @@ import Observation
 import StatsAgent
 
 /// One question's answer, built a step at a time: the single pick, the list, then each card in turn, so the cards
-/// appear as they're ready, then the answer in words, written from the cards' facts. Summary, visits, subscribers and
-/// the stats calls that rank items are drawn; the others get a card saying they aren't drawn. Alongside the cards it
+/// appear as they're ready, then the answer in words, written from the cards' facts. When the operation step chooses
+/// "none of these" for a stats call, one more pick among the calls not yet tried takes its place. Summary, visits,
+/// subscribers and the stats calls that rank items are drawn; the others get a card saying they aren't drawn. Alongside the cards it
 /// keeps every model call, each stats call's requests and status, the cards the person looked at, and the feedback
 /// form. Given a
 /// `QuestionRecorder`, it writes them to the database as they happen; the feedback form is saved as it changes, filled
@@ -15,7 +16,7 @@ final class Answer: Identifiable {
         case working(String)
         /// The single pick chose "none of these".
         case cantAnswer
-        /// The operation step chose "none of these" for every stats call in the list.
+        /// The operation step chose "none of these" for every stats call tried.
         case noCards
         case done
         case failed(String)
@@ -44,9 +45,11 @@ final class Answer: Identifiable {
     private(set) var isWriting = false
     /// Why the model couldn't write the answer in words, when it couldn't.
     private(set) var writingError: String?
-    /// The question's own model calls, in order: the picks before the cards, and the answer after them.
+    /// The question's own model calls, in order: the picks before the cards, each pick in place of a dropped stats call,
+    /// and the answer after them.
     private(set) var steps: [AgentStep] = []
-    /// One per stats call in the list, in the list's order, dropped ones included.
+    /// One per stats call tried, dropped ones included: the list's, in its order, each dropped one followed by the call
+    /// picked in its place.
     private(set) var statsCalls: [StatsCall] = []
     /// The endpoints of the cards the person looked at, in the order first seen.
     private(set) var cardsViewed: [String] = []
@@ -200,7 +203,7 @@ final class Answer: Identifiable {
         )
     }
 
-    /// The place in the agent's list of the stats call with `endpoint`.
+    /// The place among the stats calls tried of the one with `endpoint`.
     private func position(of endpoint: String) -> Int? {
         statsCalls.firstIndex { $0.endpoint == endpoint }
     }
@@ -228,26 +231,25 @@ final class Answer: Identifiable {
             status = .working("Choosing up to \(CardPicker.maximumCards) stats calls")
             let list = try await picker.endpoints(for: question)
             await add(AgentStep(list))
-            for endpoint in CardPicker.cardEndpoints(single: single, list: list) {
+            let listed = CardPicker.cardEndpoints(single: single, list: list)
+            var tried = Set(listed.map(\.id))
+            for endpoint in listed {
                 try Task.checkCancellation()
-                status = .working("Choosing what to show from \(DisplayNames.endpoint(endpoint.id))")
-                let operationStep = try await picker.operation(for: question, endpoint: endpoint)
-                statsCalls.append(StatsCall(endpoint: endpoint.id, operationStep: AgentStep(operationStep)))
-                await recorder?.startCard(statsCalls[statsCalls.count - 1], position: statsCalls.count - 1)
-                guard let operation = operationStep.chosen.first, operation != none else {
+                guard try await !addCard(for: endpoint, picker: picker, stats: stats, context: context) else {
                     continue
                 }
-                let calls = ModelCalls()
-                let card = await card(
-                    endpoint: endpoint,
-                    operation: operation,
-                    calls: calls,
-                    stats: stats,
-                    context: context
-                )
-                await record(card, calls: calls)
-                endpoints[card.id] = endpoint.id
-                cards.append(card)
+                try Task.checkCancellation()
+                status = .working("Choosing a stats call in place of \(DisplayNames.endpoint(endpoint.id))")
+                let replacement = try await picker.replacement(for: question, excluding: tried)
+                await add(AgentStep(replacement))
+                guard let id = replacement.chosen.first, id != none,
+                    let next = CardPicker.endpoints.first(where: { $0.id == id })
+                else {
+                    continue
+                }
+                tried.insert(id)
+                try Task.checkCancellation()
+                _ = try await addCard(for: next, picker: picker, stats: stats, context: context)
             }
             if cards.contains(where: { !$0.facts.isEmpty }) {
                 try Task.checkCancellation()
@@ -260,6 +262,29 @@ final class Answer: Identifiable {
         } catch {
             status = .failed(Self.message(for: error))
         }
+    }
+
+    /// Asks what to show from `endpoint`'s data and, unless the answer is "none of these", builds its card. Records the
+    /// stats call either way. Returns whether it built a card.
+    private func addCard(
+        for endpoint: CatalogNode,
+        picker: CardPicker,
+        stats: Result<SiteStats, any Error>,
+        context: StatsContext
+    ) async throws -> Bool {
+        status = .working("Choosing what to show from \(DisplayNames.endpoint(endpoint.id))")
+        let operationStep = try await picker.operation(for: question, endpoint: endpoint)
+        statsCalls.append(StatsCall(endpoint: endpoint.id, operationStep: AgentStep(operationStep)))
+        await recorder?.startCard(statsCalls[statsCalls.count - 1], position: statsCalls.count - 1)
+        guard let operation = operationStep.chosen.first, operation != CatalogNavigator.noneOfThese.id else {
+            return false
+        }
+        let calls = ModelCalls()
+        let card = await card(endpoint: endpoint, operation: operation, calls: calls, stats: stats, context: context)
+        await record(card, calls: calls)
+        endpoints[card.id] = endpoint.id
+        cards.append(card)
+        return true
     }
 
     /// Writes the answer in words from the facts of the cards that have them, and records the call after the picks

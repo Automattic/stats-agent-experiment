@@ -1,4 +1,5 @@
-/// One stats call from the agent's list, and what came of its card, whether or not it was shown.
+/// One stats call the agent tried, from its list or picked in place of a dropped one, and what came of its card,
+/// whether or not it was shown.
 public struct StatsCall: Sendable, Equatable {
     public enum Status: String, Sendable {
         case drawn
