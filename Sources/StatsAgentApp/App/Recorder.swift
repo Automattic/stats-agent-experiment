@@ -95,9 +95,9 @@ final class Recorder {
     }
 }
 
-/// Writes one question's answer to the database as it's worked out: each model call, each stats call from the agent's
-/// list with the requests its card makes and WordPress.com's responses to them, and how the answer ended. Cards are
-/// known by their place in the list. Errors are scrubbed of the token, since an error message could quote a request.
+/// Writes one question's answer to the database as it's worked out: each model call, each stats call tried with the
+/// requests its card makes and WordPress.com's responses to them, and how the answer ended. Cards are known by their
+/// place among the stats calls tried. Errors are scrubbed of the token, since an error message could quote a request.
 @MainActor
 final class QuestionRecorder {
     private let database: AppDatabase
@@ -106,7 +106,7 @@ final class QuestionRecorder {
     /// The responses of the site the question is about, taken as each request finishes.
     private let responses: ResponseCapture
     private let failed: @MainActor (any Error) -> Void
-    /// The database IDs of the stats calls in the agent's list, by their place in it.
+    /// The database IDs of the stats calls tried, by their place among them.
     private var cardIDs: [Int: Int64] = [:]
 
     init(
@@ -133,7 +133,7 @@ final class QuestionRecorder {
         }
     }
 
-    /// Records a stats call from the agent's list at `position`, with its operation step.
+    /// Records the stats call tried at `position`, with its operation step.
     func startCard(_ card: StatsCall, position: Int) async {
         do {
             let id = try await database.startCard(endpoint: card.endpoint, questionID: questionID, position: position)
@@ -206,7 +206,7 @@ final class QuestionRecorder {
         }
     }
 
-    /// Records that the person looked at the card for the stats call at `card` in the agent's list.
+    /// Records that the person looked at the card for the stats call at `card` among those tried.
     func markViewed(card position: Int?, at viewedAt: Date) async {
         guard let position, let id = cardIDs[position] else {
             return
@@ -218,8 +218,8 @@ final class QuestionRecorder {
         }
     }
 
-    /// Records the feedback form as it stands, filled in or not. `card` is the place in the agent's list of the card
-    /// that answered.
+    /// Records the feedback form as it stands, filled in or not. `card` is the place among the stats calls tried of
+    /// the card that answered.
     func saveFeedback(_ form: FeedbackForm, card position: Int?, at savedAt: Date) async {
         do {
             try await database.saveFeedback(

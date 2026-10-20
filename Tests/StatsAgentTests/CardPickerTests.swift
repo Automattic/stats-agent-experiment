@@ -2,7 +2,8 @@ import Testing
 
 @testable import StatsAgent
 
-/// Which stats calls become cards, from the single pick and the list. No model calls.
+/// Which stats calls become cards, from the single pick and the list, and which the pick in place of a dropped one is
+/// offered. No model calls.
 struct CardPickerTests {
     static let none = CatalogNavigator.noneOfThese.id
 
@@ -26,5 +27,13 @@ struct CardPickerTests {
     @Test func listWithoutCallsFallsBackToSinglePick() {
         let cards = CardPicker.cardEndpoints(single: Self.step("stats_summary"), list: Self.step(Self.none))
         #expect(cards.map(\.id) == ["stats_summary"])
+    }
+
+    @Test func replacementLeavesOutTheCallsTriedAndEndsWithNone() {
+        let ids = CardPicker.replacementOptions(excluding: ["stats_summary", "stats_referrers"]).map(\.id)
+        #expect(!ids.contains("stats_summary"))
+        #expect(!ids.contains("stats_referrers"))
+        #expect(ids.count == CardPicker.endpoints.count - 2 + 1)
+        #expect(ids.last == Self.none)
     }
 }

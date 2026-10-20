@@ -52,9 +52,11 @@ public struct ExportV1: Codable, Sendable, Equatable {
         public var outcome: String?
         public var error: String?
         public var finishedAt: Date?
-        /// The model calls before the cards, in order.
+        /// The question's own model calls, in order: the picks before the cards, each pick in place of a dropped stats
+        /// call, and the answer after them.
         public var steps: [Step]
-        /// One per stats call in the agent's list, in its order, dropped ones included.
+        /// One per stats call tried, dropped ones included: the agent's list, in its order, each dropped one followed by
+        /// the call picked in its place.
         public var cards: [Card]
         /// The feedback form as last saved, with `Included.feedback` only, and unless it was empty.
         public var feedback: Feedback?

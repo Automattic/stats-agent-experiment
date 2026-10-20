@@ -1,11 +1,13 @@
 /// The model calls that decide the proof of concept's cards: a single pick among the stats calls, which can say
 /// "none of these", then a list of up to three stats calls, then for each card what to show from its call's data.
+/// When that choice is "none of these", one more pick among the stats calls not yet tried takes the call's place.
 ///
 /// The stats calls are the sighted wordpress-rs endpoints without time spans, offered in catalog order.
 public struct CardPicker: Sendable {
     /// One model call: which one, the option ids it was offered, in order, what it chose, and how long it took.
     public struct Step: Sendable {
-        /// `endpoint` for the single pick, `endpoints` for the list, or `operation`.
+        /// `endpoint` for the single pick, `endpoints` for the list, `operation`, or `replacement` for the pick in
+        /// place of a call whose operation step chose "none of these".
         public let kind: String
         public let offered: [String]
         /// One id, or for the list the ids as the model gave them, repeats and "none of these" included.
@@ -49,6 +51,20 @@ public struct CardPicker: Sendable {
                 )
             ]
         }
+    }
+
+    /// A single pick among the stats calls not in `tried`, to take the place of one whose operation step chose "none of
+    /// these". It can say "none of these" too.
+    public func replacement(for question: String, excluding tried: Set<String>) async throws -> Step {
+        let options = Self.replacementOptions(excluding: tried)
+        return try await Self.timed("replacement", options) {
+            [try await selector.select(for: question, from: options)]
+        }
+    }
+
+    /// The stats calls not in `tried`, in catalog order, and "none of these".
+    public static func replacementOptions(excluding tried: Set<String>) -> [OptionSelector.Option] {
+        endpoints.filter { !tried.contains($0.id) }.map(\.option) + [CatalogNavigator.noneOfThese]
     }
 
     /// The stats calls to show as cards, in order: none when the single pick chose "none of these", otherwise the
